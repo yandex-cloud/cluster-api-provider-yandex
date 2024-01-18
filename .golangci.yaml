@@ -1,0 +1,22 @@
+linters:
+  # Enable specific linter
+  # https://golangci-lint.run/usage/linters/
+  enable:
+    - gofmt
+    - govet
+    - revive
+linters-settings:
+  revive:
+    rules:
+      # Consider missing comments as an error
+      - name: exported
+        severity: error
+      # Validate package comments
+      - name: package-comments
+        severity: error
+issues:
+  include:
+     - EXC0012 # exported (.+) should have comment or be unexported
+     - EXC0013 # package comment should be of the form "(.+)...
+     - EXC0014 # comment on exported (.+) should be of the form "(.+)..."
+     - EXC0015 # should have a package comment

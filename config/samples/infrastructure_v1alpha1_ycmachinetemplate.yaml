@@ -1,0 +1,12 @@
+apiVersion: infrastructure.cluster.x-k8s.io/v1alpha1
+kind: YCMachineTemplate
+metadata:
+  labels:
+    app.kubernetes.io/name: ycmachinetemplate
+    app.kubernetes.io/instance: ycmachinetemplate-sample
+    app.kubernetes.io/part-of: cluster-api-provider-yandex
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: cluster-api-provider-yandex
+  name: ycmachinetemplate-sample
+spec:
+  # TODO(user): Add fields here

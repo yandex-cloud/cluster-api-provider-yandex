@@ -1,0 +1,27 @@
+# permissions for end users to view ycmachines.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/name: clusterrole
+    app.kubernetes.io/instance: ycmachine-viewer-role
+    app.kubernetes.io/component: rbac
+    app.kubernetes.io/created-by: cluster-api-provider-yandex
+    app.kubernetes.io/part-of: cluster-api-provider-yandex
+    app.kubernetes.io/managed-by: kustomize
+  name: ycmachine-viewer-role
+rules:
+- apiGroups:
+  - infrastructure.cluster.x-k8s.io
+  resources:
+  - ycmachines
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - infrastructure.cluster.x-k8s.io
+  resources:
+  - ycmachines/status
+  verbs:
+  - get

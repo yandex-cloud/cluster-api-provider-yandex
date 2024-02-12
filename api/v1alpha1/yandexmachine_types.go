@@ -23,8 +23,8 @@ import (
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
 
-// YCMachineSpec defines the desired state of YCMachine.
-type YCMachineSpec struct {
+// YandexMachineSpec defines the desired state of YandexMachine.
+type YandexMachineSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 
@@ -37,8 +37,8 @@ type YCMachineSpec struct {
 	ProviderID *string `json:"providerID,omitempty"`
 }
 
-// YCMachineStatus defines the observed state of YCMachine.
-type YCMachineStatus struct {
+// YandexMachineStatus defines the observed state of YandexMachine.
+type YandexMachineStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 }
@@ -46,24 +46,24 @@ type YCMachineStatus struct {
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
 
-// YCMachine is the Schema for the ycmachines API.
-type YCMachine struct {
+// YandexMachine is the Schema for the yandexmachines API.
+type YandexMachine struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec   YCMachineSpec   `json:"spec,omitempty"`
-	Status YCMachineStatus `json:"status,omitempty"`
+	Spec   YandexMachineSpec   `json:"spec,omitempty"`
+	Status YandexMachineStatus `json:"status,omitempty"`
 }
 
 //+kubebuilder:object:root=true
 
-// YCMachineList contains a list of YCMachine.
-type YCMachineList struct {
+// YandexMachineList contains a list of YandexMachine.
+type YandexMachineList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []YCMachine `json:"items"`
+	Items           []YandexMachine `json:"items"`
 }
 
 func init() {
-	SchemeBuilder.Register(&YCMachine{}, &YCMachineList{})
+	SchemeBuilder.Register(&YandexMachine{}, &YandexMachineList{})
 }

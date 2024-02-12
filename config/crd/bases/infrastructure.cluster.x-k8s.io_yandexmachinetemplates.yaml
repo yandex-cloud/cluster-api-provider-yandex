@@ -5,20 +5,21 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.10.0
   creationTimestamp: null
-  name: ycmachines.infrastructure.cluster.x-k8s.io
+  name: yandexmachinetemplates.infrastructure.cluster.x-k8s.io
 spec:
   group: infrastructure.cluster.x-k8s.io
   names:
-    kind: YCMachine
-    listKind: YCMachineList
-    plural: ycmachines
-    singular: ycmachine
+    kind: YandexMachineTemplate
+    listKind: YandexMachineTemplateList
+    plural: yandexmachinetemplates
+    singular: yandexmachinetemplate
   scope: Namespaced
   versions:
   - name: v1alpha1
     schema:
       openAPIV3Schema:
-        description: YCMachine is the Schema for the ycmachines API.
+        description: YandexMachineTemplate is the Schema for the yandexmachinetemplates
+          API.
         properties:
           apiVersion:
             description: 'APIVersion defines the versioned schema of this representation
@@ -33,19 +34,16 @@ spec:
           metadata:
             type: object
           spec:
-            description: YCMachineSpec defines the desired state of YCMachine.
+            description: YandexMachineTemplateSpec defines the desired state of YandexMachineTemplate.
             properties:
-              providerID:
-                description: ProviderID is the unique identifier as specified by the
-                  cloud provider.
-                type: string
-              subnet:
-                description: Subnet is a reference to the subnetwork to use for this
-                  instance.
+              foo:
+                description: Foo is an example field of YandexMachineTemplate. Edit
+                  yandexmachinetemplate_types.go to remove/update
                 type: string
             type: object
           status:
-            description: YCMachineStatus defines the observed state of YCMachine.
+            description: YandexMachineTemplateStatus defines the observed state of
+              YandexMachineTemplate.
             type: object
         type: object
     served: true

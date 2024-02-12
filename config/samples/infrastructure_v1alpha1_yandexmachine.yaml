@@ -1,12 +1,12 @@
 apiVersion: infrastructure.cluster.x-k8s.io/v1alpha1
-kind: YCMachine
+kind: YandexMachine
 metadata:
   labels:
-    app.kubernetes.io/name: ycmachine
-    app.kubernetes.io/instance: ycmachine-sample
+    app.kubernetes.io/name: yandexmachine
+    app.kubernetes.io/instance: yandexmachine-sample
     app.kubernetes.io/part-of: cluster-api-provider-yandex
     app.kubernetes.io/managed-by: kustomize
     app.kubernetes.io/created-by: cluster-api-provider-yandex
-  name: ycmachine-sample
+  name: yandexmachine-sample
 spec:
   # TODO(user): Add fields here

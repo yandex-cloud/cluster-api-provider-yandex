@@ -18,50 +18,47 @@ package v1alpha1
 
 import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
 )
 
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
 
-// YCClusterSpec defines the desired state of YCCluster.
-type YCClusterSpec struct {
+// YandexMachineTemplateSpec defines the desired state of YandexMachineTemplate.
+type YandexMachineTemplateSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 
-	// ControlPlaneEndpoint represents the endpoint used to communicate with the control plane.
-	// +optional
-	ControlPlaneEndpoint clusterv1.APIEndpoint `json:"controlPlaneEndpoint"`
+	// Foo is an example field of YandexMachineTemplate. Edit yandexmachinetemplate_types.go to remove/update
+	Foo string `json:"foo,omitempty"`
 }
 
-// YCClusterStatus defines the observed state of YCCluster.
-type YCClusterStatus struct {
+// YandexMachineTemplateStatus defines the observed state of YandexMachineTemplate.
+type YandexMachineTemplateStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
-	Ready bool `json:"ready"`
 }
 
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
 
-// YCCluster is the Schema for the ycclusters API.
-type YCCluster struct {
+// YandexMachineTemplate is the Schema for the yandexmachinetemplates API.
+type YandexMachineTemplate struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec   YCClusterSpec   `json:"spec,omitempty"`
-	Status YCClusterStatus `json:"status,omitempty"`
+	Spec   YandexMachineTemplateSpec   `json:"spec,omitempty"`
+	Status YandexMachineTemplateStatus `json:"status,omitempty"`
 }
 
 //+kubebuilder:object:root=true
 
-// YCClusterList contains a list of YCCluster.
-type YCClusterList struct {
+// YandexMachineTemplateList contains a list of YandexMachineTemplate.
+type YandexMachineTemplateList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []YCCluster `json:"items"`
+	Items           []YandexMachineTemplate `json:"items"`
 }
 
 func init() {
-	SchemeBuilder.Register(&YCCluster{}, &YCClusterList{})
+	SchemeBuilder.Register(&YandexMachineTemplate{}, &YandexMachineTemplateList{})
 }

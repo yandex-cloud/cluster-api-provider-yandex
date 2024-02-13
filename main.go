@@ -34,14 +34,19 @@ import (
 
 	metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
 
+	"github.com/caarlos0/env/v10"
+
 	infrastructurev1alpha1 "github.com/yandex-cloud/cluster-api-provider-yandex/api/v1alpha1"
 	"github.com/yandex-cloud/cluster-api-provider-yandex/controllers"
+	"github.com/yandex-cloud/cluster-api-provider-yandex/internal/pkg/cloud"
+	"github.com/yandex-cloud/cluster-api-provider-yandex/internal/pkg/options"
 	//+kubebuilder:scaffold:imports
 )
 
 var (
 	scheme   = runtime.NewScheme()
 	setupLog = ctrl.Log.WithName("setup")
+	cfg      options.Config
 )
 
 //nolint:gochecknoinits // kubebuilder scaffold
@@ -69,6 +74,13 @@ func main() {
 
 	ctrl.SetLogger(zap.New(zap.UseFlagOptions(&opts)))
 
+	ctx := ctrl.SetupSignalHandler()
+
+	if err := env.Parse(&cfg); err != nil {
+		setupLog.Error(err, "unable to parse envs")
+		os.Exit(1)
+	}
+
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
 		Scheme: scheme,
 		Metrics: metricsserver.Options{
@@ -94,10 +106,15 @@ func main() {
 		os.Exit(1)
 	}
 
+	yandexFactory := &cloud.YandexFactory{
+		Key: cfg.YandexCloudSAKey,
+	}
+
 	if err = (&controllers.YandexClusterReconciler{
-		Client: mgr.GetClient(),
-		Scheme: mgr.GetScheme(),
-	}).SetupWithManager(mgr); err != nil {
+		Client:       mgr.GetClient(),
+		Scheme:       mgr.GetScheme(),
+		CloudFactory: yandexFactory,
+	}).SetupWithManager(ctx, mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "YandexCluster")
 		os.Exit(1)
 	}
@@ -120,7 +137,7 @@ func main() {
 	}
 
 	setupLog.Info("starting manager")
-	if err := mgr.Start(ctrl.SetupSignalHandler()); err != nil {
+	if err := mgr.Start(ctx); err != nil {
 		setupLog.Error(err, "problem running manager")
 		os.Exit(1)
 	}

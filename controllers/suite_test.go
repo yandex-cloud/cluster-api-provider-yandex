@@ -14,8 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-// Package controllers is the controllers package for CAPY.
-package controllers
+package controllers_test
 
 import (
 	"path/filepath"
@@ -31,7 +30,7 @@ import (
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
-	infrastructurev1alpha1 "github.com/yandex-cloud/cluster-api-provider-yandex/api/v1alpha1"
+	infrav1 "github.com/yandex-cloud/cluster-api-provider-yandex/api/v1alpha1"
 	//+kubebuilder:scaffold:imports
 )
 
@@ -63,7 +62,7 @@ var _ = BeforeSuite(func() {
 	Expect(err).NotTo(HaveOccurred())
 	Expect(cfg).NotTo(BeNil())
 
-	err = infrastructurev1alpha1.AddToScheme(scheme.Scheme)
+	err = infrav1.AddToScheme(scheme.Scheme)
 	Expect(err).NotTo(HaveOccurred())
 
 	//+kubebuilder:scaffold:scheme

@@ -21,23 +21,21 @@ import (
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
 )
 
-// EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
-// NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
+const (
+	// ClusterFinalizer allows cleaning up resources associated with
+	// YandexCluster before removing it from the apiserver.
+	ClusterFinalizer = "yandexcluster.infrastructure.cluster.x-k8s.io"
+)
 
 // YandexClusterSpec defines the desired state of YandexCluster.
 type YandexClusterSpec struct {
-	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
-
 	// ControlPlaneEndpoint represents the endpoint used to communicate with the control plane.
-	// +optional
 	ControlPlaneEndpoint clusterv1.APIEndpoint `json:"controlPlaneEndpoint"`
 }
 
 // YandexClusterStatus defines the observed state of YandexCluster.
 type YandexClusterStatus struct {
-	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
+	// Ready is true when the provider resource is ready.
 	Ready bool `json:"ready"`
 }
 

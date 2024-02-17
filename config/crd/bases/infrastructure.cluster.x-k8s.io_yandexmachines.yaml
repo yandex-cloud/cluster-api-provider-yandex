@@ -35,17 +35,195 @@ spec:
           spec:
             description: YandexMachineSpec defines the desired state of YandexMachine.
             properties:
+              bootDisk:
+                description: BootDisk is boot storage configuration for YandexCloud
+                  VM.
+                properties:
+                  imageID:
+                    description: ImageID is the identifier for OS image of YandexCloud
+                      VM.
+                    type: string
+                  size:
+                    description: Size is disk value in bytes.
+                    format: int64
+                    type: integer
+                  type:
+                    description: 'Type is the disk storage type for YandexCloud VM
+                      Possible values: network-ssd, network-hdd, network-ssd-nonreplicated,
+                      network-ssd-io-m3 More information https://cloud.yandex.ru/ru/docs/compute/concepts/disk
+                      .'
+                    type: string
+                required:
+                - imageID
+                - size
+                type: object
+              folderID:
+                description: FolderID is the identifier of YandexCloud folder.
+                type: string
+              networkInterfaces:
+                description: NetworkInterfaces is a network interfaces configurations
+                  for YandexCloud VM
+                items:
+                  description: NetworkInterface defines the network interface configuration
+                    of YandexCloud VM.
+                  properties:
+                    publicIP:
+                      description: PublicIP is set to true if public IP for YandexCloud
+                        VM is needed.
+                      type: boolean
+                    subnetID:
+                      description: SubnetID is the identifier of subnetwork to use
+                        for this instance.
+                      type: string
+                  required:
+                  - subnetID
+                  type: object
+                type: array
+              platformID:
+                description: 'PlatformID is the identifier of YandexCloud current
+                  CPU model. For example: standard-v1, standard-v2, standard-v3, highfreq-v3
+                  With GPU: gpu-standard-v1, gpu-standard-v2, gpu-standard-v3, standard-v3-t4
+                  More information https://cloud.yandex.ru/ru/docs/compute/concepts/vm-platforms
+                  .'
+                type: string
               providerID:
                 description: ProviderID is the unique identifier as specified by the
                   cloud provider.
                 type: string
-              subnet:
-                description: Subnet is a reference to the subnetwork to use for this
-                  instance.
+              resources:
+                description: Resources represents different types of YandexCloud VM
+                  instance resources
+                properties:
+                  cores:
+                    description: Cores is the number of cpu cores for YandexCloud
+                      VM.
+                    type: integer
+                  memory:
+                    description: Memory is the number of RAM bytes for YandexCloud
+                      VM.
+                    format: int64
+                    type: integer
+                required:
+                - cores
+                - memory
+                type: object
+              targetGroupID:
+                description: TargetGroupID is the identifier of LoadBalancer TargetGroup.
+                  Only for ControlPlane.
                 type: string
+              zoneID:
+                description: ZoneID is the identifier of YandexCloud availability
+                  zone.
+                type: string
+            required:
+            - bootDisk
+            - folderID
+            - networkInterfaces
+            - resources
             type: object
           status:
             description: YandexMachineStatus defines the observed state of YandexMachine.
+            properties:
+              addresses:
+                description: Addresses contains the YandexCloud instance associated
+                  addresses.
+                items:
+                  description: NodeAddress contains information for the node's address.
+                  properties:
+                    address:
+                      description: The node address.
+                      type: string
+                    type:
+                      description: Node address type, one of Hostname, ExternalIP
+                        or InternalIP.
+                      type: string
+                  required:
+                  - address
+                  - type
+                  type: object
+                type: array
+              conditions:
+                description: Conditions defines current service state of the YandexMachine.
+                items:
+                  description: Condition defines an observation of a Cluster API resource
+                    operational state.
+                  properties:
+                    lastTransitionTime:
+                      description: Last time the condition transitioned from one status
+                        to another. This should be when the underlying condition changed.
+                        If that is not known, then using the time when the API field
+                        changed is acceptable.
+                      format: date-time
+                      type: string
+                    message:
+                      description: A human readable message indicating details about
+                        the transition. This field may be empty.
+                      type: string
+                    reason:
+                      description: The reason for the condition's last transition
+                        in CamelCase. The specific API may choose whether or not this
+                        field is considered a guaranteed API. This field may not be
+                        empty.
+                      type: string
+                    severity:
+                      description: Severity provides an explicit classification of
+                        Reason code, so the users or machines can immediately understand
+                        the current situation and act accordingly. The Severity field
+                        MUST be set only when Status=False.
+                      type: string
+                    status:
+                      description: Status of the condition, one of True, False, Unknown.
+                      type: string
+                    type:
+                      description: Type of condition in CamelCase or in foo.example.com/CamelCase.
+                        Many .condition.type values are consistent across resources
+                        like Available, but because arbitrary conditions can be useful
+                        (see .node.status.conditions), the ability to deconflict is
+                        important.
+                      type: string
+                  required:
+                  - lastTransitionTime
+                  - status
+                  - type
+                  type: object
+                type: array
+              failureMessage:
+                description: "FailureMessage will be set in the event that there is
+                  a terminal problem reconciling the Machine and will contain a more
+                  verbose string suitable for logging and human consumption. \n This
+                  field should not be set for transitive errors that a controller
+                  faces that are expected to be fixed automatically over time (like
+                  service outages), but instead indicate that something is fundamentally
+                  wrong with the Machine's spec or the configuration of the controller,
+                  and that manual intervention is required. Examples of terminal errors
+                  would be invalid combinations of settings in the spec, values that
+                  are unsupported by the controller, or the responsible controller
+                  itself being critically misconfigured. \n Any transient errors that
+                  occur during the reconciliation of Machines can be added as events
+                  to the Machine object and/or logged in the controller's output."
+                type: string
+              failureReason:
+                description: "FailureReason will be set in the event that there is
+                  a terminal problem reconciling the Machine and will contain a succinct
+                  value suitable for machine interpretation. \n This field should
+                  not be set for transitive errors that a controller faces that are
+                  expected to be fixed automatically over time (like service outages),
+                  but instead indicate that something is fundamentally wrong with
+                  the Machine's spec or the configuration of the controller, and that
+                  manual intervention is required. Examples of terminal errors would
+                  be invalid combinations of settings in the spec, values that are
+                  unsupported by the controller, or the responsible controller itself
+                  being critically misconfigured. \n Any transient errors that occur
+                  during the reconciliation of Machines can be added as events to
+                  the Machine object and/or logged in the controller's output."
+                type: string
+              instanceState:
+                description: InstanceStatus is the status of the Yandex instance for
+                  this machine.
+                type: string
+              ready:
+                description: Ready is true when the provider resource is ready.
+                type: boolean
             type: object
         type: object
     served: true

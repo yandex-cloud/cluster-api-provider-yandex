@@ -26,29 +26,34 @@ import (
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 
 	"k8s.io/apimachinery/pkg/runtime"
-	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
-	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
-	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
+	infrav1 "github.com/yandex-cloud/cluster-api-provider-yandex/api/v1alpha1"
+	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
+	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
+	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
+	ctrl "sigs.k8s.io/controller-runtime"
 	metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
 
-	infrastructurev1alpha1 "github.com/yandex-cloud/cluster-api-provider-yandex/api/v1alpha1"
+	"github.com/caarlos0/env/v10"
 	"github.com/yandex-cloud/cluster-api-provider-yandex/controllers"
+	yandex "github.com/yandex-cloud/cluster-api-provider-yandex/internal/pkg/client"
+	"github.com/yandex-cloud/cluster-api-provider-yandex/internal/pkg/options"
 	//+kubebuilder:scaffold:imports
 )
 
 var (
 	scheme   = runtime.NewScheme()
 	setupLog = ctrl.Log.WithName("setup")
+	cfg      options.Config
 )
 
 //nolint:gochecknoinits // kubebuilder scaffold
 func init() {
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
-
-	utilruntime.Must(infrastructurev1alpha1.AddToScheme(scheme))
+	utilruntime.Must(clusterv1.AddToScheme(scheme))
+	utilruntime.Must(infrav1.AddToScheme(scheme))
 	//+kubebuilder:scaffold:scheme
 }
 
@@ -69,6 +74,13 @@ func main() {
 
 	ctrl.SetLogger(zap.New(zap.UseFlagOptions(&opts)))
 
+	ctx := ctrl.SetupSignalHandler()
+
+	if err := env.Parse(&cfg); err != nil {
+		setupLog.Error(err, "unable to parse envs")
+		os.Exit(1)
+	}
+
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
 		Scheme: scheme,
 		Metrics: metricsserver.Options{
@@ -76,7 +88,7 @@ func main() {
 		},
 		HealthProbeBindAddress: probeAddr,
 		LeaderElection:         enableLeaderElection,
-		LeaderElectionID:       "yandex.cluster.x-k8s.io",
+		LeaderElectionID:       "yc.cluster.x-k8s.io",
 		// LeaderElectionReleaseOnCancel defines if the leader should step down voluntarily
 		// when the Manager ends. This requires the binary to immediately end when the
 		// Manager is stopped, otherwise, this setting is unsafe. Setting this significantly
@@ -94,10 +106,22 @@ func main() {
 		os.Exit(1)
 	}
 
+	yandexClient, err := yandex.GetClient(ctx, cfg.YandexCloudSAKey)
+	if err != nil {
+		setupLog.Error(err, "unable to init Yandex SDK client")
+		os.Exit(1)
+	}
+
+	defer func() {
+		yandexClient.Close(ctx)
+	}()
+
 	if err = (&controllers.YandexClusterReconciler{
-		Client: mgr.GetClient(),
-		Scheme: mgr.GetScheme(),
-	}).SetupWithManager(mgr); err != nil {
+		Client:       mgr.GetClient(),
+		Scheme:       mgr.GetScheme(),
+		YandexClient: yandexClient,
+		Config:       cfg,
+	}).SetupWithManager(ctx, mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "YandexCluster")
 		os.Exit(1)
 	}
@@ -120,8 +144,8 @@ func main() {
 	}
 
 	setupLog.Info("starting manager")
-	if err := mgr.Start(ctrl.SetupSignalHandler()); err != nil {
-		setupLog.Error(err, "problem running manager")
+	if err := mgr.Start(ctx); err != nil {
+		setupLog.Error(err, "unable to start manager")
 		os.Exit(1)
 	}
 }

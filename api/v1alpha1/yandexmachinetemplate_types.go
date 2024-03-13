@@ -18,36 +18,32 @@ package v1alpha1
 
 import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
 )
 
-// EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
-// NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
+// YandexMachineTemplateResource describes the data needed to create am YandexMachine from a template.
+type YandexMachineTemplateResource struct {
+	// Standard object's metadata.
+	// +optional
+	ObjectMeta clusterv1.ObjectMeta `json:"metadata,omitempty"`
+
+	// Spec is the specification of the desired behavior of the machine.
+	Spec YandexMachineSpec `json:"spec"`
+}
 
 // YandexMachineTemplateSpec defines the desired state of YandexMachineTemplate.
 type YandexMachineTemplateSpec struct {
-	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
-
-	// Foo is an example field of YandexMachineTemplate. Edit yandexmachinetemplate_types.go to remove/update
-	Foo string `json:"foo,omitempty"`
-}
-
-// YandexMachineTemplateStatus defines the observed state of YandexMachineTemplate.
-type YandexMachineTemplateStatus struct {
-	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
+	Template YandexMachineTemplateResource `json:"template"`
 }
 
 //+kubebuilder:object:root=true
-//+kubebuilder:subresource:status
 
 // YandexMachineTemplate is the Schema for the yandexmachinetemplates API.
 type YandexMachineTemplate struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec   YandexMachineTemplateSpec   `json:"spec,omitempty"`
-	Status YandexMachineTemplateStatus `json:"status,omitempty"`
+	Spec YandexMachineTemplateSpec `json:"spec,omitempty"`
 }
 
 //+kubebuilder:object:root=true

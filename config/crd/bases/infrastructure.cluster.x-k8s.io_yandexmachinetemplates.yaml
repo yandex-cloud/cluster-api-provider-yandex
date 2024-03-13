@@ -36,17 +36,127 @@ spec:
           spec:
             description: YandexMachineTemplateSpec defines the desired state of YandexMachineTemplate.
             properties:
-              foo:
-                description: Foo is an example field of YandexMachineTemplate. Edit
-                  yandexmachinetemplate_types.go to remove/update
-                type: string
-            type: object
-          status:
-            description: YandexMachineTemplateStatus defines the observed state of
-              YandexMachineTemplate.
+              template:
+                description: YandexMachineTemplateResource describes the data needed
+                  to create am YandexMachine from a template.
+                properties:
+                  metadata:
+                    description: Standard object's metadata.
+                    properties:
+                      annotations:
+                        additionalProperties:
+                          type: string
+                        description: 'Annotations is an unstructured key value map
+                          stored with a resource that may be set by external tools
+                          to store and retrieve arbitrary metadata. They are not queryable
+                          and should be preserved when modifying objects. More info:
+                          http://kubernetes.io/docs/user-guide/annotations'
+                        type: object
+                      labels:
+                        additionalProperties:
+                          type: string
+                        description: 'Map of string keys and values that can be used
+                          to organize and categorize (scope and select) objects. May
+                          match selectors of replication controllers and services.
+                          More info: http://kubernetes.io/docs/user-guide/labels'
+                        type: object
+                    type: object
+                  spec:
+                    description: Spec is the specification of the desired behavior
+                      of the machine.
+                    properties:
+                      bootDisk:
+                        description: BootDisk is boot storage configuration for YandexCloud
+                          VM.
+                        properties:
+                          imageID:
+                            description: ImageID is the identifier for OS image of
+                              YandexCloud VM.
+                            type: string
+                          size:
+                            description: Size is disk value in bytes.
+                            format: int64
+                            type: integer
+                          type:
+                            description: 'Type is the disk storage type for YandexCloud
+                              VM Possible values: network-ssd, network-hdd, network-ssd-nonreplicated,
+                              network-ssd-io-m3 More information https://cloud.yandex.ru/ru/docs/compute/concepts/disk
+                              .'
+                            type: string
+                        required:
+                        - imageID
+                        - size
+                        type: object
+                      folderID:
+                        description: FolderID is the identifier of YandexCloud folder.
+                        type: string
+                      networkInterfaces:
+                        description: NetworkInterfaces is a network interfaces configurations
+                          for YandexCloud VM
+                        items:
+                          description: NetworkInterface defines the network interface
+                            configuration of YandexCloud VM.
+                          properties:
+                            publicIP:
+                              description: PublicIP is set to true if public IP for
+                                YandexCloud VM is needed.
+                              type: boolean
+                            subnetID:
+                              description: SubnetID is the identifier of subnetwork
+                                to use for this instance.
+                              type: string
+                          required:
+                          - subnetID
+                          type: object
+                        type: array
+                      platformID:
+                        description: 'PlatformID is the identifier of YandexCloud
+                          current CPU model. For example: standard-v1, standard-v2,
+                          standard-v3, highfreq-v3 With GPU: gpu-standard-v1, gpu-standard-v2,
+                          gpu-standard-v3, standard-v3-t4 More information https://cloud.yandex.ru/ru/docs/compute/concepts/vm-platforms
+                          .'
+                        type: string
+                      providerID:
+                        description: ProviderID is the unique identifier as specified
+                          by the cloud provider.
+                        type: string
+                      resources:
+                        description: Resources represents different types of YandexCloud
+                          VM instance resources
+                        properties:
+                          cores:
+                            description: Cores is the number of cpu cores for YandexCloud
+                              VM.
+                            type: integer
+                          memory:
+                            description: Memory is the number of RAM bytes for YandexCloud
+                              VM.
+                            format: int64
+                            type: integer
+                        required:
+                        - cores
+                        - memory
+                        type: object
+                      targetGroupID:
+                        description: TargetGroupID is the identifier of LoadBalancer
+                          TargetGroup. Only for ControlPlane.
+                        type: string
+                      zoneID:
+                        description: ZoneID is the identifier of YandexCloud availability
+                          zone.
+                        type: string
+                    required:
+                    - bootDisk
+                    - folderID
+                    - networkInterfaces
+                    - resources
+                    type: object
+                required:
+                - spec
+                type: object
+            required:
+            - template
             type: object
         type: object
     served: true
     storage: true
-    subresources:
-      status: {}

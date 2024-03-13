@@ -1,0 +1,121 @@
+---
+apiVersion: cluster.x-k8s.io/v1beta1
+kind: Cluster
+metadata:
+  name: "${CLUSTER_NAME}"
+spec:
+  clusterNetwork:
+    pods:
+      cidrBlocks: ["192.168.0.0/16"]
+  infrastructureRef:
+    apiVersion: infrastructure.cluster.x-k8s.io/v1alpha1
+    kind: YandexCluster
+    name: "${CLUSTER_NAME}"
+  controlPlaneRef:
+    kind: KubeadmControlPlane
+    apiVersion: controlplane.cluster.x-k8s.io/v1beta1
+    name: "${CLUSTER_NAME}-control-plane"
+---
+apiVersion: infrastructure.cluster.x-k8s.io/v1alpha1
+kind: YandexCluster
+metadata:
+  name: "${CLUSTER_NAME}"
+spec:
+  controlPlaneEndpoint:
+    host: "${CONTROL_PLANE_ENDPOINT_HOST}"
+    port: "${CONTROL_PLANE_ENDPOINT_PORT}"
+---
+kind: KubeadmControlPlane
+apiVersion: controlplane.cluster.x-k8s.io/v1beta1
+metadata:
+  name: "${CLUSTER_NAME}-control-plane"
+spec:
+  replicas: ${CONTROL_PLANE_MACHINE_COUNT}
+  machineTemplate:
+    infrastructureRef:
+      kind: YandexMachineTemplate
+      apiVersion: infrastructure.cluster.x-k8s.io/v1alpha1
+      name: "${CLUSTER_NAME}-control-plane"
+  kubeadmConfigSpec:
+    initConfiguration:
+      nodeRegistration:
+        kubeletExtraArgs:
+          cloud-provider: external
+        name: '{{ ds.meta_data["local_hostname"] }}'
+    joinConfiguration:
+      nodeRegistration:
+        kubeletExtraArgs:
+          cloud-provider: external
+        name: '{{ ds.meta_data["local_hostname"] }}'
+  version: "${KUBERNETES_VERSION}"
+---
+kind: YandexMachineTemplate
+apiVersion: infrastructure.cluster.x-k8s.io/v1alpha1
+metadata:
+  name: "${CLUSTER_NAME}-control-plane"
+spec:
+  template:
+    spec:
+      targetGroupID: "${YANDEX_CONTROL_PLANE_TARGET_GROUP_ID}"
+      folderID: "${YANDEX_FOLDER_ID}"
+      resources:
+        cores: "${YANDEX_CONTROL_PLANE_MACHINE_CORES}"
+        memory: "${YANDEX_CONTROL_PLANE_MACHINE_MEMORY_BYTES}"
+      bootDisk:
+        size: "${YANDEX_CONTROL_PLANE_MACHINE_BOOT_DISK_BYTES}"
+        imageID: "${YANDEX_CONTROL_PLANE_MACHINE_IMAGE}"
+      networkInterface:
+        subnet: "${YANDEX_SUBNET}"
+---
+apiVersion: cluster.x-k8s.io/v1beta1
+kind: MachineDeployment
+metadata:
+  name: "${CLUSTER_NAME}-md-0"
+spec:
+  clusterName: "${CLUSTER_NAME}"
+  replicas: ${WORKER_MACHINE_COUNT}
+  selector:
+    matchLabels:
+  template:
+    spec:
+      clusterName: "${CLUSTER_NAME}"
+      version: "${KUBERNETES_VERSION}"
+      bootstrap:
+        configRef:
+          name: "${CLUSTER_NAME}-md-0"
+          apiVersion: bootstrap.cluster.x-k8s.io/v1beta1
+          kind: KubeadmConfigTemplate
+      infrastructureRef:
+        name: "${CLUSTER_NAME}-md-0"
+        apiVersion: infrastructure.cluster.x-k8s.io/v1alpha1
+        kind: YandexMachineTemplate
+---
+apiVersion: infrastructure.cluster.x-k8s.io/v1alpha1
+kind: YandexMachineTemplate
+metadata:
+  name: "${CLUSTER_NAME}-md-0"
+spec:
+  template:
+    spec:
+      folderID: "${YANDEX_FOLDER_ID}"
+      resources:
+        cores: "${YANDEX_NODE_MACHINE_CORES}"
+        memory: "${YANDEX_NODE_MACHINE_MEMORY_BYTES}"
+      bootDisk:
+        size: "${YANDEX_NODE_MACHINE_BOOT_DISK_BYTES}"
+        imageID: "${YANDEX_NODE_MACHINE_IMAGE}"
+      networkInterface:
+        subnet: "${YANDEX_SUBNET}"
+---
+apiVersion: bootstrap.cluster.x-k8s.io/v1beta1
+kind: KubeadmConfigTemplate
+metadata:
+  name: "${CLUSTER_NAME}-md-0"
+spec:
+  template:
+    spec:
+      joinConfiguration:
+        nodeRegistration:
+          name: '{{ ds.meta_data.local_hostname }}'
+          kubeletExtraArgs:
+            cloud-provider: external

@@ -79,3 +79,8 @@ func (m *ClusterScope) SetReady() {
 func (m *ClusterScope) GetClient() yandex.Client {
 	return m.yandexClient
 }
+
+// GetLBType gets type of kubernetes api loadbalancer.
+func (m *ClusterScope) GetLBType() infrav1.LoadBalancerType {
+	return m.YandexCluster.Spec.LoadBalancer.Type
+}

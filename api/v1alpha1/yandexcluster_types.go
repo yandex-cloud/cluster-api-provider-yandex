@@ -31,7 +31,31 @@ const (
 type YandexClusterSpec struct {
 	// ControlPlaneEndpoint represents the endpoint used to communicate with the control plane.
 	ControlPlaneEndpoint clusterv1.APIEndpoint `json:"controlPlaneEndpoint"`
+
+	// LoadBalancer is a loadbalancer configuration for the kubernetes cluster api.
+	// +optional
+	LoadBalancer LoadBalancerSpec `json:"loadBalancer"`
 }
+
+// LoadBalancerSpec is a loadbalancer configuration for the kubernetes cluster api.
+type LoadBalancerSpec struct {
+	// Type is a type of a loadbalancer, possible values are: NLB and ALB.
+	// More details about loadbalancer type in YandexCloud docs:
+	// NLB https://yandex.cloud/ru/services/network-load-balancer .
+	// ALB https://yandex.cloud/ru/services/application-load-balancer .
+	// +optional
+	Type LoadBalancerType `json:"type"`
+}
+
+// LoadBalancerType is a type of a loadbalancer.
+type LoadBalancerType string
+
+const (
+	// ApplicationLoadBalancer is the string representing an Yandex Cloud Application LoadBalancer.
+	ApplicationLoadBalancer LoadBalancerType = "ALB"
+	// NetworkLoadBalancer is the string representing an Yandex Cloud Network LoadBalancer.
+	NetworkLoadBalancer LoadBalancerType = "NLB"
+)
 
 // YandexClusterStatus defines the observed state of YandexCluster.
 type YandexClusterStatus struct {

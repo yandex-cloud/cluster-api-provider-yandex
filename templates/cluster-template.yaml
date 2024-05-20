@@ -24,6 +24,8 @@ spec:
   controlPlaneEndpoint:
     host: "${CONTROL_PLANE_ENDPOINT_HOST}"
     port: "${CONTROL_PLANE_ENDPOINT_PORT}"
+  loadBalancer:
+    type: "${CONTROL_PLANE_LOADBALANCER_TYPE}"
 ---
 kind: KubeadmControlPlane
 apiVersion: controlplane.cluster.x-k8s.io/v1beta1
@@ -61,11 +63,13 @@ spec:
       resources:
         cores: "${YANDEX_CONTROL_PLANE_MACHINE_CORES}"
         memory: "${YANDEX_CONTROL_PLANE_MACHINE_MEMORY_BYTES}"
+        coreFraction: "${YANDEX_CONTROL_PLANE_MACHINE_CORE_FRACTION}"
       bootDisk:
+        type: "${YANDEX_CONTROL_PLANE_MACHINE_BOOT_DISK_TYPE}"
         size: "${YANDEX_CONTROL_PLANE_MACHINE_BOOT_DISK_BYTES}"
         imageID: "${YANDEX_CONTROL_PLANE_MACHINE_IMAGE}"
       networkInterface:
-        subnet: "${YANDEX_SUBNET}"
+        subnetID: "${YANDEX_SUBNET}"
 ---
 apiVersion: cluster.x-k8s.io/v1beta1
 kind: MachineDeployment
@@ -101,11 +105,15 @@ spec:
       resources:
         cores: "${YANDEX_NODE_MACHINE_CORES}"
         memory: "${YANDEX_NODE_MACHINE_MEMORY_BYTES}"
+        coreFraction: "${YANDEX_NODE_MACHINE_CORE_FRACTION}"
+        gpus: "${YANDEX_NODE_MACHINE_GPUS}"
       bootDisk:
         size: "${YANDEX_NODE_MACHINE_BOOT_DISK_BYTES}"
         imageID: "${YANDEX_NODE_MACHINE_IMAGE}"
+        type: "${YANDEX_NODE_MACHINE_BOOT_DISK_TYPE}"
       networkInterface:
-        subnet: "${YANDEX_SUBNET}"
+        subnetID: "${YANDEX_SUBNET}"
+        publicIP: "${YANDEX_NODE_MACHINE_PUBLIC_IP}"
 ---
 apiVersion: bootstrap.cluster.x-k8s.io/v1beta1
 kind: KubeadmConfigTemplate

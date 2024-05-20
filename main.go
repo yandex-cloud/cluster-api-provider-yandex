@@ -126,8 +126,9 @@ func main() {
 		os.Exit(1)
 	}
 	if err = (&controllers.YandexMachineReconciler{
-		Client: mgr.GetClient(),
-		Scheme: mgr.GetScheme(),
+		Client:       mgr.GetClient(),
+		Scheme:       mgr.GetScheme(),
+		YandexClient: yandexClient,
 	}).SetupWithManager(ctx, mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "YandexMachine")
 		os.Exit(1)

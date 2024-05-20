@@ -8,6 +8,6 @@ func (s *Service) Reconcile(ctx context.Context) error {
 }
 
 // Delete deletes machine instance.
-func (s *Service) Delete(ctx context.Context) error {
-	return nil
+func (s *Service) Delete(ctx context.Context) (bool, error) {
+	return true, nil
 }

@@ -3,8 +3,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.10.0
-  creationTimestamp: null
+    controller-gen.kubebuilder.io/version: v0.14.0
   name: yandexmachinetemplates.infrastructure.cluster.x-k8s.io
 spec:
   group: infrastructure.cluster.x-k8s.io
@@ -22,14 +21,19 @@ spec:
           API.
         properties:
           apiVersion:
-            description: 'APIVersion defines the versioned schema of this representation
-              of an object. Servers should convert recognized schemas to the latest
-              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            description: |-
+              APIVersion defines the versioned schema of this representation of an object.
+              Servers should convert recognized schemas to the latest internal value, and
+              may reject unrecognized values.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
             type: string
           kind:
-            description: 'Kind is a string value representing the REST resource this
-              object represents. Servers may infer this from the endpoint the client
-              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            description: |-
+              Kind is a string value representing the REST resource this object represents.
+              Servers may infer this from the endpoint the client submits requests to.
+              Cannot be updated.
+              In CamelCase.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
             type: string
           metadata:
             type: object
@@ -46,19 +50,20 @@ spec:
                       annotations:
                         additionalProperties:
                           type: string
-                        description: 'Annotations is an unstructured key value map
-                          stored with a resource that may be set by external tools
-                          to store and retrieve arbitrary metadata. They are not queryable
-                          and should be preserved when modifying objects. More info:
-                          http://kubernetes.io/docs/user-guide/annotations'
+                        description: |-
+                          Annotations is an unstructured key value map stored with a resource that may be
+                          set by external tools to store and retrieve arbitrary metadata. They are not
+                          queryable and should be preserved when modifying objects.
+                          More info: http://kubernetes.io/docs/user-guide/annotations
                         type: object
                       labels:
                         additionalProperties:
                           type: string
-                        description: 'Map of string keys and values that can be used
-                          to organize and categorize (scope and select) objects. May
-                          match selectors of replication controllers and services.
-                          More info: http://kubernetes.io/docs/user-guide/labels'
+                        description: |-
+                          Map of string keys and values that can be used to organize and categorize
+                          (scope and select) objects. May match selectors of replication controllers
+                          and services.
+                          More info: http://kubernetes.io/docs/user-guide/labels
                         type: object
                     type: object
                   spec:
@@ -74,14 +79,17 @@ spec:
                               YandexCloud VM.
                             type: string
                           size:
+                            anyOf:
+                            - type: integer
+                            - type: string
                             description: Size is disk value in bytes.
-                            format: int64
-                            type: integer
+                            pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                            x-kubernetes-int-or-string: true
                           type:
-                            description: 'Type is the disk storage type for YandexCloud
-                              VM Possible values: network-ssd, network-hdd, network-ssd-nonreplicated,
-                              network-ssd-io-m3 More information https://cloud.yandex.ru/ru/docs/compute/concepts/disk
-                              .'
+                            description: |-
+                              Type is the disk storage type for YandexCloud VM
+                              Possible values: network-ssd, network-hdd, network-ssd-nonreplicated, network-ssd-io-m3
+                              More information https://cloud.yandex.ru/ru/docs/compute/concepts/disk .
                             type: string
                         required:
                         - imageID
@@ -89,6 +97,10 @@ spec:
                         type: object
                       folderID:
                         description: FolderID is the identifier of YandexCloud folder.
+                        type: string
+                      instanceID:
+                        description: InstanceID is the YandexCloud instance ID for
+                          this machine.
                         type: string
                       networkInterfaces:
                         description: NetworkInterfaces is a network interfaces configurations
@@ -110,11 +122,11 @@ spec:
                           type: object
                         type: array
                       platformID:
-                        description: 'PlatformID is the identifier of YandexCloud
-                          current CPU model. For example: standard-v1, standard-v2,
-                          standard-v3, highfreq-v3 With GPU: gpu-standard-v1, gpu-standard-v2,
-                          gpu-standard-v3, standard-v3-t4 More information https://cloud.yandex.ru/ru/docs/compute/concepts/vm-platforms
-                          .'
+                        description: |-
+                          PlatformID is the identifier of YandexCloud current CPU model.
+                          For example: standard-v1, standard-v2, standard-v3, highfreq-v3
+                          With GPU: gpu-standard-v1, gpu-standard-v2, gpu-standard-v3, standard-v3-t4
+                          More information https://cloud.yandex.ru/ru/docs/compute/concepts/vm-platforms .
                         type: string
                       providerID:
                         description: ProviderID is the unique identifier as specified
@@ -124,22 +136,38 @@ spec:
                         description: Resources represents different types of YandexCloud
                           VM instance resources
                         properties:
+                          coreFraction:
+                            description: |-
+                              CoreFraction is baseline level of CPU performance with the ability to burst performance above that baseline level.
+                              This field sets baseline performance for each core.
+                            format: int64
+                            type: integer
                           cores:
                             description: Cores is the number of cpu cores for YandexCloud
                               VM.
-                            type: integer
-                          memory:
-                            description: Memory is the number of RAM bytes for YandexCloud
-                              VM.
                             format: int64
                             type: integer
+                          gpus:
+                            description: GPUs is the number of GPUs available for
+                              YandexCloud VM.
+                            format: int64
+                            type: integer
+                          memory:
+                            anyOf:
+                            - type: integer
+                            - type: string
+                            description: Memory is the number of RAM bytes for YandexCloud
+                              VM.
+                            pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                            x-kubernetes-int-or-string: true
                         required:
                         - cores
                         - memory
                         type: object
                       targetGroupID:
-                        description: TargetGroupID is the identifier of LoadBalancer
-                          TargetGroup. Only for ControlPlane.
+                        description: |-
+                          TargetGroupID is the identifier of LoadBalancer TargetGroup.
+                          Only for ControlPlane.
                         type: string
                       zoneID:
                         description: ZoneID is the identifier of YandexCloud availability

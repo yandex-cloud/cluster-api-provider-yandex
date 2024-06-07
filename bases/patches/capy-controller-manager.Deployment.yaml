@@ -1,0 +1,19 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: capy-controller-manager
+  namespace: capy-system
+spec:
+  template:
+    spec:
+      containers:
+      - command:
+        - manager
+        image: ${IMG}
+        env:
+        - name: YC_SA_KEY
+          value: ${YC_SA_KEY}
+        name: manager
+      securityContext:
+        runAsUser: 1000

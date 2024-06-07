@@ -22,8 +22,8 @@ metadata:
   name: "${CLUSTER_NAME}"
 spec:
   controlPlaneEndpoint:
-    host: "${CONTROL_PLANE_ENDPOINT_HOST}"
-    port: "${CONTROL_PLANE_ENDPOINT_PORT}"
+    host: "${YANDEX_CONTROL_PLANE_ENDPOINT_HOST}"
+    port: "${YANDEX_CONTROL_PLANE_ENDPOINT_PORT}"
   loadBalancer:
     type: "${CONTROL_PLANE_LOADBALANCER_TYPE}"
 ---
@@ -67,7 +67,7 @@ spec:
       bootDisk:
         type: "${YANDEX_CONTROL_PLANE_MACHINE_BOOT_DISK_TYPE}"
         size: "${YANDEX_CONTROL_PLANE_MACHINE_BOOT_DISK_BYTES}"
-        imageID: "${YANDEX_CONTROL_PLANE_MACHINE_IMAGE}"
+        imageID: "${YANDEX_CONTROL_PLANE_MACHINE_IMAGE_ID}"
       networkInterface:
         subnetID: "${YANDEX_SUBNET}"
 ---
@@ -109,7 +109,7 @@ spec:
         gpus: "${YANDEX_NODE_MACHINE_GPUS}"
       bootDisk:
         size: "${YANDEX_NODE_MACHINE_BOOT_DISK_BYTES}"
-        imageID: "${YANDEX_NODE_MACHINE_IMAGE}"
+        imageID: "${YANDEX_NODE_MACHINE_IMAGE_ID}"
         type: "${YANDEX_NODE_MACHINE_BOOT_DISK_TYPE}"
       networkInterface:
         subnetID: "${YANDEX_SUBNET}"

@@ -22,6 +22,7 @@ import (
 
 	infrav1 "github.com/yandex-cloud/cluster-api-provider-yandex/api/v1alpha1"
 	"github.com/yandex-cloud/cluster-api-provider-yandex/controllers"
+	"github.com/yandex-cloud/cluster-api-provider-yandex/internal/pkg/options"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -107,6 +108,9 @@ var _ = Describe("YandexCluster Reconciler check", func() {
 		It("should not error and not requeue the request", func() {
 			reconciler := &controllers.YandexClusterReconciler{
 				Client: k8sClient,
+				Config: options.Config{
+					ReconcileTimeout: reconcileTimeout,
+				},
 			}
 
 			yc := newYandexCluster()

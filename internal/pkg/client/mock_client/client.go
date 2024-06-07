@@ -15,9 +15,9 @@ import (
 	context "context"
 	reflect "reflect"
 
+	v1alpha1 "github.com/yandex-cloud/cluster-api-provider-yandex/api/v1alpha1"
 	compute "github.com/yandex-cloud/go-genproto/yandex/cloud/compute/v1"
 	operation "github.com/yandex-cloud/go-genproto/yandex/cloud/operation"
-	v1alpha1 "github.com/yandex-cloud/cluster-api-provider-yandex/api/v1alpha1"
 	gomock "go.uber.org/mock/gomock"
 )
 

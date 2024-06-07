@@ -84,13 +84,13 @@ spec:
                             - type: string
                             description: |-
                               Size is an disk size
-                              Possible using k,M,G and Ki,Mi,Gi and other suffixes
+                              Allows to specify k,M,G... or Ki,Mi,Gi... suffixes
                               For more information see https://pkg.go.dev/k8s.io/apimachinery/pkg/api/resource#Quantity .
                             pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
                             x-kubernetes-int-or-string: true
-                          type:
+                          typeID:
                             description: |-
-                              Type is the disk storage type for YandexCloud VM
+                              TypeID is the disk storage type for YandexCloud VM
                               Possible values: network-ssd, network-hdd, network-ssd-nonreplicated, network-ssd-io-m3
                               More information https://cloud.yandex.ru/ru/docs/compute/concepts/disk .
                             type: string
@@ -108,9 +108,9 @@ spec:
                           description: NetworkInterface defines the network interface
                             configuration of YandexCloud VM.
                           properties:
-                            publicIP:
-                              description: PublicIP is set to true if public IP for
-                                YandexCloud VM is needed.
+                            hasPublicIP:
+                              description: HasPublicIP is set to true if public IP
+                                for YandexCloud VM is needed.
                               type: boolean
                             subnetID:
                               description: SubnetID is the identifier of subnetwork
@@ -139,6 +139,7 @@ spec:
                             description: |-
                               CoreFraction is baseline level of CPU performance with the ability to burst performance above that baseline level.
                               This field sets baseline performance for each core.
+                              For more information see https://yandex.cloud/en/docs/compute/concepts/performance-levels
                             format: int64
                             type: integer
                           cores:
@@ -157,7 +158,7 @@ spec:
                             - type: string
                             description: |-
                               Memory is an amount of RAM memory for YandexCloud VM
-                              Possible using k,M,G and Ki,Mi,Gi and other suffixes
+                              Allows to specify k,M,G... or Ki,Mi,Gi... suffixes
                               For more information see https://pkg.go.dev/k8s.io/apimachinery/pkg/api/resource#Quantity .
                             pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
                             x-kubernetes-int-or-string: true

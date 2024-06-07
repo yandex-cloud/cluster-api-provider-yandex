@@ -62,7 +62,7 @@ type YandexMachineReconciler struct {
 
 // Reconcile brings YandexMachine into desired state.
 func (r *YandexMachineReconciler) Reconcile(ctx context.Context, req ctrl.Request) (_ ctrl.Result, reterr error) {
-	rlog := log.FromContext(ctx)
+	logger := log.FromContext(ctx)
 
 	yandexMachine := &infrav1.YandexMachine{}
 	err := r.Get(ctx, req.NamespacedName, yandexMachine)
@@ -74,26 +74,27 @@ func (r *YandexMachineReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 		return ctrl.Result{}, fmt.Errorf("error occurred while fetching YandexMachine resource: %w", err)
 	}
 
-	rlog.V(1).Info("machine found")
+	logger.V(1).Info("machine found")
 	machine, err := util.GetOwnerMachine(ctx, r.Client, yandexMachine.ObjectMeta)
 	if err != nil {
 		return ctrl.Result{}, err
 	}
 	if machine == nil {
-		rlog.Info("machine controller has not yet set OwnerRef")
+		logger.Info("machine controller has not yet set OwnerRef")
 		return ctrl.Result{}, nil
 	}
 
-	rlog = rlog.WithValues("machine", machine.Name)
+	logger = logger.WithValues("machine", machine.Name)
 	cluster, err := util.GetClusterFromMetadata(ctx, r.Client, machine.ObjectMeta)
 	if err != nil {
-		rlog.Info("machine is missing cluster label or cluster does not exist")
+		logger.Info("machine is missing cluster label or cluster does not exist")
+
 		return ctrl.Result{}, nil
 	}
 
-	rlog = rlog.WithValues("cluster", cluster.Name)
+	logger = logger.WithValues("cluster", cluster.Name)
 	if annotations.IsPaused(cluster, yandexMachine) {
-		rlog.Info("YandexMachine or linked Cluster is marked as paused. Won't reconcile")
+		logger.Info("YandexMachine or linked cluster is marked as paused. Won't reconcile")
 		return ctrl.Result{}, nil
 	}
 
@@ -103,7 +104,7 @@ func (r *YandexMachineReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 		Name:      cluster.Spec.InfrastructureRef.Name,
 	}
 	if err = r.Client.Get(ctx, yandexClusterKey, yandexCluster); err != nil {
-		rlog.Info("YandexCluster is not available yet")
+		logger.Info("YandexCluster is not available yet")
 		return ctrl.Result{}, nil
 	}
 
@@ -143,8 +144,8 @@ func (r *YandexMachineReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 
 // reconcile it is a part of reconciliation loop in case of yandexmachine update/create.
 func (r *YandexMachineReconciler) reconcile(ctx context.Context, machineScope *scope.MachineScope) (ctrl.Result, error) {
-	rlog := log.FromContext(ctx)
-	rlog.V(1).Info("reconciling YandexMachine")
+	logger := log.FromContext(ctx)
+	logger.Info("reconciling YandexMachine")
 
 	controllerutil.AddFinalizer(machineScope.YandexMachine, infrav1.MachineFinalizer)
 
@@ -153,7 +154,7 @@ func (r *YandexMachineReconciler) reconcile(ctx context.Context, machineScope *s
 	}
 
 	if machineScope.Machine.Spec.Bootstrap.DataSecretName == nil {
-		rlog.Info("bootstrap data is not ready yet: linked Machine's bootstrap.dataSecretName is nil. Skipping reconciliation")
+		logger.Info("bootstrap data is not ready yet: linked Machine's bootstrap.dataSecretName is nil. Skipping reconciliation")
 		return ctrl.Result{}, nil
 	}
 
@@ -164,10 +165,10 @@ func (r *YandexMachineReconciler) reconcile(ctx context.Context, machineScope *s
 	instanceState := *machineScope.GetInstanceStatus()
 	switch instanceState {
 	case infrav1.InstanceStatusStarting, infrav1.InstanceStatusProvisioning:
-		rlog.Info("YandexMachine instance is provisioning", "instance-id", machineScope.GetInstanceID())
+		logger.Info("YandexMachine instance is provisioning", "instance-id", machineScope.GetInstanceID())
 		return ctrl.Result{RequeueAfter: RequeueDuration}, nil
 	case infrav1.InstanceStatusRunning:
-		rlog.Info("YandexMachine instance is running", "instance-id", machineScope.GetInstanceID())
+		logger.Info("YandexMachine instance is running", "instance-id", machineScope.GetInstanceID())
 		machineScope.SetReady()
 		return ctrl.Result{}, nil
 	default:
@@ -179,8 +180,8 @@ func (r *YandexMachineReconciler) reconcile(ctx context.Context, machineScope *s
 
 // reconcileDelete it is a part of reconciliation loop in case of yandexmachine delete.
 func (r *YandexMachineReconciler) reconcileDelete(ctx context.Context, machineScope *scope.MachineScope) (ctrl.Result, error) {
-	rlog := log.FromContext(ctx)
-	rlog.V(1).Info("reconciling YandexMachine delete")
+	logger := log.FromContext(ctx)
+	logger.V(1).Info("reconciling YandexMachine delete")
 
 	deleted, err := compute.New(machineScope).Delete(ctx)
 	if err != nil {
@@ -188,12 +189,12 @@ func (r *YandexMachineReconciler) reconcileDelete(ctx context.Context, machineSc
 	}
 
 	if deleted {
-		rlog.Info("YandexMachine instance is deleted", "instance-id", machineScope.GetInstanceID())
+		logger.Info("YandexMachine instance is deleted", "instance-id", machineScope.GetInstanceID())
 		controllerutil.RemoveFinalizer(machineScope.YandexMachine, infrav1.MachineFinalizer)
 		return ctrl.Result{}, nil
 	}
 
-	rlog.Info("YandexMachine instance is deleting", "instance-id", machineScope.GetInstanceID())
+	logger.Info("YandexMachine instance is deleting", "instance-id", machineScope.GetInstanceID())
 	return ctrl.Result{RequeueAfter: RequeueDuration}, nil
 }
 
@@ -235,13 +236,13 @@ func (r *YandexMachineReconciler) SetupWithManager(ctx context.Context, mgr ctrl
 // YandexClusterToYandexMachines is a handler.ToRequestsFunc to be used to enqeue requests for reconciliation
 // of YandexMachines.
 func (r *YandexMachineReconciler) YandexClusterToYandexMachines(ctx context.Context) handler.MapFunc {
-	rlog := ctrl.LoggerFrom(ctx)
+	logger := ctrl.LoggerFrom(ctx)
 	return func(mapCtx context.Context, o client.Object) []ctrl.Request {
 		result := []ctrl.Request{}
 
 		c, ok := o.(*infrav1.YandexCluster)
 		if !ok {
-			rlog.Error(errors.Errorf("expected a YandexCluster but got a %T", o), "failed to get YandexMachine for YandexCluster")
+			logger.Error(errors.Errorf("expected a YandexCluster but got a %T", o), "failed to get YandexMachine for YandexCluster")
 			return nil
 		}
 
@@ -250,14 +251,14 @@ func (r *YandexMachineReconciler) YandexClusterToYandexMachines(ctx context.Cont
 		case apierrors.IsNotFound(err) || cluster == nil:
 			return result
 		case err != nil:
-			rlog.Error(err, "failed to get owning cluster")
+			logger.Error(err, "failed to get owning cluster")
 			return result
 		}
 
 		labels := map[string]string{clusterv1.ClusterNameLabel: cluster.Name}
 		machineList := &clusterv1.MachineList{}
 		if err := r.List(mapCtx, machineList, client.InNamespace(c.Namespace), client.MatchingLabels(labels)); err != nil {
-			rlog.Error(err, "failed to list Machines")
+			logger.Error(err, "failed to list Machines")
 			return nil
 		}
 		for _, m := range machineList.Items {

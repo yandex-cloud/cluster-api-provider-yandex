@@ -18,6 +18,7 @@ package controllers
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/pkg/errors"
@@ -70,9 +71,10 @@ func (r *YandexMachineReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 			return ctrl.Result{}, nil
 		}
 
-		return ctrl.Result{}, err
+		return ctrl.Result{}, fmt.Errorf("error occurred while fetching YandexMachine resource: %w", err)
 	}
 
+	rlog.V(1).Info("machine found")
 	machine, err := util.GetOwnerMachine(ctx, r.Client, yandexMachine.ObjectMeta)
 	if err != nil {
 		return ctrl.Result{}, err
@@ -86,13 +88,12 @@ func (r *YandexMachineReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 	cluster, err := util.GetClusterFromMetadata(ctx, r.Client, machine.ObjectMeta)
 	if err != nil {
 		rlog.Info("machine is missing cluster label or cluster does not exist")
-
 		return ctrl.Result{}, nil
 	}
 
 	rlog = rlog.WithValues("cluster", cluster.Name)
 	if annotations.IsPaused(cluster, yandexMachine) {
-		rlog.Info("YandexMachine or linked cluster is marked as paused. Won't reconcile")
+		rlog.Info("YandexMachine or linked Cluster is marked as paused. Won't reconcile")
 		return ctrl.Result{}, nil
 	}
 
@@ -123,7 +124,7 @@ func (r *YandexMachineReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 		ClusterGetter: clusterScope,
 	})
 	if err != nil {
-		return ctrl.Result{}, errors.Errorf("failed to create scope: %+v", err)
+		return ctrl.Result{}, err
 	}
 
 	// always close the scope when exiting this function so we can persist any YandexMachine changes.
@@ -143,18 +144,21 @@ func (r *YandexMachineReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 // reconcile it is a part of reconciliation loop in case of yandexmachine update/create.
 func (r *YandexMachineReconciler) reconcile(ctx context.Context, machineScope *scope.MachineScope) (ctrl.Result, error) {
 	rlog := log.FromContext(ctx)
-	rlog.Info("reconciling YandexMachine")
+	rlog.V(1).Info("reconciling YandexMachine")
 
 	controllerutil.AddFinalizer(machineScope.YandexMachine, infrav1.MachineFinalizer)
 
 	if err := machineScope.PatchObject(); err != nil {
-		rlog.Error(err, "failed to add finalizer")
-		return ctrl.Result{}, err
+		return ctrl.Result{}, fmt.Errorf("failed to add finalizer: %w", err)
+	}
+
+	if machineScope.Machine.Spec.Bootstrap.DataSecretName == nil {
+		rlog.Info("bootstrap data is not ready yet: linked Machine's bootstrap.dataSecretName is nil. Skipping reconciliation")
+		return ctrl.Result{}, nil
 	}
 
 	if err := compute.New(machineScope).Reconcile(ctx); err != nil {
-		rlog.Error(err, "error reconciling instance resources")
-		return ctrl.Result{}, err
+		return ctrl.Result{}, fmt.Errorf("error reconciling instance resources: %w", err)
 	}
 
 	instanceState := *machineScope.GetInstanceStatus()
@@ -169,34 +173,28 @@ func (r *YandexMachineReconciler) reconcile(ctx context.Context, machineScope *s
 	default:
 		machineScope.SetFailureReason(capierrors.UpdateMachineError)
 		machineScope.SetFailureMessage(errors.Errorf("YandexMachine instance state %s is unexpected", instanceState))
-		return ctrl.Result{Requeue: true}, nil
+		return ctrl.Result{RequeueAfter: RequeueDuration}, nil
 	}
 }
 
 // reconcileDelete it is a part of reconciliation loop in case of yandexmachine delete.
 func (r *YandexMachineReconciler) reconcileDelete(ctx context.Context, machineScope *scope.MachineScope) (ctrl.Result, error) {
 	rlog := log.FromContext(ctx)
-	rlog.Info("reconciling delete YandexMachine")
+	rlog.V(1).Info("reconciling YandexMachine delete")
 
-	if err := compute.New(machineScope).Delete(ctx); err != nil {
-		rlog.Error(err, "error deleting instance resources")
-		return ctrl.Result{}, err
+	deleted, err := compute.New(machineScope).Delete(ctx)
+	if err != nil {
+		return ctrl.Result{}, fmt.Errorf("error deleting instance resources: %w", err)
 	}
 
-	instanceState := *machineScope.GetInstanceStatus()
-	switch instanceState {
-	case infrav1.InstanceStatusDeleting:
-		rlog.Info("YandexMachine instance is deleting", "instance-id", machineScope.GetInstanceID())
-		return ctrl.Result{RequeueAfter: RequeueDuration}, nil
-	case infrav1.InstanceStatusDeleted:
+	if deleted {
 		rlog.Info("YandexMachine instance is deleted", "instance-id", machineScope.GetInstanceID())
 		controllerutil.RemoveFinalizer(machineScope.YandexMachine, infrav1.MachineFinalizer)
 		return ctrl.Result{}, nil
-	default:
-		machineScope.SetFailureReason(capierrors.UpdateMachineError)
-		machineScope.SetFailureMessage(errors.Errorf("YandexMachine instance state %s is unexpected", instanceState))
-		return ctrl.Result{Requeue: true}, nil
 	}
+
+	rlog.Info("YandexMachine instance is deleting", "instance-id", machineScope.GetInstanceID())
+	return ctrl.Result{RequeueAfter: RequeueDuration}, nil
 }
 
 // SetupWithManager sets up the controller with the Manager.

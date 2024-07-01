@@ -13,12 +13,13 @@ import (
 // Reconciler is a generic interface used by components offering a type of service.
 type Reconciler interface {
 	Reconcile(ctx context.Context) error
-	Delete(ctx context.Context) error
+	Delete(ctx context.Context) (bool, error)
 }
 
 // ClusterGetter is an interface which can get cluster information.
 type ClusterGetter interface {
 	GetClient() yandex.Client
+	GetLBType() infrav1.LoadBalancerType
 }
 
 // ClusterSetter is an interface which can set cluster information.
@@ -41,13 +42,14 @@ type MachineGetter interface {
 	GetInstanceID() *string
 	GetInstanceStatus() infrav1.InstanceStatus
 	GetBootstrapData() (string, error)
-	GetInstanceReq() *computegrpc.CreateInstanceRequest
+	GetInstanceReq() (*computegrpc.CreateInstanceRequest, error)
 	GetAddresses() []corev1.NodeAddress
 }
 
 // MachineSetter is an interface which can set machine information.
 type MachineSetter interface {
 	SetReady()
+	SetNotReady()
 	SetProviderID()
 	SetAddresses(addressList []corev1.NodeAddress)
 	SetInstanceStatus(v infrav1.InstanceStatus)

@@ -18,6 +18,7 @@ package v1alpha1
 
 import (
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
@@ -76,11 +77,23 @@ type NetworkInterface struct {
 
 // Resources defines the YandexCloud VM resources, like cores, memory etc.
 type Resources struct {
-	// Cores is the number of cpu cores for YandexCloud VM.
-	Cores int16 `json:"cores"`
+	// Memory is an amount of RAM memory for YandexCloud VM
+	// Allows to specify k,M,G... or Ki,Mi,Gi... suffixes
+	// For more information see https://pkg.go.dev/k8s.io/apimachinery/pkg/api/resource#Quantity .
+	Memory resource.Quantity `json:"memory"`
 
-	// Memory is the number of RAM bytes for YandexCloud VM.
-	Memory int64 `json:"memory"`
+	// Cores is the number of cpu cores for YandexCloud VM.
+	Cores int64 `json:"cores"`
+
+	// CoreFraction is baseline level of CPU performance with the ability to burst performance above that baseline level.
+	// This field sets baseline performance for each core.
+	// For more information see https://yandex.cloud/en/docs/compute/concepts/performance-levels
+	// +optional
+	CoreFraction *int64 `json:"coreFraction,omitempty"`
+
+	// GPUs is the number of GPUs available for YandexCloud VM.
+	// +optional
+	GPUs *int64 `json:"gpus,omitempty"`
 }
 
 // Disk defines YandexCloud VM disk configuration
@@ -91,8 +104,10 @@ type Disk struct {
 	// +optional
 	Type *string `json:"type,omitempty"`
 
-	// Size is disk value in bytes.
-	Size int64 `json:"size"`
+	// Size is an disk size
+	// Allows to specify k,M,G... or Ki,Mi,Gi... suffixes
+	// For more information see https://pkg.go.dev/k8s.io/apimachinery/pkg/api/resource#Quantity .
+	Size resource.Quantity `json:"size"`
 
 	// ImageID is the identifier for OS image of YandexCloud VM.
 	ImageID string `json:"imageID"`
@@ -177,13 +192,13 @@ type YandexMachineList struct {
 }
 
 // GetConditions returns the list of conditions for an Yandex Machine API object.
-func (ycm *YandexMachine) GetConditions() clusterv1.Conditions {
-	return ycm.Status.Conditions
+func (ym *YandexMachine) GetConditions() clusterv1.Conditions {
+	return ym.Status.Conditions
 }
 
 // SetConditions will set the given conditions on an Yandex Machine API object.
-func (ycm *YandexMachine) SetConditions(conditions clusterv1.Conditions) {
-	ycm.Status.Conditions = conditions
+func (ym *YandexMachine) SetConditions(conditions clusterv1.Conditions) {
+	ym.Status.Conditions = conditions
 }
 
 func init() {

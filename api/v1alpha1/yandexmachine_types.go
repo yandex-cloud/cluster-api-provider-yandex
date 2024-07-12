@@ -70,9 +70,9 @@ type NetworkInterface struct {
 	// SubnetID is the identifier of subnetwork to use for this instance.
 	SubnetID string `json:"subnetID"`
 
-	// PublicIP is set to true if public IP for YandexCloud VM is needed.
+	// HasPublicIP is set to true if public IP for YandexCloud VM is needed.
 	// +optional
-	PublicIP *bool `json:"publicIP,omitempty"`
+	HasPublicIP *bool `json:"hasPublicIP,omitempty"`
 }
 
 // Resources defines the YandexCloud VM resources, like cores, memory etc.
@@ -98,11 +98,11 @@ type Resources struct {
 
 // Disk defines YandexCloud VM disk configuration
 type Disk struct {
-	// Type is the disk storage type for YandexCloud VM
+	// TypeID is the disk storage type for YandexCloud VM
 	// Possible values: network-ssd, network-hdd, network-ssd-nonreplicated, network-ssd-io-m3
 	// More information https://cloud.yandex.ru/ru/docs/compute/concepts/disk .
 	// +optional
-	Type *string `json:"type,omitempty"`
+	TypeID *string `json:"typeID,omitempty"`
 
 	// Size is an disk size
 	// Allows to specify k,M,G... or Ki,Mi,Gi... suffixes

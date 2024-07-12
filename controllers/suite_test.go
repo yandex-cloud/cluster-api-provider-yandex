@@ -20,12 +20,14 @@ import (
 	"context"
 	"path/filepath"
 	"testing"
+	"time"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
 	"github.com/yandex-cloud/cluster-api-provider-yandex/controllers"
 	"github.com/yandex-cloud/cluster-api-provider-yandex/internal/pkg/client/mock_client"
+	"github.com/yandex-cloud/cluster-api-provider-yandex/internal/pkg/options"
 	"go.uber.org/mock/gomock"
 	"golang.org/x/tools/go/packages"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -47,13 +49,14 @@ import (
 // http://onsi.github.io/ginkgo/ to learn more about Ginkgo.
 
 var (
-	cfg        *rest.Config
-	mockCLient *mock_client.MockClient
-	k8sClient  client.Client
-	testEnv    *envtest.Environment
-	ctx        context.Context
-	cancel     context.CancelFunc
-	scheme     = runtime.NewScheme()
+	cfg              *rest.Config
+	mockCLient       *mock_client.MockClient
+	k8sClient        client.Client
+	testEnv          *envtest.Environment
+	ctx              context.Context
+	cancel           context.CancelFunc
+	scheme           = runtime.NewScheme()
+	reconcileTimeout = 1 * time.Minute
 )
 
 func TestAPIs(t *testing.T) {
@@ -106,6 +109,9 @@ var _ = BeforeSuite(func() {
 		Client:       mgr.GetClient(),
 		Scheme:       mgr.GetScheme(),
 		YandexClient: mockCLient,
+		Config: options.Config{
+			ReconcileTimeout: reconcileTimeout,
+		},
 	}).SetupWithManager(ctx, mgr)
 	Expect(err).ToNot(HaveOccurred(), "unable to create YandexCluster controller")
 

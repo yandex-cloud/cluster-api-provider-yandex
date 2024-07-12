@@ -368,7 +368,7 @@ func (m *MachineScope) GetCreateInstanceRequest() (*yandex_compute.CreateInstanc
 			SubnetId:             networkInterface.SubnetID,
 			PrimaryV4AddressSpec: &yandex_compute.PrimaryAddressSpec{},
 		}
-		if networkInterface.PublicIP != nil && *networkInterface.PublicIP {
+		if networkInterface.HasPublicIP != nil && *networkInterface.HasPublicIP {
 			networkInterfaceSpec.PrimaryV4AddressSpec = &yandex_compute.PrimaryAddressSpec{
 				OneToOneNatSpec: &yandex_compute.OneToOneNatSpec{
 					IpVersion: yandex_compute.IpVersion_IPV4,
@@ -384,8 +384,8 @@ func (m *MachineScope) GetCreateInstanceRequest() (*yandex_compute.CreateInstanc
 	}
 
 	bootDiskTypeID := defaultDiskTypeID
-	if m.YandexMachine.Spec.BootDisk.Type != nil {
-		bootDiskTypeID = *m.YandexMachine.Spec.BootDisk.Type
+	if m.YandexMachine.Spec.BootDisk.TypeID != nil {
+		bootDiskTypeID = *m.YandexMachine.Spec.BootDisk.TypeID
 	}
 	bootDiskSize, ok := m.YandexMachine.Spec.BootDisk.Size.AsInt64()
 	if !ok {

@@ -43,14 +43,14 @@ func (m *MachineScope) getMachineLabels() map[string]string {
 		deploymentName = m.YandexMachine.Labels[clusterv1.MachineDeploymentNameLabel]
 	}
 
-	labels[yaAnalyticsClusterHashLabel] = getYaAnalyticsLabelValue(m.YandexMachine.Spec.FolderID, m.YandexMachine.Labels[clusterv1.ClusterNameLabel])
-	labels[yaAnalyticsMachineDeploymentLabel] = getYaAnalyticsLabelValue(m.YandexMachine.Spec.FolderID, m.YandexMachine.Labels[clusterv1.ClusterNameLabel], deploymentName)
+	labels[yaAnalyticsClusterHashLabel] = getYaAnalyticsLabelHashValue(m.YandexMachine.Spec.FolderID, m.YandexMachine.Labels[clusterv1.ClusterNameLabel])
+	labels[yaAnalyticsMachineDeploymentLabel] = getYaAnalyticsLabelHashValue(m.YandexMachine.Spec.FolderID, m.YandexMachine.Labels[clusterv1.ClusterNameLabel], deploymentName)
 
 	return labels
 }
 
-// getYaAnalyticsLabelValue gets md5 from concatenated string and truncate to 20 symbols
-func getYaAnalyticsLabelValue(parts ...string) string {
+// getYaAnalyticsLabelHashValue gets md5 from concatenated string and truncate to 20 symbols
+func getYaAnalyticsLabelHashValue(parts ...string) string {
 	valueLength := 20
 	hasher := md5.New()
 	hasher.Write([]byte(strings.Join(parts, "")))

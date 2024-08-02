@@ -14,7 +14,7 @@ const (
 	// yaAnalyticsClusterNameLabel representation of CAPI "cluster.x-k8s.io/cluster-name" label
 	yaAnalyticsClusterNameLabel string = "yandex.cloud/capy-cluster-name"
 	// yaAnalyticsFolderIdLabel Yandex Cloud folder Id
-	yaAnalyticsFolderIdLabel string = "yandex.cloud/folderID"
+	yaAnalyticsFolderIdLabel string = "yandex.cloud/folder-id"
 	// yaAnalyticsControlPlaneNameLabel representation of CAPI "cluster.x-k8s.io/control-plane-name" label. Absent for workers
 	yaAnalyticsControlPlaneNameLabel string = "yandex.cloud/capy-control-plane-name"
 	// yaAnalyticsMachineDeploymentNameLabel representation of CAPI "cluster.x-k8s.io/deployment-name" label. Absent for masters

@@ -400,10 +400,7 @@ func (m *MachineScope) GetCreateInstanceRequest() (*yandex_compute.CreateInstanc
 		Metadata: map[string]string{
 			"user-data": bootstrapData,
 		},
-		Labels: map[string]string{
-			"managed-by": "capy-controller-manager",
-			"purpose":    "capy-test",
-		},
+		Labels:        m.getMachineLabels(),
 		Hostname:      m.YandexMachine.GetName(),
 		ResourcesSpec: resourcesSpec,
 		BootDiskSpec: &yandex_compute.AttachedDiskSpec{

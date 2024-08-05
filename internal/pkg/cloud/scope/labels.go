@@ -7,10 +7,9 @@ import (
 	"strings"
 )
 
+// Labels mostly used in Yandex analytics to differentiate VMs created by CAPI
+// CAPY means "Cluster API Provider Yandex"
 const (
-	// Labels used in Yandex analytics to differentiate VMs created by CAPI
-	// CAPY means "Cluster API Provider Yandex"
-
 	// yaAnalyticsClusterNameLabel representation of CAPI "cluster.x-k8s.io/cluster-name" label
 	yaAnalyticsClusterNameLabel string = "yandex.cloud/capy-cluster-name"
 	// yaAnalyticsFolderIdLabel Yandex Cloud folder Id
@@ -23,13 +22,16 @@ const (
 	yaAnalyticsClusterHashLabel string = "yandex.cloud/capy-cluster-hash"
 	// yaAnalyticsMachineDeploymentLabel label value is the md5(folderId + clusterName + deploymentName) truncated to 20s
 	yaAnalyticsMachineDeploymentLabel string = "yandex.cloud/capy-cluster-machine-deployment-hash"
+	// managedByLabel label name identifies our controller as the VM owner
+	managedByLabel string = "yandex.cloud/managed-by"
+	// capyControllerManagerName name of a capy controller manager deployment
+	capyControllerManagerName string = "capy-controller-manager"
 )
 
 // getMachineLabels prepares labels for machine in current scope
 func (m *MachineScope) getMachineLabels() map[string]string {
 	labels := map[string]string{
-		"managed-by":                "capy-controller-manager",
-		"purpose":                   "capy-test",
+		managedByLabel:              capyControllerManagerName,
 		yaAnalyticsClusterNameLabel: m.YandexMachine.Labels[clusterv1.ClusterNameLabel],
 		yaAnalyticsFolderIdLabel:    m.YandexMachine.Spec.FolderID,
 	}

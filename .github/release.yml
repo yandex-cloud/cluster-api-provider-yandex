@@ -1,0 +1,29 @@
+changelog:
+  exclude:
+    labels:
+    - ignore-for-release
+    - no-changelog
+  categories:
+  - title: ":rotating_light: Breaking Changes"
+    labels:
+    - warning
+    - breaking
+  - title: ":tada: New Features / Improvements"
+    labels:
+    - seedling
+    - sparkles
+    - feat
+  - title: ":bug: Fixes"
+    labels:
+    - bug
+    - fix
+  - title: ":package: Dependency updates"
+    labels:
+    - deps
+  - title: ":memo: Documentation"
+    labels:
+    - book
+    - docs
+  - title: ":heavy_plus_sign: Other Changes"
+    labels:
+    - "*"

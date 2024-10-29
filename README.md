@@ -19,6 +19,13 @@ This repo is implementation of Cluster API [infrastructure provider](https://clu
 * Install kind
 * Install yc
 
+### Service Account
+To create and manage clusters, this infrastructure provider uses a service account to authenticate with YC’s APIs.
+
+Follow [these instructions](https://yandex.cloud/en/docs/iam/operations/sa/create) to create a new service account. Then [add](https://yandex.cloud/en/docs/iam/operations/sa/assign-role-for-sa#binding-role-resource) the following roles to the service account:
+- [compute.editor](https://yandex.cloud/en/docs/compute/security/#compute-editor) 
+- [alb.editor](https://yandex.cloud/en/docs/iam/roles-reference#alb-editor)
+
 ### Start kind or choose management cluster
 ```
 kind create cluster

@@ -89,14 +89,14 @@ func (c *YandexClient) LBAddTarget(ctx context.Context, req any, lbType infrav1.
 		if !ok {
 			return nil, fmt.Errorf("can't convert request to application loadbalancer AddTargetRequest")
 		}
-		return c.sdk.ApplicationLoadBalancer().TargetGroup().AddTargets(ctx, request)
+		return c.ALBAddTarget(ctx, request)
 
 	case infrav1.NetworkLoadBalancer:
 		request, ok := req.(*loadbalancer.AddTargetsRequest)
 		if !ok {
 			return nil, fmt.Errorf("can't convert request to network loadbalancer AddTargetRequest")
 		}
-		return c.sdk.LoadBalancer().TargetGroup().AddTargets(ctx, request)
+		return c.NLBAddTarget(ctx, request)
 	default:
 		return nil, fmt.Errorf("unknown loadbalancer type: %v", lbType)
 	}
@@ -110,14 +110,14 @@ func (c *YandexClient) LBRemoveTarget(ctx context.Context, req any, lbType infra
 		if !ok {
 			return nil, fmt.Errorf("can't convert request to application loadbalancer RemoveTargetRequest")
 		}
-		return c.sdk.ApplicationLoadBalancer().TargetGroup().RemoveTargets(ctx, request)
+		return c.ALBRemoveTarget(ctx, request)
 
 	case infrav1.NetworkLoadBalancer:
 		request, ok := req.(*loadbalancer.RemoveTargetsRequest)
 		if !ok {
 			return nil, fmt.Errorf("can't convert request to network loadbalancer RemoveTargetRequest")
 		}
-		return c.sdk.LoadBalancer().TargetGroup().RemoveTargets(ctx, request)
+		return c.NLBRemoveTarget(ctx, request)
 	default:
 		return nil, fmt.Errorf("unknown loadbalancer type: %v", lbType)
 	}
@@ -127,15 +127,9 @@ func (c *YandexClient) LBRemoveTarget(ctx context.Context, req any, lbType infra
 func (c *YandexClient) LBGetTargetGroup(ctx context.Context, targetGroupID string, lbType infrav1.LoadBalancerType) (any, error) {
 	switch lbType {
 	case infrav1.ApplicationLoadBalancer:
-		req := &apploadbalancer.GetTargetGroupRequest{
-			TargetGroupId: targetGroupID,
-		}
-		return c.sdk.ApplicationLoadBalancer().TargetGroup().Get(ctx, req)
+		return c.ALBGetTargetGroup(ctx, targetGroupID)
 	case infrav1.NetworkLoadBalancer:
-		req := &loadbalancer.GetTargetGroupRequest{
-			TargetGroupId: targetGroupID,
-		}
-		return c.sdk.LoadBalancer().TargetGroup().Get(ctx, req)
+		return c.NLBGetTargetGroup(ctx, targetGroupID)
 	default:
 		return nil, fmt.Errorf("unknown loadbalancer type: %v", lbType)
 	}

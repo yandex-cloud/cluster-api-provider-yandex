@@ -2,13 +2,13 @@ name: ci
 
 on:
   push:
-    branches: [main]
+    branches: [master]
     paths-ignore:
       - '*.md'
       - 'hack/**'
       - 'LICENSE'
   pull_request:
-    branches: [main]
+    branches: [master]
     types: [opened, edited, synchronize, reopened]
     paths-ignore:
       - '*.md'

@@ -1,4 +1,4 @@
-name: lint-test-build
+name: ci
 
 on:
   push:

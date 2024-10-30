@@ -40,7 +40,7 @@ import (
 	yandex "github.com/yandex-cloud/cluster-api-provider-yandex/internal/pkg/client"
 	"github.com/yandex-cloud/cluster-api-provider-yandex/internal/pkg/cloud/scope"
 	"github.com/yandex-cloud/cluster-api-provider-yandex/internal/pkg/cloud/services/compute"
-	"github.com/yandex-cloud/cluster-api-provider-yandex/internal/pkg/cloud/services/loadbalancer"
+	"github.com/yandex-cloud/cluster-api-provider-yandex/internal/pkg/cloud/services/loadbalancers"
 )
 
 const (
@@ -61,7 +61,7 @@ type YandexMachineReconciler struct {
 //+kubebuilder:rbac:groups=infrastructure.cluster.x-k8s.io,resources=yandexmachines/status,verbs=get;update;patch
 //+kubebuilder:rbac:groups=infrastructure.cluster.x-k8s.io,resources=yandexmachines/finalizers,verbs=update
 
-// reconcile brings YandexMachine into desired state.
+// Reconcile brings YandexMachine into desired state.
 func (r *YandexMachineReconciler) Reconcile(ctx context.Context, req ctrl.Request) (_ ctrl.Result, reterr error) {
 	logger := log.FromContext(ctx)
 

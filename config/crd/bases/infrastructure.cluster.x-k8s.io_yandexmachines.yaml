@@ -40,8 +40,7 @@ spec:
             description: YandexMachineSpec defines the desired state of YandexMachine.
             properties:
               bootDisk:
-                description: BootDisk is boot storage configuration for YandexCloud
-                  VM.
+                description: Disk is boot storage configuration for YandexCloud VM.
                 properties:
                   imageID:
                     description: ImageID is the identifier for OS image of YandexCloud
@@ -52,12 +51,13 @@ spec:
                     - type: integer
                     - type: string
                     description: |-
-                      Size is an disk size
+                      Size is disk value in bytes
                       Allows to specify k,M,G... or Ki,Mi,Gi... suffixes
                       For more information see https://pkg.go.dev/k8s.io/apimachinery/pkg/api/resource#Quantity .
                     pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
                     x-kubernetes-int-or-string: true
                   typeID:
+                    default: network-ssd
                     description: |-
                       TypeID is the disk storage type for YandexCloud VM
                       Possible values: network-ssd, network-hdd, network-ssd-nonreplicated, network-ssd-io-m3
@@ -67,9 +67,6 @@ spec:
                 - imageID
                 - size
                 type: object
-              folderID:
-                description: FolderID is the identifier of YandexCloud folder.
-                type: string
               networkInterfaces:
                 description: NetworkInterfaces is a network interfaces configurations
                   for YandexCloud VM
@@ -78,6 +75,7 @@ spec:
                     of YandexCloud VM.
                   properties:
                     hasPublicIP:
+                      default: false
                       description: HasPublicIP is set to true if public IP for YandexCloud
                         VM is needed.
                       type: boolean
@@ -90,6 +88,7 @@ spec:
                   type: object
                 type: array
               platformID:
+                default: standard-v3
                 description: |-
                   PlatformID is the identifier of YandexCloud current CPU model.
                   For example: standard-v1, standard-v2, standard-v3, highfreq-v3
@@ -101,15 +100,18 @@ spec:
                   cloud provider.
                 type: string
               resources:
-                description: Resources represents different types of YandexCloud VM
-                  instance resources
+                description: Resources contains computing resources of YandexCloud
+                  VM.
                 properties:
                   coreFraction:
+                    default: 100
                     description: |-
                       CoreFraction is baseline level of CPU performance with the ability to burst performance above that baseline level.
                       This field sets baseline performance for each core.
                       For more information see https://yandex.cloud/en/docs/compute/concepts/performance-levels
                     format: int64
+                    maximum: 100
+                    minimum: 0
                     type: integer
                   cores:
                     description: Cores is the number of cpu cores for YandexCloud
@@ -126,7 +128,7 @@ spec:
                     - type: integer
                     - type: string
                     description: |-
-                      Memory is an amount of RAM memory for YandexCloud VM
+                      Memory is the number of RAM bytes for YandexCloud VM
                       Allows to specify k,M,G... or Ki,Mi,Gi... suffixes
                       For more information see https://pkg.go.dev/k8s.io/apimachinery/pkg/api/resource#Quantity .
                     pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
@@ -135,18 +137,13 @@ spec:
                 - cores
                 - memory
                 type: object
-              targetGroupID:
-                description: |-
-                  TargetGroupID is the identifier of LoadBalancer TargetGroup.
-                  Only for ControlPlane.
-                type: string
               zoneID:
+                default: ru-central1-d
                 description: ZoneID is the identifier of YandexCloud availability
                   zone.
                 type: string
             required:
             - bootDisk
-            - folderID
             - networkInterfaces
             - resources
             type: object

@@ -4,9 +4,6 @@ import (
 	"context"
 
 	infrav1 "github.com/yandex-cloud/cluster-api-provider-yandex/api/v1alpha1"
-	computegrpc "github.com/yandex-cloud/go-genproto/yandex/cloud/compute/v1"
-	corev1 "k8s.io/api/core/v1"
-
 	yandex "github.com/yandex-cloud/cluster-api-provider-yandex/internal/pkg/client"
 )
 
@@ -16,10 +13,33 @@ type Reconciler interface {
 	Delete(ctx context.Context) (bool, error)
 }
 
+// LoadBalancerSetter is an interface which can add and remove client to/from load balancer target group.
+type LoadBalancerSetter interface {
+	AddTarget(ctx context.Context, addr, subnetID string) error
+	RemoveTarget(ctx context.Context, addr, subnetID string) error
+}
+
+// LoadBalancerGetter is an interface which can get load balancer information.
+type LoadBalancerGetter interface {
+	Describe(ctx context.Context) (infrav1.LoadBalancerStatus, error)
+	Status(ctx context.Context) (infrav1.LBStatus, error)
+}
+
+// LoadBalancer is an interface which provides ALB/NLB management.
+type LoadBalancer interface {
+	LoadBalancerGetter
+	LoadBalancerSetter
+}
+
 // ClusterGetter is an interface which can get cluster information.
 type ClusterGetter interface {
+	GetNetworkID() string
+	GetAdditionalLabels() infrav1.Labels
 	GetClient() yandex.Client
 	GetLBType() infrav1.LoadBalancerType
+	GetLBSpec() infrav1.LoadBalancerSpec
+	GetLBName() string
+	GetFolderID() string
 }
 
 // ClusterSetter is an interface which can set cluster information.
@@ -31,32 +51,4 @@ type ClusterSetter interface {
 type Cluster interface {
 	ClusterGetter
 	ClusterSetter
-}
-
-// MachineGetter is an interface which can get machine information.
-type MachineGetter interface {
-	GetClient() yandex.Client
-	Name() string
-	ControlPlaneTargetGroupID() string
-	IsControlPlane() bool
-	GetInstanceID() *string
-	GetInstanceStatus() infrav1.InstanceStatus
-	GetBootstrapData() (string, error)
-	GetInstanceReq() (*computegrpc.CreateInstanceRequest, error)
-	GetAddresses() []corev1.NodeAddress
-}
-
-// MachineSetter is an interface which can set machine information.
-type MachineSetter interface {
-	SetReady()
-	SetNotReady()
-	SetProviderID()
-	SetAddresses(addressList []corev1.NodeAddress)
-	SetInstanceStatus(v infrav1.InstanceStatus)
-}
-
-// Machine is an interface which can get and set machine information.
-type Machine interface {
-	MachineGetter
-	MachineSetter
 }

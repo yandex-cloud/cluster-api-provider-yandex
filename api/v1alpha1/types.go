@@ -39,8 +39,31 @@ const (
 	ConditionStatusProvisioning clusterv1.ConditionType = "PROVISIONING"
 	// ConditionStatusRunning is the string representing an instance in a running state.
 	ConditionStatusRunning = "RUNNING"
+	// ConditionStatusReady is the string representing an instance in a ready state.
+	ConditionStatusReady = "READY"
 	// ConditionStatusError is the string representing an instance in a error state.
 	ConditionStatusError = "ERROR"
 	// ConditionStatusNotfound used when the instance couldn't be retrieved.
 	ConditionStatusNotfound = "NOTFOUND"
+)
+
+// LBStatus describes the status of a YandexCloud load balancer (ALB or NLB).
+type LBStatus string
+
+var (
+	// LoadBalancerCreating is the string representing an instance in a provisioning state.
+	LoadBalancerCreating = LBStatus("CREATING")
+	// LoadBalancerDeleting is the string representing an instance in a deleting state.
+	LoadBalancerDeleting = LBStatus("DELETING")
+	// LoadBalancerRunning is the string representing an instance in a running state.
+	LoadBalancerRunning = LBStatus("RUNNING")
+	// LoadBalancerOther is the string representing an instance in a other state.
+	LoadBalancerOther = LBStatus("OTHER")
+)
+
+const (
+	// LoadBalancerReadyCondition reports on whether a control plane load balancer was successfully reconciled.
+	LoadBalancerReadyCondition clusterv1.ConditionType = "LoadBalancerReady"
+	// LoadBalancerFailedReason used when an error occurs during load balancer reconciliation.
+	LoadBalancerFailedReason = "LoadBalancerFailed"
 )

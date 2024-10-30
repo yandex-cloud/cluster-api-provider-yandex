@@ -36,7 +36,7 @@ func (s *Service) Reconcile(ctx context.Context) error {
 		}
 
 		s.scope.SetProviderID(newInstanceID)
-		logger.Info("instance creating")
+		logger.Info("compute instance creating")
 	}
 
 	// Find compute instance and set status.
@@ -50,7 +50,7 @@ func (s *Service) Reconcile(ctx context.Context) error {
 			infrav1.ConditionStatusRunning,
 			infrav1.ConditionStatusNotfound,
 			err.Error())
-		return fmt.Errorf("unable to find instance %v: %w", s.scope.GetInstanceID(), err)
+		return fmt.Errorf("unable to find compute instance %v: %w", s.scope.GetInstanceID(), err)
 	}
 
 	instanceState := infrav1.InstanceStatus(vm.GetStatus().String())
@@ -68,33 +68,29 @@ func (s *Service) Reconcile(ctx context.Context) error {
 		s.scope.SetAddresses(instanceAddress)
 
 		if s.scope.IsControlPlane() {
-			logger.V(1).Info("registering control plane instance")
-			if err := s.registerControlPlane(ctx, client); err != nil {
-				return fmt.Errorf("failed to register control plane: %w", err)
+			logger.V(1).Info("registering controlplane compute instance in load balancer")
+			if err := s.registerControlPlane(ctx); err != nil {
+				return fmt.Errorf("failed to register controlplane compute instance in load balancer: %w", err)
 			}
 		}
 		conditions.MarkTrue(s.scope.YandexMachine, infrav1.ConditionStatusRunning)
 	}
 
-	s.scope.SetInstanceStatus(
-		infrav1.InstanceStatus(
-			vm.GetStatus().String(),
-		),
-	)
-
+	s.scope.SetInstanceStatus(infrav1.InstanceStatus(vm.GetStatus().String()))
 	return nil
 }
 
 // Delete deletes a compute instance.
 func (s *Service) Delete(ctx context.Context) (bool, error) {
 	logger := log.FromContext(ctx)
-	logger.Info("deleting instance")
+	logger.Info("deleting YandexMachine compute instance")
 	client := s.scope.GetClient()
 
 	// TODO: bootstap secret deletion handling.
 	instanceID := s.scope.GetInstanceID()
 	// instance never been created, mark deleted and return.
 	if instanceID == "" {
+		logger.Info("YandexMachine does not have providerID, instance deleted")
 		return instanceDeleted, nil
 	}
 
@@ -102,11 +98,14 @@ func (s *Service) Delete(ctx context.Context) (bool, error) {
 	vm, err := client.ComputeGet(ctx, s.scope.GetInstanceID())
 	if err != nil {
 		// instance already deleted or deleted by someone else.
-		logger.Info("unable to find instance")
+		// TODO: need to manage the deletion more carefully. If this is a common api error,
+		// we probably have to restart YandexMachine deletion reconcile .
+		logger.Info("unable to find compute instance", "id", s.scope.GetInstanceID())
 		if s.scope.IsControlPlane() {
-			logger.V(1).Info("deregistering control plane instance")
-			if err := s.deregisterControlPlane(ctx, client); err != nil {
-				return instanceNotDeleted, fmt.Errorf("failed to deregister control plane: %w", err)
+			logger.V(1).Info("deregistering controlplane compute instance from load balancer")
+			// Try to deregister deleted VM to prevent zombie targets in load balancer.
+			if err := s.deregisterControlPlane(ctx); err != nil {
+				return instanceNotDeleted, fmt.Errorf("failed to deregister controlplane compute instance from load balancer: %w", err)
 			}
 		}
 		return instanceDeleted, nil
@@ -122,9 +121,9 @@ func (s *Service) Delete(ctx context.Context) (bool, error) {
 	}
 
 	if s.scope.IsControlPlane() {
-		logger.V(1).Info("deregistering control plane instance")
-		if err := s.deregisterControlPlane(ctx, client); err != nil {
-			return instanceNotDeleted, fmt.Errorf("failed to deregister control plane: %w", err)
+		logger.V(1).Info("deregistering controlplane compute instance form load balancer")
+		if err := s.deregisterControlPlane(ctx); err != nil {
+			return instanceNotDeleted, fmt.Errorf("failed to deregister controlplane compute instance from load balancer: %w", err)
 		}
 	}
 
@@ -133,7 +132,7 @@ func (s *Service) Delete(ctx context.Context) (bool, error) {
 
 // createComputeInstance creates a virtual machine from YandexCompute specification.
 func (s *Service) createComputeInstance(ctx context.Context, client yandex.Client) (string, error) {
-	request, err := s.scope.GetCreateInstanceRequest()
+	request, err := s.scope.GetInstanceReq()
 	if err != nil {
 		return "", err
 	}
@@ -159,56 +158,29 @@ func (s *Service) getInstanceAddress(instance *yandex_compute.Instance) ([]corev
 	}}, nil
 }
 
-// registerControlPlane adds control plane instance address to kube api lb target group.
-func (s *Service) registerControlPlane(ctx context.Context, client yandex.Client) error {
-	targetGroupID := *s.scope.ControlPlaneTargetGroupID()
-	lbType := s.scope.ClusterGetter.GetLBType()
-
-	request, err := s.scope.GetLBAddTargetsRequest()
-	if err != nil {
-		return err
+// registerControlPlane adds controlplane instance address to controlplane loadbalancer target group.
+func (s *Service) registerControlPlane(ctx context.Context) error {
+	addresses := s.scope.GetAddresses()
+	if len(addresses) == 0 {
+		return fmt.Errorf("no addresses registered for YandexMachne %s", s.scope.Name())
 	}
 
-	tg, err := client.LBGetTargetGroup(ctx, targetGroupID, lbType)
-	if err != nil {
-		return err
-	}
-
-	registered, err := s.scope.IsControlPlaneRegistered(tg)
-	if err != nil {
-		return err
-	}
-	if registered {
-		return nil
-	}
-
-	_, err = client.LBAddTarget(ctx, request, lbType)
-	return err
+	address := addresses[0].Address
+	subnetID := s.scope.YandexMachine.Spec.NetworkInterfaces[0].SubnetID
+	return s.scope.LoadBalancer.AddTarget(ctx, address, subnetID)
 }
 
-// deregisterControlPlane removes control plane instance address from kube api lb target group.
-func (s *Service) deregisterControlPlane(ctx context.Context, client yandex.Client) error {
-	targetGroupID := *s.scope.ControlPlaneTargetGroupID()
-	lbType := s.scope.ClusterGetter.GetLBType()
-
-	request, err := s.scope.GetLBRemoveTargetsRequest()
-	if err != nil {
-		return err
-	}
-
-	tg, err := client.LBGetTargetGroup(ctx, targetGroupID, lbType)
-	if err != nil {
-		return err
-	}
-
-	registered, err := s.scope.IsControlPlaneRegistered(tg)
-	if err != nil {
-		return err
-	}
-	if !registered {
+// deregisterControlPlane removes controlplane instance address from controlplane loadbalancer target group.
+func (s *Service) deregisterControlPlane(ctx context.Context) error {
+	logger := log.FromContext(ctx)
+	addresses := s.scope.GetAddresses()
+	// if instance have no addresses, skip deregistration.
+	if len(addresses) == 0 {
+		logger.V(1).Info("no addresses registered for YandexMachne", "name", s.scope.Name())
 		return nil
 	}
 
-	_, err = client.LBRemoveTarget(ctx, request, lbType)
-	return err
+	address := addresses[0].Address
+	subnetID := s.scope.YandexMachine.Spec.NetworkInterfaces[0].SubnetID
+	return s.scope.LoadBalancer.RemoveTarget(ctx, address, subnetID)
 }

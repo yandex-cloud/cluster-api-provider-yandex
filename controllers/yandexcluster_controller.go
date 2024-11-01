@@ -128,20 +128,18 @@ func (r *YandexClusterReconciler) reconcile(ctx context.Context, clusterScope *s
 		return ctrl.Result{}, fmt.Errorf("error reconciling load balancer: %w", err)
 	}
 
-	status, err := lb.Status(ctx)
+	active, err := lb.IsActive(ctx)
 	if err != nil {
 		conditions.MarkFalse(clusterScope.YandexCluster, infrav1.LoadBalancerReadyCondition,
 			"load balancer reconcile error", clusterv1.ConditionSeverityError, err.Error())
 		return ctrl.Result{}, fmt.Errorf("error reconciling load balancer: %w", err)
 	}
-	if status != infrav1.LoadBalancerRunning {
-		logger.Info("load balancer instance not ready, requeueing")
-		conditions.MarkFalse(clusterScope.YandexCluster, infrav1.LoadBalancerReadyCondition,
-			"load balancer not ready", clusterv1.ConditionSeverityInfo, string(status))
+	if !active {
+		logger.Info("load balancer instance not active, requeueing")
 		return ctrl.Result{RequeueAfter: RequeueDuration}, nil
 	}
 
-	// When load balancer is ready, fetch his status from YandexCloud, then set API address
+	// When load balancer is active, fetch his status from YandexCloud, then set API address
 	// and YandexCluster status.
 	state, err := lb.Describe(ctx)
 	if err != nil {

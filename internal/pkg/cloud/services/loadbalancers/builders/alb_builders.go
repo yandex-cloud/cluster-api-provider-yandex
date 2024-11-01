@@ -291,8 +291,8 @@ func (a *ALBBuilder) Build() (*alb.CreateLoadBalancerRequest, error) {
 	// Sinle zone allocation only in alpha version.
 	request.SetAllocationPolicy(&alb.AllocationPolicy{
 		Locations: []*alb.Location{{
-			ZoneId:   a.lbs.Listener.Subnets[0].ZoneID,
-			SubnetId: a.lbs.Listener.Subnets[0].ID,
+			ZoneId:   a.lbs.Listener.Subnet.ZoneID,
+			SubnetId: a.lbs.Listener.Subnet.ID,
 		}},
 	})
 
@@ -302,7 +302,7 @@ func (a *ALBBuilder) Build() (*alb.CreateLoadBalancerRequest, error) {
 
 	request.SetListenerSpecs(a.createListenerSpec(
 		a.lbs.Listener.Port,
-		a.lbs.Listener.Subnets[0].ID,
+		a.lbs.Listener.Subnet.ID,
 		a.backendGroupID))
 	request.SetLogOptions(&alb.LogOptions{Disable: true})
 

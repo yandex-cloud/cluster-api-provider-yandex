@@ -83,7 +83,7 @@ spec:
                             - type: integer
                             - type: string
                             description: |-
-                              Size is disk value in bytes
+                              Size is ths disk size in bytes
                               Allows to specify k,M,G... or Ki,Mi,Gi... suffixes
                               For more information see https://pkg.go.dev/k8s.io/apimachinery/pkg/api/resource#Quantity .
                             pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
@@ -160,7 +160,7 @@ spec:
                             - type: integer
                             - type: string
                             description: |-
-                              Memory is the number of RAM bytes for YandexCloud VM
+                              Memory is the RAM memory size for YandexCloud VM in bytes
                               Allows to specify k,M,G... or Ki,Mi,Gi... suffixes
                               For more information see https://pkg.go.dev/k8s.io/apimachinery/pkg/api/resource#Quantity .
                             pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$

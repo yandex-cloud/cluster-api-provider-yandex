@@ -72,7 +72,7 @@ type NetworkInterface struct {
 
 // Resources defines the YandexCloud VM resources, like cores, memory etc.
 type Resources struct {
-	// Memory is the number of RAM bytes for YandexCloud VM
+	// Memory is the RAM memory size for YandexCloud VM in bytes
 	// Allows to specify k,M,G... or Ki,Mi,Gi... suffixes
 	// For more information see https://pkg.go.dev/k8s.io/apimachinery/pkg/api/resource#Quantity .
 	Memory resource.Quantity `json:"memory"`
@@ -103,7 +103,7 @@ type Disk struct {
 	// +kubebuilder:default=network-ssd
 	TypeID *string `json:"typeID,omitempty"`
 
-	// Size is disk value in bytes
+	// Size is ths disk size in bytes
 	// Allows to specify k,M,G... or Ki,Mi,Gi... suffixes
 	// For more information see https://pkg.go.dev/k8s.io/apimachinery/pkg/api/resource#Quantity .
 	Size resource.Quantity `json:"size"`

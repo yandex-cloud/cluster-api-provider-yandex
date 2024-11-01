@@ -120,12 +120,10 @@ type ListenerSpec struct {
 	// +optional
 	Internal bool `json:"internal,omitempty"`
 
-	// Subnets configuration with subnet list. Load balancer listeners will be located in these subnets.
-	Subnets Subnets `json:"subnets,omitempty"`
+	// Load balancer listener will be located in this subnet.
+	// More information https://yandex.cloud/ru/docs/vpc/concepts/network#subnet.
+	Subnet SubnetSpec `json:"subnets,omitempty"`
 }
-
-// Subnets is a slice of Subnet.
-type Subnets []SubnetSpec
 
 // SubnetSpec configures an Yandex Subnet.
 type SubnetSpec struct {

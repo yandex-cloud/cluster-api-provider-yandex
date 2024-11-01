@@ -38,10 +38,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/envtest"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
-	"sigs.k8s.io/controller-runtime/pkg/webhook"
 
 	infrav1 "github.com/yandex-cloud/cluster-api-provider-yandex/api/v1alpha1"
-
 	"github.com/yandex-cloud/cluster-api-provider-yandex/internal/pkg/client/mock_client"
 	//+kubebuilder:scaffold:imports
 )
@@ -97,14 +95,8 @@ var _ = BeforeSuite(func() {
 	Expect(err).NotTo(HaveOccurred())
 	Expect(k8sClient).NotTo(BeNil())
 
-	webhookInstallOptions := &testEnv.WebhookInstallOptions
 	mgr, err := ctrl.NewManager(cfg, ctrl.Options{
 		Scheme: scheme,
-		WebhookServer: webhook.NewServer(webhook.Options{
-			Host:    webhookInstallOptions.LocalServingHost,
-			Port:    webhookInstallOptions.LocalServingPort,
-			CertDir: webhookInstallOptions.LocalServingCertDir,
-		}),
 	})
 	Expect(err).ToNot(HaveOccurred(), "Failed to create manager")
 

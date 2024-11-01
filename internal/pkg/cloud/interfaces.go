@@ -22,7 +22,7 @@ type LoadBalancerSetter interface {
 // LoadBalancerGetter is an interface which can get load balancer information.
 type LoadBalancerGetter interface {
 	Describe(ctx context.Context) (infrav1.LoadBalancerStatus, error)
-	Status(ctx context.Context) (infrav1.LBStatus, error)
+	IsActive(ctx context.Context) (bool, error)
 }
 
 // LoadBalancer is an interface which provides ALB/NLB management.

@@ -47,20 +47,6 @@ const (
 	ConditionStatusNotfound = "NOTFOUND"
 )
 
-// LBStatus describes the status of a YandexCloud load balancer (ALB or NLB).
-type LBStatus string
-
-var (
-	// LoadBalancerCreating is the string representing an instance in a provisioning state.
-	LoadBalancerCreating = LBStatus("CREATING")
-	// LoadBalancerDeleting is the string representing an instance in a deleting state.
-	LoadBalancerDeleting = LBStatus("DELETING")
-	// LoadBalancerRunning is the string representing an instance in a running state.
-	LoadBalancerRunning = LBStatus("RUNNING")
-	// LoadBalancerOther is the string representing an instance in a other state.
-	LoadBalancerOther = LBStatus("OTHER")
-)
-
 const (
 	// LoadBalancerReadyCondition reports on whether a control plane load balancer was successfully reconciled.
 	LoadBalancerReadyCondition clusterv1.ConditionType = "LoadBalancerReady"

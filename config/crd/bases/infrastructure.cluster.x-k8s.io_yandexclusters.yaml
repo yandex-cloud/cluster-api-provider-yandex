@@ -121,21 +121,19 @@ spec:
                         minimum: 1
                         type: integer
                       subnets:
-                        description: Subnets configuration with subnet list. Load
-                          balancer listeners will be located in these subnets.
-                        items:
-                          description: SubnetSpec configures an Yandex Subnet.
-                          properties:
-                            id:
-                              description: ID defines a unique identificator of the
-                                subnet to be used.
-                              type: string
-                            zoneID:
-                              description: ZoneID is the identifier of YandexCloud
-                                availability zone where the subnet resides.
-                              type: string
-                          type: object
-                        type: array
+                        description: |-
+                          Load balancer listener will be located in this subnet.
+                          More information https://yandex.cloud/ru/docs/vpc/concepts/network#subnet.
+                        properties:
+                          id:
+                            description: ID defines a unique identificator of the
+                              subnet to be used.
+                            type: string
+                          zoneID:
+                            description: ZoneID is the identifier of YandexCloud availability
+                              zone where the subnet resides.
+                            type: string
+                        type: object
                     type: object
                   name:
                     description: |-

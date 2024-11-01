@@ -46,19 +46,6 @@ func (s *Service) Describe(ctx context.Context) (infrav1.LoadBalancerStatus, err
 	}
 }
 
-// Status returns the load balancer status.
-func (s *Service) Status(ctx context.Context) (infrav1.LBStatus, error) {
-	lbType := s.scope.GetLBType()
-	switch lbType {
-	case infrav1.LoadBalancerTypeALB:
-		return s.getStatusALB(ctx)
-	case infrav1.LoadBalancerTypeNLB:
-		return s.getStatusNLB(ctx)
-	default:
-		return infrav1.LoadBalancerOther, fmt.Errorf("unknown loadbalancer type: %v", lbType)
-	}
-}
-
 // AddTarget adds address to the load balancer target group.
 func (s *Service) AddTarget(ctx context.Context, addr, subnetID string) error {
 	lbType := s.scope.GetLBType()
@@ -82,5 +69,18 @@ func (s *Service) RemoveTarget(ctx context.Context, addr, subnetID string) error
 		return s.removeTargetNLB(ctx, addr, subnetID)
 	default:
 		return fmt.Errorf("unknown loadbalancer type: %v", lbType)
+	}
+}
+
+// IsActive returns true when the load balancer instance have an ACTIVE status.
+func (s *Service) IsActive(ctx context.Context) (bool, error) {
+	lbType := s.scope.GetLBType()
+	switch lbType {
+	case infrav1.LoadBalancerTypeALB:
+		return s.isActiveALB(ctx)
+	case infrav1.LoadBalancerTypeNLB:
+		return s.isActiveNLB(ctx)
+	default:
+		return false, fmt.Errorf("unknown loadbalancer type: %v", lbType)
 	}
 }

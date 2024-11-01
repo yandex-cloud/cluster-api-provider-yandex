@@ -328,21 +328,16 @@ func (s *Service) isAddressRegisteredALB(addr, subnetID string, tg *alb.TargetGr
 	return false
 }
 
-// getStatusALB returns the application load balancer instance status.
-func (s *Service) getStatusALB(ctx context.Context) (infrav1.LBStatus, error) {
+// isActiveALB returns true when the application load balancer instance have an ACTIVE status.
+func (s *Service) isActiveALB(ctx context.Context) (bool, error) {
 	lb, err := s.scope.GetClient().ALBGetByName(ctx, s.scope.GetFolderID(), s.scope.GetLBName())
 	if err != nil {
-		return infrav1.LoadBalancerOther, err
+		return false, err
 	}
 
-	switch lb.GetStatus() {
-	case alb.LoadBalancer_ACTIVE:
-		return infrav1.LoadBalancerRunning, nil
-	case alb.LoadBalancer_CREATING:
-		return infrav1.LoadBalancerCreating, nil
-	case alb.LoadBalancer_DELETING:
-		return infrav1.LoadBalancerDeleting, nil
-	default:
-		return infrav1.LoadBalancerOther, nil
+	if lb.GetStatus() == alb.LoadBalancer_ACTIVE {
+		return true, nil
 	}
+
+	return false, nil
 }

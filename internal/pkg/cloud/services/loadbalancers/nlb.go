@@ -33,12 +33,6 @@ func (s *Service) describeNLB(ctx context.Context) (infrav1.LoadBalancerStatus, 
 	return infrav1.LoadBalancerStatus{}, fmt.Errorf("NLB support will be added in future releases, use ALB instead")
 }
 
-// getStatusNLB returns the network load balancer instance status.
-func (s *Service) getStatusNLB(ctx context.Context) (infrav1.LBStatus, error) {
-	_ = ctx
-	return infrav1.LoadBalancerOther, fmt.Errorf("NLB support will be added in future releases, use ALB instead")
-}
-
 // addTargetNLB adds the IP address to the network load balancer's target group.
 func (s *Service) addTargetNLB(ctx context.Context, addr, subnetID string) error {
 	//nolint:dogsled // placeholder
@@ -51,4 +45,11 @@ func (s *Service) removeTargetNLB(ctx context.Context, addr, subnetID string) er
 	//nolint:dogsled // placeholder
 	_, _, _ = ctx, addr, subnetID
 	return fmt.Errorf("NLB support will be added in future releases, use ALB instead")
+}
+
+// isActiveNLB returns true when the network load balancer instance have an ACTIVE status.
+func (s *Service) isActiveNLB(ctx context.Context) (bool, error) {
+	//nolint:dogsled // placeholder
+	_ = ctx
+	return false, fmt.Errorf("NLB support will be added in future releases, use ALB instead")
 }

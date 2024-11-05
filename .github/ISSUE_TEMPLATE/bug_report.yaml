@@ -1,0 +1,29 @@
+name: 🐛 Bug report
+description: Tell us about a problem you are experiencing
+title: "Bug: "
+labels: [🐛 bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to fill out this bug report!
+  - type: textarea
+    attributes:
+      label: Describe the bug
+      description: A clear and concise description of what the bug is.
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Steps to reproduce
+      description: Describe how to reproduce the behavior.
+    validations:
+      required: true
+  - type: markdown
+    attributes:
+      value: |
+        Please include the following
+
+        1. cluster-api-provider-yandex version: 
+        2. kubernetes version: (use `kubectl version`): 
+        3. OS (e.g. from `/etc/os-release`): 

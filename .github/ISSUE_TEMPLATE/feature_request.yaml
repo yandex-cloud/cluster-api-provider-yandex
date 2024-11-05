@@ -1,0 +1,23 @@
+name: 🚀 Feature request
+description: Suggest an idea for this project 💡
+title: "Feature: "
+labels: [💡 feature]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to fill out this feature request!
+  - type: textarea
+    attributes:
+      label: Suggested solution
+      description: A clear and concise description of what you want to happen.
+    validations:
+      required: true
+  - type: markdown
+    attributes:
+      value: |
+        Please include the following
+
+        1. cluster-api-provider-yandex version: 
+        2. kubernetes version: (use `kubectl version`): 
+        3. OS (e.g. from `/etc/os-release`): 

@@ -1,0 +1,65 @@
+name: ci
+
+on:
+  push:
+    branches: [master]
+    paths-ignore:
+      - '*.md'
+      - 'hack/**'
+      - 'LICENSE'
+  pull_request:
+    branches: [master]
+    types: [opened, edited, synchronize, reopened]
+    paths-ignore:
+      - '*.md'
+      - 'hack/**'
+      - 'LICENSE'
+
+jobs:
+  golangci:
+    name: lint
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: false
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v4
+        with:
+          args: --timeout=5m
+          # Require: The version of golangci-lint to use.
+          version: v1.55.2
+
+  test:
+    needs: golangci
+    runs-on: ubuntu-22.04
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version-file: go.mod
+
+    - name: Run test make target
+      run: make test
+
+  build:
+    needs: [golangci, test]
+    runs-on: ubuntu-22.04
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version-file: go.mod
+
+    - name: Build provider
+      run: make build

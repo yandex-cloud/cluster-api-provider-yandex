@@ -60,9 +60,9 @@ type YandexClusterSpec struct {
 	// LoadBalancer is a loadbalancer configuration for the kubernetes cluster API.
 	LoadBalancer LoadBalancerSpec `json:"loadBalancer"`
 
-	// AdditionalLabels is an optional set of labels to add to Yandex resources managed by the CAPY provider.
+	// Labels is an optional set of labels to add to Yandex resources managed by the CAPY provider.
 	// +optional
-	AdditionalLabels Labels `json:"additionalLabels,omitempty"`
+	Labels Labels `json:"labels,omitempty"`
 }
 
 // LoadBalancerSpec is a loadbalancer configuration for the kubernetes cluster API.

@@ -34,7 +34,7 @@ type LoadBalancer interface {
 // ClusterGetter is an interface which can get cluster information.
 type ClusterGetter interface {
 	GetNetworkID() string
-	GetAdditionalLabels() infrav1.Labels
+	GetLabels() infrav1.Labels
 	GetClient() yandex.Client
 	GetLBType() infrav1.LoadBalancerType
 	GetLBSpec() infrav1.LoadBalancerSpec

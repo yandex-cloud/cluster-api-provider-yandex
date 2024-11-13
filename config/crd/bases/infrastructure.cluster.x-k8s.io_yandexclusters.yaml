@@ -52,12 +52,6 @@ spec:
           spec:
             description: YandexClusterSpec defines the desired state of YandexCluster.
             properties:
-              additionalLabels:
-                additionalProperties:
-                  type: string
-                description: AdditionalLabels is an optional set of labels to add
-                  to Yandex resources managed by the CAPY provider.
-                type: object
               controlPlaneEndpoint:
                 description: ControlPlaneEndpoint represents the endpoint used to
                   communicate with the control plane.
@@ -77,6 +71,12 @@ spec:
                 description: FolderID is the identifier of YandexCloud folder to deploy
                   the cluster to.
                 type: string
+              labels:
+                additionalProperties:
+                  type: string
+                description: Labels is an optional set of labels to add to Yandex
+                  resources managed by the CAPY provider.
+                type: object
               loadBalancer:
                 description: LoadBalancer is a loadbalancer configuration for the
                   kubernetes cluster API.

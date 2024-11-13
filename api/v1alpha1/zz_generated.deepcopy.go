@@ -278,8 +278,8 @@ func (in *YandexClusterSpec) DeepCopyInto(out *YandexClusterSpec) {
 	out.NetworkSpec = in.NetworkSpec
 	out.ControlPlaneEndpoint = in.ControlPlaneEndpoint
 	in.LoadBalancer.DeepCopyInto(&out.LoadBalancer)
-	if in.AdditionalLabels != nil {
-		in, out := &in.AdditionalLabels, &out.AdditionalLabels
+	if in.Labels != nil {
+		in, out := &in.Labels, &out.Labels
 		*out = make(Labels, len(*in))
 		for key, val := range *in {
 			(*out)[key] = val

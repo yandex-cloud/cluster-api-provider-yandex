@@ -108,9 +108,9 @@ func (c *ClusterScope) GetNetworkID() string {
 	return c.YandexCluster.Spec.NetworkSpec.ID
 }
 
-// GetAdditionalLabels gets the set of cluster tags.
-func (c *ClusterScope) GetAdditionalLabels() infrav1.Labels {
-	return c.YandexCluster.Spec.AdditionalLabels
+// GetLabels gets the set of cluster tags.
+func (c *ClusterScope) GetLabels() infrav1.Labels {
+	return c.YandexCluster.Spec.Labels
 }
 
 // ControlPlaneEndpoint gets the cluster API endpoit.

@@ -140,7 +140,7 @@ func (s *Service) reconcileALBTargetGroup(ctx context.Context) (string, error) {
 		WithCluster(s.scope.Name()).
 		WithLBName(s.scope.GetLBName()).
 		WithFolder(s.scope.GetFolderID()).
-		WithLabels(s.scope.GetAdditionalLabels())
+		WithLabels(s.scope.GetLabels())
 
 	tg, err := client.ALBTargetGroupGetByName(ctx, s.scope.GetFolderID(), builder.GetName())
 	if err != nil {
@@ -179,7 +179,7 @@ func (s *Service) reconcileALBBackendGroup(ctx context.Context, targetGroupID st
 		WithLBName(s.scope.GetLBName()).
 		WithFolder(s.scope.GetFolderID()).
 		WithTargetGroupID(targetGroupID).
-		WithLabels(s.scope.GetAdditionalLabels())
+		WithLabels(s.scope.GetLabels())
 
 	bg, err := client.ALBBackendGroupGetByName(ctx, s.scope.GetFolderID(), builder.GetName())
 	if err != nil {
@@ -217,7 +217,7 @@ func (s *Service) reconcileALB(ctx context.Context, backendGroupID string) error
 		WithFolder(s.scope.GetFolderID()).
 		WithBackendGroupID(backendGroupID).
 		WithNetworkID(s.scope.GetNetworkID()).
-		WithLabels(s.scope.GetAdditionalLabels())
+		WithLabels(s.scope.GetLabels())
 
 	lb, err := client.ALBGetByName(ctx, s.scope.GetFolderID(), builder.GetName())
 	if err != nil {

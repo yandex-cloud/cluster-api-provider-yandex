@@ -7,6 +7,7 @@ import (
 	"github.com/yandex-cloud/go-genproto/yandex/cloud/compute/v1"
 	nlb "github.com/yandex-cloud/go-genproto/yandex/cloud/loadbalancer/v1"
 	"github.com/yandex-cloud/go-genproto/yandex/cloud/operation"
+	kube "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // Compute defines interface for YandexCloud Compute operations.
@@ -48,4 +49,15 @@ type Client interface {
 	ApplicationLoadBalancer
 	NetworkLoadBalancer
 	Close(ctx context.Context) error
+}
+
+//go:generate mockgen -build_flags=--mod=mod -package mock_client -destination=mock_client/builder.go . Builder
+
+// Builder defines interfaces for YandexClientBuilder
+type Builder interface {
+	// GetClientFromSecret returns YandexClient with secretName and keyName
+	GetClientFromSecret(ctx context.Context, cl kube.Client, secretName string, keyName string) (Client, error)
+
+	// GetDefaultClient returns YandexClient with defaultKey
+	GetDefaultClient() (Client, error)
 }

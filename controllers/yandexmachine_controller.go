@@ -51,8 +51,8 @@ const (
 // YandexMachineReconciler reconciles a YandexMachine object.
 type YandexMachineReconciler struct {
 	client.Client
-	Scheme       *runtime.Scheme
-	YandexClient yandex.Client
+	Scheme              *runtime.Scheme
+	YandexClientBuilder yandex.Builder
 }
 
 //+kubebuilder:rbac:groups="",resources=secrets;,verbs=get;list;watch
@@ -108,11 +108,41 @@ func (r *YandexMachineReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 		return ctrl.Result{}, nil
 	}
 
+	// Get Yandex Client for cluster
+	var yandexClient yandex.Client
+
+	if yandexCluster.Spec.IdentityRef != nil {
+		yc, err := r.YandexClientBuilder.GetClientFromSecret(ctx, r.Client, yandexCluster.Spec.IdentityRef.Name, yandexCluster.Spec.IdentityRef.Namespace)
+		if err != nil {
+			logger.Info("Unable to get YandexClient from secret, will try to fallback to default client", "error", err)
+		} else {
+			yandexClient = yc
+		}
+	}
+
+	// Fall back to default client if no identity is provided
+	if yandexClient == nil {
+		logger.Info("No identityRef provided, using default client")
+
+		yc, err := r.YandexClientBuilder.GetDefaultClient()
+		if err != nil {
+			return ctrl.Result{}, err
+		}
+		yandexClient = yc
+	}
+
+	// close the client when we're done
+	defer func() {
+		if err := yandexClient.Close(ctx); err != nil && reterr == nil {
+			reterr = err
+		}
+	}()
+
 	clusterScope, err := scope.NewClusterScope(ctx, scope.ClusterScopeParams{
 		Client:        r.Client,
 		Cluster:       cluster,
 		YandexCluster: yandexCluster,
-		YandexClient:  r.YandexClient,
+		YandexClient:  yandexClient,
 	})
 	if err != nil {
 		return ctrl.Result{}, err

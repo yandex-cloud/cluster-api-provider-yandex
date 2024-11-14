@@ -50,6 +50,8 @@ var (
 	cfg      options.Config
 )
 
+const defaultNamespace = "capy-system"
+
 //nolint:gochecknoinits // kubebuilder scaffold
 func init() {
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
@@ -108,29 +110,27 @@ func main() {
 		os.Exit(1)
 	}
 
-	yandexClient, err := yandex.GetClient(ctx, cfg.YandexCloudSAKey)
-	if err != nil {
-		setupLog.Error(err, "unable to init Yandex SDK client")
-		os.Exit(1)
+	controllerNamespace := os.Getenv("NAMESPACE")
+	if controllerNamespace == "" {
+		setupLog.Info("NAMESPACE env is not set, using default ", "namespace", defaultNamespace)
+		controllerNamespace = defaultNamespace
 	}
 
-	defer func() {
-		yandexClient.Close(ctx)
-	}()
+	yandexClientBuilder := yandex.NewYandexClientBuilder(cfg.YandexCloudSAKey, controllerNamespace)
 
 	if err = (&controllers.YandexClusterReconciler{
-		Client:       mgr.GetClient(),
-		Scheme:       mgr.GetScheme(),
-		YandexClient: yandexClient,
-		Config:       cfg,
+		Client:              mgr.GetClient(),
+		Scheme:              mgr.GetScheme(),
+		YandexClientBuilder: yandexClientBuilder,
+		Config:              cfg,
 	}).SetupWithManager(ctx, mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "YandexCluster")
 		os.Exit(1)
 	}
 	if err = (&controllers.YandexMachineReconciler{
-		Client:       mgr.GetClient(),
-		Scheme:       mgr.GetScheme(),
-		YandexClient: yandexClient,
+		Client:              mgr.GetClient(),
+		Scheme:              mgr.GetScheme(),
+		YandexClientBuilder: yandexClientBuilder,
 	}).SetupWithManager(ctx, mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "YandexMachine")
 		os.Exit(1)

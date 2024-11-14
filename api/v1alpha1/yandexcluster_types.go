@@ -71,6 +71,10 @@ type YandexClusterSpec struct {
 	// Labels is an optional set of labels to add to Yandex resources managed by the CAPY provider.
 	// +optional
 	Labels Labels `json:"labels,omitempty"`
+
+	// IdentityRef is a reference to a YandexIdentity resource.
+	// +optional
+	IdentityRef *IdentityReference `json:"identityRef"`
 }
 
 // LoadBalancerSpec is a loadbalancer configuration for the kubernetes cluster API.
@@ -166,6 +170,15 @@ type NetworkSpec struct {
 	// ID is the unique identificator of the cloud network to be used.
 	// More information https://yandex.cloud/ru/docs/vpc/concepts/network.
 	ID string `json:"id,omitempty"`
+}
+
+// IdentityReference is a reference to a YandexIdentity resource.
+type IdentityReference struct {
+	// Name is the name of the YandexIdentity resource.
+	Name string `json:"name"`
+
+	// Namespace is the namespace of the YandexIdentity resource.
+	Namespace string `json:"namespace"`
 }
 
 // YandexClusterStatus defines the observed state of YandexCluster.

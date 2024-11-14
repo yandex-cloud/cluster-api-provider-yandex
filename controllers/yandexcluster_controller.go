@@ -18,9 +18,15 @@ package controllers
 
 import (
 	"context"
+	"fmt"
 
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
+	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
+	"sigs.k8s.io/cluster-api/util"
+	"sigs.k8s.io/cluster-api/util/annotations"
+	"sigs.k8s.io/cluster-api/util/conditions"
+	"sigs.k8s.io/cluster-api/util/predicates"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
@@ -28,16 +34,11 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/source"
 
-	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
-	"sigs.k8s.io/cluster-api/util"
-	"sigs.k8s.io/cluster-api/util/annotations"
-	"sigs.k8s.io/cluster-api/util/predicates"
-
 	infrav1 "github.com/yandex-cloud/cluster-api-provider-yandex/api/v1alpha1"
-	"github.com/yandex-cloud/cluster-api-provider-yandex/internal/pkg/cloud/scope"
-	"github.com/yandex-cloud/cluster-api-provider-yandex/internal/pkg/options"
-
 	yandex "github.com/yandex-cloud/cluster-api-provider-yandex/internal/pkg/client"
+	"github.com/yandex-cloud/cluster-api-provider-yandex/internal/pkg/cloud/scope"
+	"github.com/yandex-cloud/cluster-api-provider-yandex/internal/pkg/cloud/services/loadbalancers"
+	"github.com/yandex-cloud/cluster-api-provider-yandex/internal/pkg/options"
 )
 
 // YandexClusterReconciler reconciles a YandexCluster object.
@@ -55,13 +56,6 @@ type YandexClusterReconciler struct {
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
-// TODO(user): Modify the Reconcile function to compare the state specified by
-// the YandexCluster object against the actual cluster state, and then
-// perform operations to make the cluster state reflect the state specified by
-// the user.
-//
-// For more details, check Reconcile and its Result here:
-// - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.13.1/pkg/reconcile
 func (r *YandexClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (_ ctrl.Result, rerr error) {
 	logger := log.FromContext(ctx)
 
@@ -76,7 +70,7 @@ func (r *YandexClusterReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 		return ctrl.Result{}, err
 	}
 
-	// Get the Cluster
+	// Get the Cluster.
 	cluster, err := util.GetOwnerCluster(ctx, r.Client, yandexCluster.ObjectMeta)
 	if err != nil {
 		return ctrl.Result{}, err
@@ -101,14 +95,14 @@ func (r *YandexClusterReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 		return ctrl.Result{}, err
 	}
 
-	// Always close the scope when exiting this function so we can persist any YandexMachine changes.
+	// Always close the scope when exiting this function so we can persist any YandexCluster changes.
 	defer func() {
 		if err := clusterScope.Close(ctx); err != nil && rerr == nil {
 			rerr = err
 		}
 	}()
 
-	// Handle deleted clusters
+	// Handle deleted clusters.
 	if !yandexCluster.DeletionTimestamp.IsZero() {
 		return r.reconcileDelete(ctx, clusterScope)
 	}
@@ -116,6 +110,7 @@ func (r *YandexClusterReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 	return r.reconcile(ctx, clusterScope)
 }
 
+// reconcile it is a part of reconciliation loop in case of YandexCluster update/create.
 func (r *YandexClusterReconciler) reconcile(ctx context.Context, clusterScope *scope.ClusterScope) (ctrl.Result, error) {
 	logger := log.FromContext(ctx)
 
@@ -125,15 +120,76 @@ func (r *YandexClusterReconciler) reconcile(ctx context.Context, clusterScope *s
 		return ctrl.Result{Requeue: true}, nil
 	}
 
-	clusterScope.SetReady()
+	// Get loadbalancer service and reconcile load balancer.
+	lb := loadbalancer.New(clusterScope)
+	if err := lb.Reconcile(ctx); err != nil {
+		conditions.MarkFalse(clusterScope.YandexCluster, infrav1.LoadBalancerReadyCondition,
+			"load balancer reconcile error", clusterv1.ConditionSeverityError, err.Error())
+		return ctrl.Result{}, fmt.Errorf("error reconciling load balancer: %w", err)
+	}
 
+	active, err := lb.IsActive(ctx)
+	if err != nil {
+		conditions.MarkFalse(clusterScope.YandexCluster, infrav1.LoadBalancerReadyCondition,
+			"load balancer reconcile error", clusterv1.ConditionSeverityError, err.Error())
+		return ctrl.Result{}, fmt.Errorf("error reconciling load balancer: %w", err)
+	}
+	if !active {
+		logger.Info("load balancer instance not active, requeueing")
+		return ctrl.Result{RequeueAfter: RequeueDuration}, nil
+	}
+
+	// When load balancer is active, fetch his status from YandexCloud, then set API address
+	// and YandexCluster status.
+	state, err := lb.Describe(ctx)
+	if err != nil {
+		conditions.MarkFalse(clusterScope.YandexCluster, infrav1.LoadBalancerReadyCondition,
+			"load balancer reconcile error", clusterv1.ConditionSeverityError, err.Error())
+		return ctrl.Result{}, fmt.Errorf("error reconciling load balancer: %w", err)
+	}
+
+	clusterScope.YandexCluster.Spec.ControlPlaneEndpoint = clusterv1.APIEndpoint{
+		Host: state.ListenerAddress,
+		Port: state.ListenerPort,
+	}
+	clusterScope.YandexCluster.Status.LoadBalancer = infrav1.LoadBalancerStatus{
+		ListenerAddress: state.ListenerAddress,
+		ListenerPort:    state.ListenerPort,
+	}
+
+	conditions.MarkTrue(clusterScope.YandexCluster, infrav1.LoadBalancerReadyCondition)
+	clusterScope.SetReady()
 	return ctrl.Result{}, nil
 }
 
-func (r *YandexClusterReconciler) reconcileDelete(_ context.Context, clusterScope *scope.ClusterScope) (ctrl.Result, error) {
-	controllerutil.RemoveFinalizer(clusterScope.YandexCluster, infrav1.ClusterFinalizer)
+// reconcileDelete it is a part of reconciliation loop in case of YandexCluster delete.
+func (r *YandexClusterReconciler) reconcileDelete(ctx context.Context, clusterScope *scope.ClusterScope) (ctrl.Result, error) {
+	logger := log.FromContext(ctx)
 
-	return ctrl.Result{}, nil
+	if !controllerutil.ContainsFinalizer(clusterScope.YandexCluster, infrav1.ClusterFinalizer) {
+		logger.Info("no finalizer found on YandexCluster, skipping deletion reconciliation")
+		return ctrl.Result{}, nil
+	}
+
+	// Delete load balancer and remove finalizer from YandexCluster.
+	lb := loadbalancer.New(clusterScope)
+	deleted, err := lb.Delete(ctx)
+	if err != nil {
+		conditions.MarkFalse(clusterScope.YandexCluster, infrav1.LoadBalancerReadyCondition,
+			clusterv1.DeletionFailedReason, clusterv1.ConditionSeverityWarning, "")
+		return ctrl.Result{}, fmt.Errorf("error deleting load balancer  %w", err)
+	}
+
+	if deleted {
+		logger.Info("load balancer has been deleted")
+		controllerutil.RemoveFinalizer(clusterScope.YandexCluster, infrav1.ClusterFinalizer)
+		return ctrl.Result{}, nil
+	}
+
+	logger.V(1).Info("load balancer is being deleted, requeueing")
+	conditions.MarkFalse(clusterScope.YandexCluster, infrav1.LoadBalancerReadyCondition,
+		clusterv1.DeletingReason, clusterv1.ConditionSeverityInfo, "")
+	return ctrl.Result{RequeueAfter: RequeueDuration}, nil
 }
 
 // SetupWithManager sets up the controller with the Manager.

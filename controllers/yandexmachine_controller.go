@@ -24,6 +24,8 @@ import (
 	"github.com/pkg/errors"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
+	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
+	capierrors "sigs.k8s.io/cluster-api/errors"
 	"sigs.k8s.io/cluster-api/util"
 	"sigs.k8s.io/cluster-api/util/annotations"
 	"sigs.k8s.io/cluster-api/util/predicates"
@@ -37,13 +39,12 @@ import (
 	infrav1 "github.com/yandex-cloud/cluster-api-provider-yandex/api/v1alpha1"
 	yandex "github.com/yandex-cloud/cluster-api-provider-yandex/internal/pkg/client"
 	"github.com/yandex-cloud/cluster-api-provider-yandex/internal/pkg/cloud/scope"
-	compute "github.com/yandex-cloud/cluster-api-provider-yandex/internal/pkg/cloud/services/compute"
-	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
-	capierrors "sigs.k8s.io/cluster-api/errors"
+	"github.com/yandex-cloud/cluster-api-provider-yandex/internal/pkg/cloud/services/compute"
+	"github.com/yandex-cloud/cluster-api-provider-yandex/internal/pkg/cloud/services/loadbalancers"
 )
 
 const (
-	// RequeueDuration is pause before reconcile will be repeated
+	// RequeueDuration is pause before reconcile will be repeated.
 	RequeueDuration time.Duration = 10 * time.Second
 )
 
@@ -88,13 +89,12 @@ func (r *YandexMachineReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 	cluster, err := util.GetClusterFromMetadata(ctx, r.Client, machine.ObjectMeta)
 	if err != nil {
 		logger.Info("machine is missing cluster label or cluster does not exist")
-
 		return ctrl.Result{}, nil
 	}
 
 	logger = logger.WithValues("cluster", cluster.Name)
 	if annotations.IsPaused(cluster, yandexMachine) {
-		logger.Info("YandexMachine or linked cluster is marked as paused. Won't reconcile")
+		logger.Info("YandexMachine or linked Cluster is marked as paused. Won't reconcile")
 		return ctrl.Result{}, nil
 	}
 
@@ -122,6 +122,7 @@ func (r *YandexMachineReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 		Client:        r.Client,
 		Machine:       machine,
 		YandexMachine: yandexMachine,
+		LoadBalancer:  loadbalancer.New(clusterScope),
 		ClusterGetter: clusterScope,
 	})
 	if err != nil {
@@ -145,7 +146,7 @@ func (r *YandexMachineReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 // reconcile it is a part of reconciliation loop in case of yandexmachine update/create.
 func (r *YandexMachineReconciler) reconcile(ctx context.Context, machineScope *scope.MachineScope) (ctrl.Result, error) {
 	logger := log.FromContext(ctx)
-	logger.Info("reconciling YandexMachine")
+	logger.V(1).Info("reconciling YandexMachine")
 
 	controllerutil.AddFinalizer(machineScope.YandexMachine, infrav1.MachineFinalizer)
 

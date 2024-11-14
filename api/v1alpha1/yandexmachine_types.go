@@ -18,9 +18,9 @@ package v1alpha1
 
 import (
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
+	"k8s.io/apimachinery/pkg/api/resource"
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
 	"sigs.k8s.io/cluster-api/errors"
 )
@@ -36,11 +36,9 @@ type YandexMachineSpec struct {
 	// ProviderID is the unique identifier as specified by the cloud provider.
 	ProviderID *string `json:"providerID,omitempty"`
 
-	// FolderID is the identifier of YandexCloud folder.
-	FolderID string `json:"folderID"`
-
 	// ZoneID is the identifier of YandexCloud availability zone.
 	// +optional
+	// +kubebuilder:default=ru-central1-d
 	ZoneID *string `json:"zoneID,omitempty"`
 
 	// PlatformID is the identifier of YandexCloud current CPU model.
@@ -48,17 +46,13 @@ type YandexMachineSpec struct {
 	// With GPU: gpu-standard-v1, gpu-standard-v2, gpu-standard-v3, standard-v3-t4
 	// More information https://cloud.yandex.ru/ru/docs/compute/concepts/vm-platforms .
 	// +optional
+	// +kubebuilder:default=standard-v3
 	PlatformID *string `json:"platformID,omitempty"`
 
-	// TargetGroupID is the identifier of LoadBalancer TargetGroup.
-	// Only for ControlPlane.
-	// +optional
-	TargetGroupID *string `json:"targetGroupID,omitempty"`
+	// Disk is boot storage configuration for YandexCloud VM.
+	BootDisk *Disk `json:"bootDisk"`
 
-	// BootDisk is boot storage configuration for YandexCloud VM.
-	BootDisk Disk `json:"bootDisk"`
-
-	// Resources represents different types of YandexCloud VM instance resources
+	// Resources contains computing resources of YandexCloud VM.
 	Resources Resources `json:"resources"`
 
 	// NetworkInterfaces is a network interfaces configurations for YandexCloud VM
@@ -72,12 +66,13 @@ type NetworkInterface struct {
 
 	// HasPublicIP is set to true if public IP for YandexCloud VM is needed.
 	// +optional
+	// +kubebuilder:default=false
 	HasPublicIP *bool `json:"hasPublicIP,omitempty"`
 }
 
 // Resources defines the YandexCloud VM resources, like cores, memory etc.
 type Resources struct {
-	// Memory is an amount of RAM memory for YandexCloud VM
+	// Memory is the RAM memory size for YandexCloud VM in bytes
 	// Allows to specify k,M,G... or Ki,Mi,Gi... suffixes
 	// For more information see https://pkg.go.dev/k8s.io/apimachinery/pkg/api/resource#Quantity .
 	Memory resource.Quantity `json:"memory"`
@@ -89,6 +84,9 @@ type Resources struct {
 	// This field sets baseline performance for each core.
 	// For more information see https://yandex.cloud/en/docs/compute/concepts/performance-levels
 	// +optional
+	// +kubebuilder:validation:Minimum=0
+	// +kubebuilder:validation:Maximum=100
+	// +kubebuilder:default=100
 	CoreFraction *int64 `json:"coreFraction,omitempty"`
 
 	// GPUs is the number of GPUs available for YandexCloud VM.
@@ -96,15 +94,16 @@ type Resources struct {
 	GPUs *int64 `json:"gpus,omitempty"`
 }
 
-// Disk defines YandexCloud VM disk configuration
+// Disk defines YandexCloud VM disk configuration.
 type Disk struct {
 	// TypeID is the disk storage type for YandexCloud VM
 	// Possible values: network-ssd, network-hdd, network-ssd-nonreplicated, network-ssd-io-m3
 	// More information https://cloud.yandex.ru/ru/docs/compute/concepts/disk .
 	// +optional
+	// +kubebuilder:default=network-ssd
 	TypeID *string `json:"typeID,omitempty"`
 
-	// Size is an disk size
+	// Size is ths disk size in bytes
 	// Allows to specify k,M,G... or Ki,Mi,Gi... suffixes
 	// For more information see https://pkg.go.dev/k8s.io/apimachinery/pkg/api/resource#Quantity .
 	Size resource.Quantity `json:"size"`

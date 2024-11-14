@@ -39,8 +39,17 @@ const (
 	ConditionStatusProvisioning clusterv1.ConditionType = "PROVISIONING"
 	// ConditionStatusRunning is the string representing an instance in a running state.
 	ConditionStatusRunning = "RUNNING"
+	// ConditionStatusReady is the string representing an instance in a ready state.
+	ConditionStatusReady = "READY"
 	// ConditionStatusError is the string representing an instance in a error state.
 	ConditionStatusError = "ERROR"
 	// ConditionStatusNotfound used when the instance couldn't be retrieved.
 	ConditionStatusNotfound = "NOTFOUND"
+)
+
+const (
+	// LoadBalancerReadyCondition reports on whether a control plane load balancer was successfully reconciled.
+	LoadBalancerReadyCondition clusterv1.ConditionType = "LoadBalancerReady"
+	// LoadBalancerFailedReason used when an error occurs during load balancer reconciliation.
+	LoadBalancerFailedReason = "LoadBalancerFailed"
 )

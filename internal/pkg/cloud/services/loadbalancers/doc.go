@@ -1,2 +1,2 @@
-// Package loadbalancers has all services and interface to work with the YandexCloud loadbalancer API.
-package loadbalancers
+// Package loadbalancer have all services and interface to work with the YandexCloud loadbalancer API.
+package loadbalancer

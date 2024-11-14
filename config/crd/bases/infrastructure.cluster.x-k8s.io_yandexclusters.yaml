@@ -14,7 +14,20 @@ spec:
     singular: yandexcluster
   scope: Namespaced
   versions:
-  - name: v1alpha1
+  - additionalPrinterColumns:
+    - description: Cluster to which this YandexCluster belongs
+      jsonPath: .metadata.labels.cluster\.x-k8s\.io/cluster-name
+      name: Cluster
+      type: string
+    - description: Cluster infrastructure is ready for YandexCloud instances
+      jsonPath: .status.ready
+      name: Ready
+      type: string
+    - description: API Endpoint
+      jsonPath: .spec.controlPlaneEndpoint
+      name: Endpoint
+      type: string
+    name: v1alpha1
     schema:
       openAPIV3Schema:
         description: YandexCluster is the Schema for the yandexclusters API.
@@ -54,25 +67,184 @@ spec:
                 - host
                 - port
                 type: object
+              folderID:
+                description: FolderID is the identifier of YandexCloud folder to deploy
+                  the cluster to.
+                type: string
+              labels:
+                additionalProperties:
+                  type: string
+                description: Labels is an optional set of labels to add to Yandex
+                  resources managed by the CAPY provider.
+                type: object
               loadBalancer:
                 description: LoadBalancer is a loadbalancer configuration for the
-                  kubernetes cluster api.
+                  kubernetes cluster API.
                 properties:
+                  backendPort:
+                    default: 8443
+                    description: Load balancer backend port. Acceptable values are
+                      1 to 65535, inclusive.
+                    format: int32
+                    maximum: 65535
+                    minimum: 1
+                    type: integer
+                  healthcheck:
+                    default: {}
+                    description: HealtcheckSpec configures load balancer healthchecks.
+                    properties:
+                      healthcheckIntervalSec:
+                        default: 3
+                        type: integer
+                      healthcheckThreshold:
+                        default: 3
+                        type: integer
+                      healthcheckTimeoutSec:
+                        default: 1
+                        type: integer
+                    type: object
+                  listener:
+                    description: ListenerSpec is an optional listener configuration
+                      for the load balancer.
+                    properties:
+                      internal:
+                        default: true
+                        description: If Internal value is true, then a private IP
+                          will be used for the listener address.
+                        type: boolean
+                      port:
+                        default: 8443
+                        description: load balncer listener port. Acceptable values
+                          are 1 to 65535, inclusive.
+                        format: int32
+                        maximum: 65535
+                        minimum: 1
+                        type: integer
+                      subnets:
+                        description: |-
+                          Load balancer listener will be located in this subnet.
+                          More information https://yandex.cloud/ru/docs/vpc/concepts/network#subnet.
+                        properties:
+                          id:
+                            description: ID defines a unique identificator of the
+                              subnet to be used.
+                            type: string
+                          zoneID:
+                            description: ZoneID is the identifier of YandexCloud availability
+                              zone where the subnet resides.
+                            type: string
+                        type: object
+                    type: object
+                  name:
+                    description: |-
+                      Name sets the name of the ALB load balancer. The name must be unique within your set of
+                      load balancers for the folder, must have a minimum 3 and maximum of 63 characters,
+                      must contain only alphanumeric characters or hyphens, and cannot begin or end with a hyphen.
+                      Once set, the value cannot be changed.
+                    maxLength: 63
+                    minLength: 3
+                    pattern: ([a-z]([-a-z0-9]{0,61}[a-z0-9])?)?
+                    type: string
+                  securityGroups:
+                    description: |-
+                      SecurityGroups sets the security groups ID used by the load balancer.
+                      If SecurityGroups not provided, new security group will be created for the load balancer.
+                      More information https://yandex.cloud/ru/docs/vpc/concepts/security-groups.
+                    items:
+                      type: string
+                    type: array
                   type:
+                    default: ALB
                     description: |-
                       Type is a type of a loadbalancer, possible values are: NLB and ALB.
-                      More details about loadbalancer type in YandexCloud docs:
-                      NLB https://yandex.cloud/ru/services/network-load-balancer .
-                      ALB https://yandex.cloud/ru/services/application-load-balancer .
+                      If Type not provided, loadbalancer type will be set to the ALB.
+                    enum:
+                    - ALB
+                    - NLB
+                    type: string
+                type: object
+              network:
+                description: NetworkSpec encapsulates all things related to Yandex
+                  network.
+                properties:
+                  id:
+                    description: |-
+                      ID is the unique identificator of the cloud network to be used.
+                      More information https://yandex.cloud/ru/docs/vpc/concepts/network.
                     type: string
                 type: object
             required:
-            - controlPlaneEndpoint
+            - folderID
+            - loadBalancer
             type: object
           status:
             description: YandexClusterStatus defines the observed state of YandexCluster.
             properties:
+              conditions:
+                description: Conditions provide observations of the operational state
+                  of a Cluster API resource.
+                items:
+                  description: Condition defines an observation of a Cluster API resource
+                    operational state.
+                  properties:
+                    lastTransitionTime:
+                      description: |-
+                        Last time the condition transitioned from one status to another.
+                        This should be when the underlying condition changed. If that is not known, then using the time when
+                        the API field changed is acceptable.
+                      format: date-time
+                      type: string
+                    message:
+                      description: |-
+                        A human readable message indicating details about the transition.
+                        This field may be empty.
+                      type: string
+                    reason:
+                      description: |-
+                        The reason for the condition's last transition in CamelCase.
+                        The specific API may choose whether or not this field is considered a guaranteed API.
+                        This field may not be empty.
+                      type: string
+                    severity:
+                      description: |-
+                        Severity provides an explicit classification of Reason code, so the users or machines can immediately
+                        understand the current situation and act accordingly.
+                        The Severity field MUST be set only when Status=False.
+                      type: string
+                    status:
+                      description: Status of the condition, one of True, False, Unknown.
+                      type: string
+                    type:
+                      description: |-
+                        Type of condition in CamelCase or in foo.example.com/CamelCase.
+                        Many .condition.type values are consistent across resources like Available, but because arbitrary conditions
+                        can be useful (see .node.status.conditions), the ability to deconflict is important.
+                      type: string
+                  required:
+                  - lastTransitionTime
+                  - status
+                  - type
+                  type: object
+                type: array
+              loadBalancerStatus:
+                description: LoadBalancerStatus encapsulates load balancer resources.
+                properties:
+                  listenerAddress:
+                    description: |-
+                      ListenerAddress is the IPV4 l address assigned to the load balancer listener,
+                      created for the API Server.
+                    type: string
+                  listenerPort:
+                    description: ListenerPort is the port assigned to the load balancer
+                      listener, created for the API Server.
+                    format: int32
+                    type: integer
+                  name:
+                    description: The name of the load balancer.
+                    type: string
+                type: object
               ready:
+                default: false
                 description: Ready is true when the provider resource is ready.
                 type: boolean
             required:

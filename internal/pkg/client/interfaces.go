@@ -3,28 +3,49 @@ package client
 import (
 	"context"
 
-	infrav1 "github.com/yandex-cloud/cluster-api-provider-yandex/api/v1alpha1"
+	alb "github.com/yandex-cloud/go-genproto/yandex/cloud/apploadbalancer/v1"
 	"github.com/yandex-cloud/go-genproto/yandex/cloud/compute/v1"
+	nlb "github.com/yandex-cloud/go-genproto/yandex/cloud/loadbalancer/v1"
 	"github.com/yandex-cloud/go-genproto/yandex/cloud/operation"
 )
 
-// Compute defines interfaces for YandexCloud Compute operations
+// Compute defines interface for YandexCloud Compute operations.
 type Compute interface {
 	ComputeGet(ctx context.Context, id string) (*compute.Instance, error)
 	ComputeCreate(ctx context.Context, req *compute.CreateInstanceRequest) (string, error)
 	ComputeDelete(ctx context.Context, id string) error
 }
 
-// LoadBalancer defines interfaces for YandexCloud LoadBalancer operations
-type LoadBalancer interface {
-	LBAddTarget(ctx context.Context, req any, lbType infrav1.LoadBalancerType) (*operation.Operation, error)
-	LBRemoveTarget(ctx context.Context, req any, lbType infrav1.LoadBalancerType) (*operation.Operation, error)
-	LBGetTargetGroup(ctx context.Context, targetGroupID string, lbType infrav1.LoadBalancerType) (any, error)
+// ApplicationLoadBalancer defines interface for YandexCloud ALB operations.
+type ApplicationLoadBalancer interface {
+	ALBAddTarget(ctx context.Context, req *alb.AddTargetsRequest) (*operation.Operation, error)
+	ALBGetTargetGroup(ctx context.Context, targetGroupID string) (*alb.TargetGroup, error)
+	ALBRemoveTarget(ctx context.Context, req *alb.RemoveTargetsRequest) (*operation.Operation, error)
+	ALBTargetGroupCreate(ctx context.Context, req *alb.CreateTargetGroupRequest) (string, error)
+	ALBTargetGroupDelete(ctx context.Context, id string) error
+	ALBTargetGroupGet(ctx context.Context, id string) (*alb.TargetGroup, error)
+	ALBTargetGroupGetByName(ctx context.Context, id, name string) (*alb.TargetGroup, error)
+	ALBBackendGroupCreate(ctx context.Context, req *alb.CreateBackendGroupRequest) (string, error)
+	ALBBackendGroupDelete(ctx context.Context, id string) error
+	ALBBackendGroupGet(ctx context.Context, id string) (*alb.BackendGroup, error)
+	ALBBackendGroupGetByName(ctx context.Context, id, name string) (*alb.BackendGroup, error)
+	ALBCreate(ctx context.Context, req *alb.CreateLoadBalancerRequest) (string, error)
+	ALBDelete(ctx context.Context, id string) error
+	ALBGet(ctx context.Context, id string) (*alb.LoadBalancer, error)
+	ALBGetByName(ctx context.Context, id, name string) (*alb.LoadBalancer, error)
 }
 
-// Client defines interfaces for YandexCloud api
+// NetworkLoadBalancer defines interface for YandexCloud NLB operations.
+type NetworkLoadBalancer interface {
+	NLBAddTarget(ctx context.Context, req *nlb.AddTargetsRequest) (*operation.Operation, error)
+	NLBGetTargetGroup(ctx context.Context, targetGroupID string) (*nlb.TargetGroup, error)
+	NLBRemoveTarget(ctx context.Context, req *nlb.RemoveTargetsRequest) (*operation.Operation, error)
+}
+
+// Client defines interface for YandexCloud API.
 type Client interface {
 	Compute
-	LoadBalancer
+	ApplicationLoadBalancer
+	NetworkLoadBalancer
 	Close(ctx context.Context) error
 }

@@ -1,4 +1,4 @@
-package loadbalancers
+package loadbalancer
 
 import (
 	"github.com/yandex-cloud/cluster-api-provider-yandex/internal/pkg/cloud"
@@ -7,13 +7,13 @@ import (
 
 // Service implements instances reconciler.
 type Service struct {
-	scope *scope.MachineScope
+	scope *scope.ClusterScope
 }
 
 var _ cloud.Reconciler = &Service{}
 
-// New returns a new service given the YandexCloud api client.
-func New(scp *scope.MachineScope) *Service {
+// New returns a new load balancer service.
+func New(scp *scope.ClusterScope) *Service {
 	return &Service{
 		scope: scp,
 	}

@@ -148,10 +148,13 @@ func (r *YandexClusterReconciler) reconcile(ctx context.Context, clusterScope *s
 		return ctrl.Result{}, fmt.Errorf("error reconciling load balancer: %w", err)
 	}
 
-	clusterScope.YandexCluster.Spec.ControlPlaneEndpoint = clusterv1.APIEndpoint{
-		Host: state.ListenerAddress,
-		Port: state.ListenerPort,
+	if clusterScope.YandexCluster.Spec.ControlPlaneEndpoint.Host == "" {
+		clusterScope.YandexCluster.Spec.ControlPlaneEndpoint.Host = state.ListenerAddress
 	}
+	if clusterScope.YandexCluster.Spec.ControlPlaneEndpoint.Port == 0 {
+		clusterScope.YandexCluster.Spec.ControlPlaneEndpoint.Port = state.ListenerPort
+	}
+
 	clusterScope.YandexCluster.Status.LoadBalancer = infrav1.LoadBalancerStatus{
 		ListenerAddress: state.ListenerAddress,
 		ListenerPort:    state.ListenerPort,

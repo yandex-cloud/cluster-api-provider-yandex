@@ -6,6 +6,7 @@ import (
 
 	infrav1 "github.com/yandex-cloud/cluster-api-provider-yandex/api/v1alpha1"
 	yandex "github.com/yandex-cloud/cluster-api-provider-yandex/internal/pkg/client"
+	"github.com/yandex-cloud/cluster-api-provider-yandex/internal/pkg/cloud/ycerrors"
 	yandex_compute "github.com/yandex-cloud/go-genproto/yandex/cloud/compute/v1"
 	corev1 "k8s.io/api/core/v1"
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
@@ -94,16 +95,18 @@ func (s *Service) Delete(ctx context.Context) (bool, error) {
 		return instanceDeleted, nil
 	}
 
-	// Find compute instance and set status.
+	// Find compute instance for deletion. If the instance has already been deleted,
+	// return with instanceDeleted status.
 	vm, err := client.ComputeGet(ctx, s.scope.GetInstanceID())
 	if err != nil {
+		if !ycerrors.IsNotFound(err) {
+			return instanceNotDeleted, fmt.Errorf("failed to get compute instance with id: %s for delete: %w",
+				s.scope.GetInstanceID(), err)
+		}
 		// instance already deleted or deleted by someone else.
-		// TODO: need to manage the deletion more carefully. If this is a common api error,
-		// we probably have to restart YandexMachine deletion reconcile .
-		logger.Info("unable to find compute instance", "id", s.scope.GetInstanceID())
 		if s.scope.IsControlPlane() {
-			logger.V(1).Info("deregistering controlplane compute instance from load balancer")
 			// Try to deregister deleted VM to prevent zombie targets in load balancer.
+			logger.V(1).Info("deregistering controlplane compute instance from load balancer")
 			if err := s.deregisterControlPlane(ctx); err != nil {
 				return instanceNotDeleted, fmt.Errorf("failed to deregister controlplane compute instance from load balancer: %w", err)
 			}

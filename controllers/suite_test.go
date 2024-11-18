@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package controllers //nolint: testpackage // private variables access
+package controllers //nolint:testpackage // private variables access
 
 import (
 	"context"
@@ -161,5 +161,18 @@ func getFilePathToCAPICRDs() []string {
 	return []string{
 		filepath.Join(pkg.Module.Dir, "config", "crd", "bases"),
 		filepath.Join(pkg.Module.Dir, "controlplane", "kubeadm", "config", "crd", "bases"),
+	}
+}
+
+// logFunctionCalls is a helper for printing arguments of called functions in Ginkgo tests.
+func logFunctionCalls(name string, args map[string]interface{}, returns []interface{}) {
+	GinkgoWriter.Printf("%s called with args:\n", name)
+	for key, value := range args {
+		GinkgoWriter.Printf("  %s: %+v\n", key, value)
+	}
+
+	GinkgoWriter.Printf("%s returns:\n", name)
+	for idx, value := range returns {
+		GinkgoWriter.Printf("  [%d]: %+v\n", idx, value)
 	}
 }

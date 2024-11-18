@@ -31,6 +31,8 @@ const (
 	LoadBalancerTypeNLB LoadBalancerType = "NLB"
 )
 
+//+kubebuilder:validation:Required
+
 // Labels defines a map of tags.
 // No more than 64 per resource. The string length in characters for each key must be 1-63.
 // Each key must match the regular expression [a-z][-_./\@0-9a-z]*.
@@ -51,13 +53,19 @@ type YandexClusterSpec struct {
 	NetworkSpec NetworkSpec `json:"network,omitempty"`
 
 	// ControlPlaneEndpoint represents the endpoint used to communicate with the control plane.
+	// It is not recommended to set it manually when creating YandexCluster as CAPY will set this for you
+	// after creating load balancer based on LoadBalancer specification.
+	// However, if it is set, CAPY will not change it.
 	// +optional
 	ControlPlaneEndpoint clusterv1.APIEndpoint `json:"controlPlaneEndpoint"`
 
 	// FolderID is the identifier of YandexCloud folder to deploy the cluster to.
+	// +required
+	// +kubebuilder:validation:MinLength=1
 	FolderID string `json:"folderID"`
 
 	// LoadBalancer is a loadbalancer configuration for the kubernetes cluster API.
+	// +required
 	LoadBalancer LoadBalancerSpec `json:"loadBalancer"`
 
 	// Labels is an optional set of labels to add to Yandex resources managed by the CAPY provider.
@@ -84,8 +92,9 @@ type LoadBalancerSpec struct {
 	// +optional
 	Name string `json:"name,omitempty"`
 
-	// ListenerSpec is an optional listener configuration for the load balancer.
-	Listener ListenerSpec `json:"listener,omitempty"`
+	// ListenerSpec is a listener configuration for the load balancer.
+	// +required
+	Listener ListenerSpec `json:"listener"`
 
 	// Load balancer backend port. Acceptable values are 1 to 65535, inclusive.
 	// +kubebuilder:validation:Minimum=1
@@ -96,7 +105,7 @@ type LoadBalancerSpec struct {
 
 	// +optional
 	// +kubebuilder:default={}
-	Healthcheck HealtcheckSpec `json:"healthcheck"`
+	Healthcheck HealtcheckSpec `json:"healthcheck,omitempty"`
 
 	// SecurityGroups sets the security groups ID used by the load balancer.
 	// If SecurityGroups not provided, new security group will be created for the load balancer.
@@ -108,7 +117,11 @@ type LoadBalancerSpec struct {
 // ListenerSpec is a load balancer listener configuration for the kubernetes cluster api.
 // More information https://yandex.cloud/ru/docs/application-load-balancer/concepts/application-load-balancer#listener.
 type ListenerSpec struct {
-	// load balncer listener port. Acceptable values are 1 to 65535, inclusive.
+	// load balancer listener ip address.
+	// +optional
+	Address string `json:"address,omitempty"`
+
+	// load balancer listener port. Acceptable values are 1 to 65535, inclusive.
 	// +kubebuilder:validation:Minimum=1
 	// +kubebuilder:validation:Maximum=65535
 	// +kubebuilder:default=8443
@@ -122,7 +135,8 @@ type ListenerSpec struct {
 
 	// Load balancer listener will be located in this subnet.
 	// More information https://yandex.cloud/ru/docs/vpc/concepts/network#subnet.
-	Subnet SubnetSpec `json:"subnets,omitempty"`
+	// +required
+	Subnet SubnetSpec `json:"subnet"`
 }
 
 // SubnetSpec configures an Yandex Subnet.

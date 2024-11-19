@@ -43,6 +43,11 @@ func (b *YandexClientBuilder) GetClientFromSecret(ctx context.Context, cl kube.C
 }
 
 // GetDefaultClient returns YandexClient build from default key
-func (b *YandexClientBuilder) GetDefaultClient() (Client, error) {
+func (b *YandexClientBuilder) GetDefaultClient(ctx context.Context) (Client, error) {
 	return GetClient(context.Background(), b.defaultKey)
+}
+
+// GetClientFromKey returns YandexClient build from provided key
+func (b *YandexClientBuilder) GetClientFromKey(ctx context.Context, key string) (Client, error) {
+	return GetClient(ctx, key)
 }

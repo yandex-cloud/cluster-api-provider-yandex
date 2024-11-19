@@ -53,3 +53,14 @@ const (
 	// LoadBalancerFailedReason used when an error occurs during load balancer reconciliation.
 	LoadBalancerFailedReason = "LoadBalancerFailed"
 )
+
+const (
+	// IdentityReadyCondition reports on whether a Yandex Identity was successfully reconciled.
+	IdentityReadyCondition clusterv1.ConditionType = "IdentityReady"
+	// IdentityValidCondition reports on whether a Yandex Identity is valid.
+	IdentityValidCondition clusterv1.ConditionType = "IdentityValid"
+	// IdentitySecretUpdatedCondition reports on whether a Yandex Identity secret was updated.
+	IdentitySecretUpdatedCondition clusterv1.ConditionType = "IdentitySecretUpdated"
+	// IdentityLinkedClustersUpdatedCondition reports on whether a Yandex Identity linked clusters were updated.
+	IdentityLinkedClustersUpdatedCondition clusterv1.ConditionType = "IdentityLinkedClustersUpdated"
+)

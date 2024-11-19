@@ -59,5 +59,8 @@ type Builder interface {
 	GetClientFromSecret(ctx context.Context, cl kube.Client, secretName string, keyName string) (Client, error)
 
 	// GetDefaultClient returns YandexClient with defaultKey
-	GetDefaultClient() (Client, error)
+	GetDefaultClient(ctx context.Context) (Client, error)
+
+	// GetClientFromKey returns YandexClient with key
+	GetClientFromKey(ctx context.Context, key string) (Client, error)
 }

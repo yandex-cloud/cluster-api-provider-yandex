@@ -13,6 +13,12 @@ rules:
   - list
   - watch
 - apiGroups:
+  - ""
+  resources:
+  - secrets/finalizers
+  verbs:
+  - update
+- apiGroups:
   - cluster.x-k8s.io
   resources:
   - clusters
@@ -26,6 +32,7 @@ rules:
 - apiGroups:
   - infrastructure.cluster.x-k8s.io
   resources:
+  - YandexIdentity
   - yandexclusters
   - yandexmachines
   verbs:
@@ -39,6 +46,7 @@ rules:
 - apiGroups:
   - infrastructure.cluster.x-k8s.io
   resources:
+  - YandexIdentity/finalizers
   - yandexclusters/finalizers
   - yandexmachines/finalizers
   verbs:
@@ -46,6 +54,7 @@ rules:
 - apiGroups:
   - infrastructure.cluster.x-k8s.io
   resources:
+  - YandexIdentity/status
   - yandexclusters/status
   - yandexmachines/status
   verbs:

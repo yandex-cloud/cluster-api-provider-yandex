@@ -18,6 +18,7 @@ package v1alpha1
 
 import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
 )
 
 const (
@@ -30,11 +31,11 @@ const (
 type YandexIdentitySpec struct {
 	// Name is the name of a secret in the same namespace as YandexIdentity.
 	// The secret must contain a key, which contains an valid iamkey.Key as of github.com/yandex-cloud/go-sdk/iamkey.
-	// +kubebuilder:validation:Required
+	// +required
 	SecretName string `json:"secretname"`
 
 	// KeyName is the name of the key in the secret. Default is `YandexCloudSAKey`.
-	// +kubebuilder:validation:Optional
+	// +optional
 	KeyName string `json:"keyname" default:"YandexCloudSAKey"`
 }
 
@@ -42,6 +43,14 @@ type YandexIdentitySpec struct {
 type YandexIdentityStatus struct {
 	// Ready is true when the secret is checked and resource is ready.
 	Ready bool `json:"ready"`
+
+	// Conditions is a list of conditions and their status.
+	// +optional
+	Conditions clusterv1.Conditions `json:"conditions,omitempty"`
+
+	// Linked clusters
+	// +optional
+	LinkedClusters []string `json:"linkedClusters,omitempty"`
 }
 
 //+kubebuilder:object:root=true
@@ -63,6 +72,26 @@ type YandexIdentityList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
 	Items           []YandexIdentity `json:"items"`
+}
+
+func (i *YandexIdentity) GenerateSecretFinalizer() string {
+	return i.Name + "." + IdentityFinalizer
+}
+
+// GetConditions returns the list of conditions for an YandexIdentity API object.
+func (i *YandexIdentity) GetConditions() clusterv1.Conditions {
+	return i.Status.Conditions
+}
+
+// SetConditions will set the given conditions on an YandexIdentity API object.
+func (i *YandexIdentity) SetConditions(conditions clusterv1.Conditions) {
+	i.Status.Conditions = conditions
+}
+
+func (i *YandexIdentity) GenerateLabelsForCluster() map[string]string {
+	return map[string]string{
+		"yandexidentity/" + i.Namespace: i.Name,
+	}
 }
 
 func init() {

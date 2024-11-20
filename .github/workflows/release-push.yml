@@ -40,7 +40,7 @@ jobs:
       - name: Build, tag, and push image to Yandex CR
         env:
           CR_REGISTRY: crpsjg1coh47p81vh2lc
-          CR_REPOSITORY: capy
+          CR_REPOSITORY: capy/cluster-api-provider-yandex
           IMAGE_TAG: ${{ github.sha }}
         run: |
           docker build -t cr.yandex/$CR_REGISTRY/$CR_REPOSITORY:$IMAGE_TAG .

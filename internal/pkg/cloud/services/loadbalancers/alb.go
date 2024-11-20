@@ -227,6 +227,7 @@ func (s *Service) reconcileALB(ctx context.Context, backendGroupID string) error
 	case lb != nil && lb.Status == alb.LoadBalancer_ACTIVE && s.scope.GetLBSpec().Listener.Address != "":
 		// TODO: add support for external balancers
 		lbAddress, lbPort := s.getInternalAddress(lb), s.getInternalPort(lb)
+		// TODO: reconile LB listener address/port in https://github.com/yandex-cloud/cluster-api-provider-yandex/issues/17
 		if lbAddress != "" && s.scope.GetLBSpec().Listener.Address != lbAddress {
 			return fmt.Errorf(
 				"load balancer for the YandexCluster %s has an incorrect address %s, expected %s. "+

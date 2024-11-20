@@ -4,16 +4,22 @@ kind: YandexCluster
 metadata:
   name: "${CLUSTER_NAME}"
 spec:
-  controlPlaneEndpoint:
-    host: "${YANDEX_CONTROL_PLANE_ENDPOINT_HOST}"
-    port: ${YANDEX_CONTROL_PLANE_ENDPOINT_PORT:=8443}
+  folderID: ${YANDEX_FOLDER_ID}
+  network:
+    id: "${YANDEX_NETWORK_ID}"
   loadBalancer:
     type: "${YANDEX_CONTROL_PLANE_LOADBALANCER_TYPE:=ALB}"
+    listener:
+      subnet:
+        id: ${YANDEX_SUBNET_ID}
+        zoneID: ${YANDEX_ZONE_ID:=ru-central1-a}
 ---
 apiVersion: cluster.x-k8s.io/v1beta1
 kind: Cluster
 metadata:
   name: "${CLUSTER_NAME}"
+  labels:
+    cni: cilium
 spec:
   clusterNetwork:
     pods:
@@ -36,7 +42,7 @@ apiVersion: controlplane.cluster.x-k8s.io/v1beta1
 metadata:
   name: "${CLUSTER_NAME}-control-plane"
 spec:
-  replicas: ${CONTROL_PLANE_MACHINE_COUNT:=3}
+  replicas: ${YANDEX_CONTROL_PLANE_MACHINE_COUNT:=3}
   machineTemplate:
     infrastructureRef:
       kind: YandexMachineTemplate
@@ -73,19 +79,17 @@ metadata:
 spec:
   template:
     spec:
-      zoneID: ${YANDEX_ZONE_ID}
+      zoneID: ${YANDEX_ZONE_ID:=ru-central1-a}
       platformID: "${YANDEX_CONTROL_PLANE_PLATFORM_ID:=standard-v3}"
-      targetGroupID: "${YANDEX_CONTROL_PLANE_TARGET_GROUP_ID}"
-      folderID: "${YANDEX_FOLDER_ID}"
       resources:
         cores: ${YANDEX_CONTROL_PLANE_MACHINE_CORES:=2}
         memory: "${YANDEX_CONTROL_PLANE_MACHINE_MEMORY_SIZE:=4Gi}"
       bootDisk:
         size: "${YANDEX_CONTROL_PLANE_MACHINE_BOOT_DISK_SIZE:=100Gi}"
         imageID: "${YANDEX_CONTROL_PLANE_MACHINE_IMAGE_ID}"
-        typeID: "${YANDEX_CONTROL_PLANE_MACHINE_BOOT_DISK_TYPE_ID:=network-ssd}"
+        typeID: "${YANDEX_NODE_MACHINE_BOOT_DISK_TYPE:=network-ssd}"
       networkInterfaces:
-      - subnetID: "${YANDEX_SUBNET_ID}"
+        - subnetID: "${YANDEX_SUBNET_ID}"
 ---
 apiVersion: cluster.x-k8s.io/v1beta1
 kind: MachineDeployment
@@ -122,18 +126,17 @@ metadata:
 spec:
   template:
     spec:
-      zoneID: ${YANDEX_ZONE_ID}
+      zoneID: ${YANDEX_ZONE_ID:=ru-central1-a}
       platformID: "${YANDEX_NODE_MACHINE_PLATFORM_ID:=standard-v3}"
-      folderID: "${YANDEX_FOLDER_ID}"
       resources:
         cores: ${YANDEX_NODE_MACHINE_CORES:=2}
         memory: "${YANDEX_NODE_MACHINE_MEMORY_SIZE:=4Gi}"
       bootDisk:
         size: "${YANDEX_NODE_MACHINE_BOOT_DISK_SIZE:=100Gi}"
         imageID: "${YANDEX_NODE_MACHINE_IMAGE_ID:=${YANDEX_CONTROL_PLANE_MACHINE_IMAGE_ID}}"
-        typeID: "${YANDEX_NODE_MACHINE_BOOT_DISK_TYPE_ID:=network-ssd}"
+        typeID: "${YANDEX_NODE_MACHINE_BOOT_DISK_TYPE:=network-ssd}"
       networkInterfaces:
-      - subnetID: "${YANDEX_SUBNET_ID}"
+        - subnetID: "${YANDEX_SUBNET_ID}"
 ---
 apiVersion: bootstrap.cluster.x-k8s.io/v1beta1
 kind: KubeadmConfigTemplate

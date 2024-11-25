@@ -1,6 +1,10 @@
 name: crpush
 
 on:
+  # push to container registry on release tag
+  push:
+    tags:
+      - "v*"
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
@@ -41,7 +45,7 @@ jobs:
         env:
           CR_REGISTRY: crpsjg1coh47p81vh2lc
           CR_REPOSITORY: capy/cluster-api-provider-yandex
-          IMAGE_TAG: ${{ github.sha }}
+          IMAGE_TAG: ${{ github.ref_name }}
         run: |
           docker build -t cr.yandex/$CR_REGISTRY/$CR_REPOSITORY:$IMAGE_TAG .
           docker push cr.yandex/$CR_REGISTRY/$CR_REPOSITORY:$IMAGE_TAG

@@ -53,9 +53,9 @@ type YandexClusterSpec struct {
 	NetworkSpec NetworkSpec `json:"network,omitempty"`
 
 	// ControlPlaneEndpoint represents the endpoint used to communicate with the control plane.
-	// It is not recommended to set it manually when creating YandexCluster as CAPY will set this for you
+	// Once set, the value cannot be changed.
+	// Do not set it manually when creating YandexCluster as CAPY will set this for you
 	// after creating load balancer based on LoadBalancer specification.
-	// However, if it is set, CAPY will not change it.
 	// +optional
 	ControlPlaneEndpoint clusterv1.APIEndpoint `json:"controlPlaneEndpoint"`
 

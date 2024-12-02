@@ -465,7 +465,7 @@ var _ = Describe("YandexCluster reconciliation check", func() {
 			cc := e.getCAPIClusterWithInfrastructureReference(testNamespace.Name)
 			Expect(e.Create(ctx, cc)).To(Succeed())
 			yc := e.getYandexClusterWithOwnerReference(testNamespace.Name)
-			controlPlaneEndpointIP := "1.1.1.1"
+			controlPlaneEndpointIP := "1.2.3.4"
 			ip := "1.2.3.4"
 			yc.Spec.ControlPlaneEndpoint = clusterv1.APIEndpoint{
 				Host: controlPlaneEndpointIP,

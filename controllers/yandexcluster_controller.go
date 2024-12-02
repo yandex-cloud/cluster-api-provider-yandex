@@ -148,21 +148,35 @@ func (r *YandexClusterReconciler) reconcile(ctx context.Context, clusterScope *s
 		return ctrl.Result{}, fmt.Errorf("error reconciling load balancer: %w", err)
 	}
 
-	if clusterScope.YandexCluster.Spec.ControlPlaneEndpoint.Host == "" {
-		clusterScope.YandexCluster.Spec.ControlPlaneEndpoint.Host = state.ListenerAddress
-	}
-	if clusterScope.YandexCluster.Spec.ControlPlaneEndpoint.Port == 0 {
-		clusterScope.YandexCluster.Spec.ControlPlaneEndpoint.Port = state.ListenerPort
-	}
+	switch {
+	// The load balancer has been created.
+	case clusterScope.YandexCluster.Spec.ControlPlaneEndpoint.Host == "" && clusterScope.YandexCluster.Spec.ControlPlaneEndpoint.Port == 0:
+		clusterScope.YandexCluster.Spec.ControlPlaneEndpoint = clusterv1.APIEndpoint{
+			Host: state.ListenerAddress,
+			Port: state.ListenerPort,
+		}
+		clusterScope.YandexCluster.Status.LoadBalancer = infrav1.LoadBalancerStatus{
+			ListenerAddress: state.ListenerAddress,
+			ListenerPort:    state.ListenerPort,
+		}
+		conditions.MarkTrue(clusterScope.YandexCluster, infrav1.LoadBalancerReadyCondition)
+		clusterScope.SetReady()
+		return ctrl.Result{}, nil
 
-	clusterScope.YandexCluster.Status.LoadBalancer = infrav1.LoadBalancerStatus{
-		ListenerAddress: state.ListenerAddress,
-		ListenerPort:    state.ListenerPort,
-	}
+	// The load balancer has been recreated.
+	case clusterScope.YandexCluster.Spec.ControlPlaneEndpoint.Host == state.ListenerAddress && clusterScope.YandexCluster.Spec.ControlPlaneEndpoint.Port == state.ListenerPort:
+		clusterScope.YandexCluster.Status.LoadBalancer = infrav1.LoadBalancerStatus{
+			ListenerAddress: state.ListenerAddress,
+			ListenerPort:    state.ListenerPort,
+		}
+		conditions.MarkTrue(clusterScope.YandexCluster, infrav1.LoadBalancerReadyCondition)
+		clusterScope.SetReady()
+		return ctrl.Result{}, nil
 
-	conditions.MarkTrue(clusterScope.YandexCluster, infrav1.LoadBalancerReadyCondition)
-	clusterScope.SetReady()
-	return ctrl.Result{}, nil
+	default:
+		return ctrl.Result{},
+			fmt.Errorf("YandexCluster controlPlaneEndpoint differs from the load balancer listener values. The cluster has become unrecoverable and should be manually deleted")
+	}
 }
 
 // reconcileDelete it is a part of reconciliation loop in case of YandexCluster delete.

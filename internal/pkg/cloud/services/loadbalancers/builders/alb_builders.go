@@ -18,6 +18,7 @@ type ALBTargetGroupBuilder struct {
 	folderID         string
 	clusterName      string
 	name             string
+	subnetID         string
 	targetGroupID    string
 	ipAddress        string
 	additionalLabels infrav1.Labels
@@ -75,6 +76,12 @@ func (a *ALBTargetGroupBuilder) WithLabels(labels infrav1.Labels) *ALBTargetGrou
 
 // WithSubnetID sets the YandexCloud SubnetID.
 func (a *ALBTargetGroupBuilder) WithSubnetID(id string) *ALBTargetGroupBuilder {
+	a.subnetID = id
+	return a
+}
+
+// WithTargetGroupID sets the YandexCloud TargetGroupID.
+func (a *ALBTargetGroupBuilder) WithTargetGroupID(id string) *ALBTargetGroupBuilder {
 	a.targetGroupID = id
 	return a
 }
@@ -101,14 +108,12 @@ func (a *ALBTargetGroupBuilder) Build() (*alb.CreateTargetGroupRequest, error) {
 }
 
 // BuildAddTargetRequest returns the ALB AddTargetsRequest.
-// subnetID: subnet idnetificator, where the target address is located.
-// targetGroupID: ALB TargetGroup identificator.
 // address: IPv4 address.
-func (a *ALBTargetGroupBuilder) BuildAddTargetRequest(subnetID, targetGroupID, address string) *alb.AddTargetsRequest {
+func (a *ALBTargetGroupBuilder) BuildAddTargetRequest(address string) *alb.AddTargetsRequest {
 	return &alb.AddTargetsRequest{
-		TargetGroupId: targetGroupID,
+		TargetGroupId: a.targetGroupID,
 		Targets: []*alb.Target{{
-			SubnetId: subnetID,
+			SubnetId: a.subnetID,
 			AddressType: &alb.Target_IpAddress{
 				IpAddress: address,
 			}},
@@ -117,14 +122,12 @@ func (a *ALBTargetGroupBuilder) BuildAddTargetRequest(subnetID, targetGroupID, a
 }
 
 // BuildRemoveTargetRequest returns the ALB RemoveTargetsRequest.
-// subnetID: subnet idnetificator, where the target address is located.
-// targetGroupID: ALB TargetGroup identificator.
 // address: IPv4 address.
-func (a *ALBTargetGroupBuilder) BuildRemoveTargetRequest(subnetID, targetGroupID, address string) *alb.RemoveTargetsRequest {
+func (a *ALBTargetGroupBuilder) BuildRemoveTargetRequest(address string) *alb.RemoveTargetsRequest {
 	return &alb.RemoveTargetsRequest{
-		TargetGroupId: targetGroupID,
+		TargetGroupId: a.targetGroupID,
 		Targets: []*alb.Target{{
-			SubnetId: subnetID,
+			SubnetId: a.subnetID,
 			AddressType: &alb.Target_IpAddress{
 				IpAddress: address,
 			}},
@@ -174,23 +177,17 @@ func (a *ALBBackendGroupBuilder) WithLabels(labels infrav1.Labels) *ALBBackendGr
 
 // Build prepares and returns the ALB backend group creation request.
 func (a *ALBBackendGroupBuilder) Build() (*alb.CreateBackendGroupRequest, error) {
-	var backends []*alb.StreamBackend
-	var tgIDs []string
-
-	// create stream backend.
-	tgIDs = append(tgIDs, a.targetGroupID)
 	sb := &alb.StreamBackend{
 		Name: a.name,
 	}
 
 	sb.SetPort(int64(a.lbs.BackendPort))
-	sb.SetTargetGroups(&alb.TargetGroupsBackend{TargetGroupIds: tgIDs})
+	sb.SetTargetGroups(&alb.TargetGroupsBackend{TargetGroupIds: []string{a.targetGroupID}})
 	sb.SetLoadBalancingConfig(a.createLoadBalancingConfig())
 	sb.SetHealthchecks(a.createHealthChecks())
 
-	backends = append(backends, sb)
 	sbg := &alb.StreamBackendGroup{
-		Backends: backends,
+		Backends: []*alb.StreamBackend{sb},
 	}
 
 	// create backend request.
@@ -288,7 +285,7 @@ func (a *ALBBuilder) Build() (*alb.CreateLoadBalancerRequest, error) {
 		Description: describePrefix + a.clusterName + " loadbalancer",
 	}
 
-	// Sinle zone allocation only in alpha version.
+	// Single zone allocation only in alpha version.
 	request.SetAllocationPolicy(&alb.AllocationPolicy{
 		Locations: []*alb.Location{{
 			ZoneId:   a.lbs.Listener.Subnet.ZoneID,
@@ -301,6 +298,7 @@ func (a *ALBBuilder) Build() (*alb.CreateLoadBalancerRequest, error) {
 	}
 
 	request.SetListenerSpecs(a.createListenerSpec(
+		a.lbs.Listener.Address,
 		a.lbs.Listener.Port,
 		a.lbs.Listener.Subnet.ID,
 		a.backendGroupID))
@@ -315,21 +313,22 @@ func (a *ALBBuilder) GetName() string {
 }
 
 // createListenerSpec prepares and returns the ALB Listener specification.
-func (a *ALBBuilder) createListenerSpec(port int32, subnetID, backendID string) []*alb.ListenerSpec {
-	var listeners []*alb.ListenerSpec
+func (a *ALBBuilder) createListenerSpec(address string, port int32, subnetID, backendID string) []*alb.ListenerSpec {
+	intAddressSpec := &alb.InternalIpv4AddressSpec{}
+	if address != "" {
+		intAddressSpec.SetAddress(address)
+	}
+	intAddressSpec.SetSubnetId(subnetID)
+	addressSpec := &alb.AddressSpec{}
+	addressSpec.SetInternalIpv4AddressSpec(intAddressSpec)
 
-	intAddress := &alb.InternalIpv4AddressSpec{}
-	intAddress.SetSubnetId(subnetID)
-	address := &alb.AddressSpec{}
-	address.SetInternalIpv4AddressSpec(intAddress)
+	endpointSpec := &alb.EndpointSpec{}
+	endpointSpec.SetPorts([]int64{int64(port)})
+	endpointSpec.SetAddressSpecs([]*alb.AddressSpec{addressSpec})
 
-	endpoint := &alb.EndpointSpec{}
-	endpoint.SetPorts([]int64{int64(port)})
-	endpoint.SetAddressSpecs([]*alb.AddressSpec{address})
-
-	listener := &alb.ListenerSpec{}
-	listener.SetName(a.name)
-	listener.SetEndpointSpecs([]*alb.EndpointSpec{endpoint})
+	listenerSpec := &alb.ListenerSpec{}
+	listenerSpec.SetName(a.name)
+	listenerSpec.SetEndpointSpecs([]*alb.EndpointSpec{endpointSpec})
 
 	// Stream listener only.
 	streamHandler := &alb.StreamHandler{}
@@ -337,7 +336,7 @@ func (a *ALBBuilder) createListenerSpec(port int32, subnetID, backendID string) 
 
 	streamListener := &alb.StreamListener{}
 	streamListener.SetHandler(streamHandler)
-	listener.SetStream(streamListener)
+	listenerSpec.SetStream(streamListener)
 
-	return append(listeners, listener)
+	return []*alb.ListenerSpec{listenerSpec}
 }

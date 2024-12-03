@@ -223,9 +223,26 @@ func (s *Service) reconcileALB(ctx context.Context, backendGroupID string) error
 	if err != nil {
 		return err
 	}
-
 	switch {
-	case lb == nil && s.scope.ControlPlaneEndpoint().IsValid():
+	case lb != nil && lb.Status == alb.LoadBalancer_ACTIVE && s.scope.GetLBSpec().Listener.Address != "":
+		// TODO: add support for external balancers
+		lbAddress, lbPort := s.getInternalAddress(lb), s.getInternalPort(lb)
+		// TODO: reconile LB listener address/port in https://github.com/yandex-cloud/cluster-api-provider-yandex/issues/17
+		if lbAddress != "" && s.scope.GetLBSpec().Listener.Address != lbAddress {
+			return fmt.Errorf(
+				"load balancer for the YandexCluster %s has an incorrect address %s, expected %s. "+
+					"The cluster has become unrecoverable and should be manually deleted",
+				s.scope.Name(), lbAddress,
+				s.scope.GetLBSpec().Listener.Address)
+		}
+		if lbPort != 0 && s.scope.GetLBSpec().Listener.Port != lbPort {
+			return fmt.Errorf(
+				"load balancer for the YandexCluster %s has an incorrect port %d, expected %d. "+
+					"The cluster has become unrecoverable and should be manually deleted",
+				s.scope.Name(), lbPort,
+				s.scope.GetLBSpec().Listener.Port)
+		}
+	case lb == nil && s.scope.ControlPlaneEndpoint().IsValid() && s.scope.GetLBSpec().Listener.Address == "":
 		// if load balancer is not found and cluster ControlPlaneEndpoint is already populated, then we have to recreate cluster.
 		return fmt.Errorf("load balancer for the YandexCluster %s not found, the cluster has become unrecoverable and should be manually deleted",
 			s.scope.YandexCluster.Name)
@@ -250,6 +267,14 @@ func (s *Service) reconcileALB(ctx context.Context, backendGroupID string) error
 	return nil
 }
 
+func (s *Service) getInternalAddress(lb *alb.LoadBalancer) string {
+	return lb.Listeners[0].GetEndpoints()[0].Addresses[0].GetInternalIpv4Address().Address
+}
+
+func (s *Service) getInternalPort(lb *alb.LoadBalancer) int32 {
+	return int32(lb.Listeners[0].GetEndpoints()[0].Ports[0])
+}
+
 // describeALB returns the IP address and port of the application load balancer listener.
 func (s *Service) describeALB(ctx context.Context) (infrav1.LoadBalancerStatus, error) {
 	lb, err := s.scope.GetClient().ALBGetByName(
@@ -262,11 +287,9 @@ func (s *Service) describeALB(ctx context.Context) (infrav1.LoadBalancerStatus, 
 	}
 
 	// TODO: external address support.
-	addr := lb.Listeners[0].GetEndpoints()[0].Addresses[0].GetInternalIpv4Address().Address
-	port := lb.Listeners[0].GetEndpoints()[0].Ports[0]
 	status := infrav1.LoadBalancerStatus{
-		ListenerAddress: addr,
-		ListenerPort:    int32(port),
+		ListenerAddress: s.getInternalAddress(lb),
+		ListenerPort:    s.getInternalPort(lb),
 	}
 	return status, nil
 }
@@ -289,7 +312,7 @@ func (s *Service) addTargetALB(ctx context.Context, ipAddress, subnetID string) 
 		return nil
 	}
 
-	req := builder.BuildAddTargetRequest(subnetID, tg.GetId(), ipAddress)
+	req := builder.WithTargetGroupID(tg.Id).BuildAddTargetRequest(ipAddress)
 	_, err = s.scope.GetClient().ALBAddTarget(ctx, req)
 	return err
 }
@@ -312,7 +335,7 @@ func (s *Service) removeTargetALB(ctx context.Context, ipAddress, subnetID strin
 		return nil
 	}
 
-	req := builder.BuildRemoveTargetRequest(subnetID, tg.GetId(), ipAddress)
+	req := builder.WithTargetGroupID(tg.Id).BuildRemoveTargetRequest(ipAddress)
 	_, err = s.scope.GetClient().ALBRemoveTarget(ctx, req)
 	return err
 }

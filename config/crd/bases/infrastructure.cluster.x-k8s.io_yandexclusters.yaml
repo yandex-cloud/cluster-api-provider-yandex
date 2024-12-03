@@ -3,7 +3,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.14.0
+    controller-gen.kubebuilder.io/version: v0.16.5
   name: yandexclusters.infrastructure.cluster.x-k8s.io
 spec:
   group: infrastructure.cluster.x-k8s.io
@@ -53,8 +53,11 @@ spec:
             description: YandexClusterSpec defines the desired state of YandexCluster.
             properties:
               controlPlaneEndpoint:
-                description: ControlPlaneEndpoint represents the endpoint used to
-                  communicate with the control plane.
+                description: |-
+                  ControlPlaneEndpoint represents the endpoint used to communicate with the control plane.
+                  Once set, the value cannot be changed.
+                  Do not set it manually when creating YandexCluster as CAPY will set this for you
+                  after creating load balancer based on LoadBalancer specification.
                 properties:
                   host:
                     description: The hostname on which the API server is serving.
@@ -70,6 +73,7 @@ spec:
               folderID:
                 description: FolderID is the identifier of YandexCloud folder to deploy
                   the cluster to.
+                minLength: 1
                 type: string
               labels:
                 additionalProperties:
@@ -104,9 +108,12 @@ spec:
                         type: integer
                     type: object
                   listener:
-                    description: ListenerSpec is an optional listener configuration
-                      for the load balancer.
+                    description: ListenerSpec is a listener configuration for the
+                      load balancer.
                     properties:
+                      address:
+                        description: load balancer listener ip address.
+                        type: string
                       internal:
                         default: true
                         description: If Internal value is true, then a private IP
@@ -114,13 +121,13 @@ spec:
                         type: boolean
                       port:
                         default: 8443
-                        description: load balncer listener port. Acceptable values
+                        description: load balancer listener port. Acceptable values
                           are 1 to 65535, inclusive.
                         format: int32
                         maximum: 65535
                         minimum: 1
                         type: integer
-                      subnets:
+                      subnet:
                         description: |-
                           Load balancer listener will be located in this subnet.
                           More information https://yandex.cloud/ru/docs/vpc/concepts/network#subnet.
@@ -134,6 +141,8 @@ spec:
                               zone where the subnet resides.
                             type: string
                         type: object
+                    required:
+                    - subnet
                     type: object
                   name:
                     description: |-
@@ -162,6 +171,8 @@ spec:
                     - ALB
                     - NLB
                     type: string
+                required:
+                - listener
                 type: object
               network:
                 description: NetworkSpec encapsulates all things related to Yandex

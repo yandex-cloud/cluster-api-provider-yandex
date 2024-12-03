@@ -31,6 +31,8 @@ const (
 	MachineFinalizer = "yandexmachine.infrastructure.cluster.x-k8s.io"
 )
 
+//+kubebuilder:validation:Required
+
 // YandexMachineSpec defines the desired state of YandexMachine.
 type YandexMachineSpec struct {
 	// ProviderID is the unique identifier as specified by the cloud provider.
@@ -103,7 +105,7 @@ type Disk struct {
 	// +kubebuilder:default=network-ssd
 	TypeID *string `json:"typeID,omitempty"`
 
-	// Size is ths disk size in bytes
+	// Size is the disk size in bytes
 	// Allows to specify k,M,G... or Ki,Mi,Gi... suffixes
 	// For more information see https://pkg.go.dev/k8s.io/apimachinery/pkg/api/resource#Quantity .
 	Size resource.Quantity `json:"size"`

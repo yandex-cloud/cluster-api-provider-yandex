@@ -24,3 +24,23 @@ webhooks:
     resources:
     - yandexmachines
   sideEffects: None
+- admissionReviewVersions:
+  - v1beta1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /validate-infrastructure-cluster-x-k8s-io-v1alpha1-yandexmachinetemplate
+  failurePolicy: Fail
+  name: validation.yandexmachinetemplates.infrastructure.cluster.x-k8s.io
+  rules:
+  - apiGroups:
+    - infrastructure.cluster.x-k8s.io
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - yandexmachinetemplates
+  sideEffects: None

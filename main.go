@@ -138,6 +138,10 @@ func main() {
 		setupLog.Error(err, "unable to create webhook", "webhook", "YandexMachine")
 		os.Exit(1)
 	}
+	if err = (&infrav1.YandexMachineTemplate{}).SetupWebhookWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create webhook", "webhook", "YandexMachineTemplate")
+		os.Exit(1)
+	}
 
 	//+kubebuilder:scaffold:builder
 

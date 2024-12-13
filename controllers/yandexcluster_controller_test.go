@@ -50,6 +50,12 @@ var _ = Describe("YandexCluster API check", func() {
 		//+kubebuilder:scaffold:webhook
 		e.controller = gomock.NewController(GinkgoT())
 		e.mockClient = mock_client.NewMockClient(e.controller)
+		e.mockClientBuilder = mock_client.NewMockBuilder(e.controller)
+		e.mockClientBuilder.EXPECT().GetDefaultClient(gomock.Any()).
+			DoAndReturn(func(_ context.Context) (*mock_client.MockClient, error) {
+				return e.mockClient, nil
+			}).AnyTimes()
+		e.mockClient.EXPECT().Close(gomock.Any()).Return(nil).AnyTimes()
 		testNamespace, err = e.CreateNamespace(ctx, "api-check")
 		Expect(err).ToNot(HaveOccurred())
 	})
@@ -105,6 +111,12 @@ var _ = Describe("YandexCluster reconciliation check", func() {
 		//+kubebuilder:scaffold:webhook
 		e.controller = gomock.NewController(GinkgoT())
 		e.mockClient = mock_client.NewMockClient(e.controller)
+		e.mockClientBuilder = mock_client.NewMockBuilder(e.controller)
+		e.mockClientBuilder.EXPECT().GetDefaultClient(gomock.Any()).
+			DoAndReturn(func(_ context.Context) (*mock_client.MockClient, error) {
+				return e.mockClient, nil
+			}).AnyTimes()
+		e.mockClient.EXPECT().Close(gomock.Any()).Return(nil).AnyTimes()
 		testNamespace, err = e.CreateNamespace(ctx, "reconcile-check")
 		Expect(err).ToNot(HaveOccurred())
 
@@ -162,9 +174,9 @@ var _ = Describe("YandexCluster reconciliation check", func() {
 			Expect(e.Create(ctx, yc)).To(Succeed())
 
 			reconciler := &YandexClusterReconciler{
-				Client:       k8sClient,
-				YandexClient: e.mockClient,
-				Config:       config,
+				Client:              k8sClient,
+				YandexClientBuilder: e.mockClientBuilder,
+				Config:              config,
 			}
 
 			result, err := reconciler.Reconcile(ctx, e.getReconcileRequest(yc.Namespace, yc.Name))
@@ -189,9 +201,9 @@ var _ = Describe("YandexCluster reconciliation check", func() {
 			Expect(e.Create(ctx, yc)).To(Succeed())
 
 			reconciler := &YandexClusterReconciler{
-				Client:       k8sClient,
-				YandexClient: e.mockClient,
-				Config:       config,
+				Client:              k8sClient,
+				YandexClientBuilder: e.mockClientBuilder,
+				Config:              config,
 			}
 
 			// reconciler sets finalizer here.
@@ -231,9 +243,9 @@ var _ = Describe("YandexCluster reconciliation check", func() {
 			Expect(e.Create(ctx, yc)).To(Succeed())
 
 			reconciler := &YandexClusterReconciler{
-				Client:       k8sClient,
-				YandexClient: e.mockClient,
-				Config:       config,
+				Client:              k8sClient,
+				YandexClientBuilder: e.mockClientBuilder,
+				Config:              config,
 			}
 
 			// reconciler sets finalizer here.
@@ -269,9 +281,9 @@ var _ = Describe("YandexCluster reconciliation check", func() {
 			Expect(e.Create(ctx, yc)).To(Succeed())
 
 			reconciler := &YandexClusterReconciler{
-				Client:       k8sClient,
-				YandexClient: e.mockClient,
-				Config:       config,
+				Client:              k8sClient,
+				YandexClientBuilder: e.mockClientBuilder,
+				Config:              config,
 			}
 			req := e.getReconcileRequest(yc.Namespace, yc.Name)
 
@@ -309,9 +321,9 @@ var _ = Describe("YandexCluster reconciliation check", func() {
 			Expect(e.Create(ctx, yc)).To(Succeed())
 
 			reconciler := &YandexClusterReconciler{
-				Client:       k8sClient,
-				YandexClient: e.mockClient,
-				Config:       config,
+				Client:              k8sClient,
+				YandexClientBuilder: e.mockClientBuilder,
+				Config:              config,
 			}
 			req := e.getReconcileRequest(yc.Namespace, yc.Name)
 
@@ -400,9 +412,9 @@ var _ = Describe("YandexCluster reconciliation check", func() {
 			Expect(e.Create(ctx, yc)).To(Succeed())
 
 			reconciler := &YandexClusterReconciler{
-				Client:       k8sClient,
-				YandexClient: e.mockClient,
-				Config:       config,
+				Client:              k8sClient,
+				YandexClientBuilder: e.mockClientBuilder,
+				Config:              config,
 			}
 			req := e.getReconcileRequest(yc.Namespace, yc.Name)
 
@@ -475,9 +487,9 @@ var _ = Describe("YandexCluster reconciliation check", func() {
 			Expect(e.Create(ctx, yc)).To(Succeed())
 
 			reconciler := &YandexClusterReconciler{
-				Client:       k8sClient,
-				YandexClient: e.mockClient,
-				Config:       config,
+				Client:              k8sClient,
+				YandexClientBuilder: e.mockClientBuilder,
+				Config:              config,
 			}
 			req := e.getReconcileRequest(yc.Namespace, yc.Name)
 
@@ -517,9 +529,9 @@ var _ = Describe("YandexCluster reconciliation check", func() {
 			Expect(e.Create(ctx, yc)).To(Succeed())
 
 			reconciler := &YandexClusterReconciler{
-				Client:       k8sClient,
-				YandexClient: e.mockClient,
-				Config:       config,
+				Client:              k8sClient,
+				YandexClientBuilder: e.mockClientBuilder,
+				Config:              config,
 			}
 
 			// reconciler sets finalizer here.
@@ -552,9 +564,9 @@ var _ = Describe("YandexCluster reconciliation check", func() {
 			Expect(e.Create(ctx, yc)).To(Succeed())
 
 			reconciler := &YandexClusterReconciler{
-				Client:       k8sClient,
-				YandexClient: e.mockClient,
-				Config:       config,
+				Client:              k8sClient,
+				YandexClientBuilder: e.mockClientBuilder,
+				Config:              config,
 			}
 
 			// reconciler sets finalizer here.
@@ -587,9 +599,9 @@ var _ = Describe("YandexCluster reconciliation check", func() {
 			Expect(e.Create(ctx, yc)).To(Succeed())
 
 			reconciler := &YandexClusterReconciler{
-				Client:       k8sClient,
-				YandexClient: e.mockClient,
-				Config:       config,
+				Client:              k8sClient,
+				YandexClientBuilder: e.mockClientBuilder,
+				Config:              config,
 			}
 
 			// reconciler sets finalizer here.
@@ -644,6 +656,12 @@ var _ = Describe("YandexCluster deletion check", func() {
 		//+kubebuilder:scaffold:webhook
 		e.controller = gomock.NewController(GinkgoT())
 		e.mockClient = mock_client.NewMockClient(e.controller)
+		e.mockClientBuilder = mock_client.NewMockBuilder(e.controller)
+		e.mockClientBuilder.EXPECT().GetDefaultClient(gomock.Any()).
+			DoAndReturn(func(_ context.Context) (*mock_client.MockClient, error) {
+				return e.mockClient, nil
+			}).AnyTimes()
+		e.mockClient.EXPECT().Close(gomock.Any()).Return(nil).AnyTimes()
 		testNamespace, err = e.CreateNamespace(ctx, "deletion-check")
 		Expect(err).ToNot(HaveOccurred())
 
@@ -671,7 +689,7 @@ var _ = Describe("YandexCluster deletion check", func() {
 				Client:        e.Client,
 				Cluster:       e.getCAPIClusterWithInfrastructureReference(testNamespace.Name),
 				YandexCluster: yc,
-				YandexClient:  e.mockClient,
+				Builder:       e.mockClientBuilder,
 			})
 			Expect(err).NotTo(HaveOccurred())
 
@@ -705,7 +723,7 @@ var _ = Describe("YandexCluster deletion check", func() {
 				Client:        e.Client,
 				Cluster:       e.getCAPIClusterWithInfrastructureReference(testNamespace.Name),
 				YandexCluster: yc,
-				YandexClient:  e.mockClient,
+				Builder:       e.mockClientBuilder,
 			})
 			Expect(err).NotTo(HaveOccurred())
 			controllerutil.AddFinalizer(clusterScope.YandexCluster, infrav1.ClusterFinalizer)
@@ -732,7 +750,7 @@ var _ = Describe("YandexCluster deletion check", func() {
 				Client:        e.Client,
 				Cluster:       e.getCAPIClusterWithInfrastructureReference(testNamespace.Name),
 				YandexCluster: yc,
-				YandexClient:  e.mockClient,
+				Builder:       e.mockClientBuilder,
 			})
 			Expect(err).NotTo(HaveOccurred())
 

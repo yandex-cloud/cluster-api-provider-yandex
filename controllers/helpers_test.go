@@ -50,6 +50,7 @@ type ClusterTestEnv struct {
 	client.Client
 	controller               *gomock.Controller
 	mockClient               *mock_client.MockClient
+	mockClientBuilder        *mock_client.MockBuilder
 	clusterName              string
 	machineName              string
 	secretName               string

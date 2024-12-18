@@ -156,7 +156,7 @@ func (s *IdentityScope) UpdateLinkedClusters(ctx context.Context) error {
 	return nil
 }
 
-// Check if the identity is linked to any cluster.
+// IsLinkedToCluster checks if the identity is linked to any cluster.
 func (s *IdentityScope) IsLinkedToCluster(ctx context.Context) (bool, error) {
 	if err := s.UpdateLinkedClusters(ctx); err != nil {
 		return false, err

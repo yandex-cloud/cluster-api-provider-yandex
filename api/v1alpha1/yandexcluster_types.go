@@ -182,6 +182,7 @@ type IdentityReference struct {
 	Namespace string `json:"namespace"`
 }
 
+// NamespacedName returns the namespaced name of the YandexIdentity resource.
 func (ir *IdentityReference) NamespacedName() types.NamespacedName {
 	return types.NamespacedName{
 		Namespace: ir.Namespace,

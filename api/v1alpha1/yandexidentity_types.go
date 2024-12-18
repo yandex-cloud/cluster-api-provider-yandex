@@ -75,6 +75,7 @@ type YandexIdentityList struct {
 	Items           []YandexIdentity `json:"items"`
 }
 
+// GenerateSecretFinalizer returns the finalizer string for the YandexIdentity API object.
 func (i *YandexIdentity) GenerateSecretFinalizer() string {
 	return i.Name + "/" + IdentityFinalizer
 }
@@ -89,6 +90,7 @@ func (i *YandexIdentity) SetConditions(conditions clusterv1.Conditions) {
 	i.Status.Conditions = conditions
 }
 
+// GenerateLabelsForCluster returns the labels that should be applied to the cluster object.
 func (i *YandexIdentity) GenerateLabelsForCluster() map[string]string {
 	return map[string]string{
 		"yandexidentity/" + i.Namespace: i.Name,

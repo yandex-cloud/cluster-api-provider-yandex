@@ -17,8 +17,8 @@ type YandexClient struct {
 	sdk *ycsdk.SDK
 }
 
-// GetClient returns authentificated YandexClient.
-func GetClient(ctx context.Context, key string) (Client, error) {
+// getClient returns authentificated YandexClient.
+func getClient(ctx context.Context, key string) (Client, error) {
 	var SAKey iamkey.Key
 
 	if err := json.Unmarshal([]byte(key), &SAKey); err != nil {

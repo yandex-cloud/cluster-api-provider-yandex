@@ -39,15 +39,15 @@ func (b *YandexClientBuilder) GetClientFromSecret(ctx context.Context, cl kube.C
 		return nil, fmt.Errorf("key %s not found in secret %s/%s", keyName, secretName, metav1.NamespaceDefault)
 	}
 
-	return GetClient(ctx, string(key))
+	return getClient(ctx, string(key))
 }
 
 // GetDefaultClient returns YandexClient build from default key
 func (b *YandexClientBuilder) GetDefaultClient(ctx context.Context) (Client, error) {
-	return GetClient(context.Background(), b.defaultKey)
+	return getClient(context.Background(), b.defaultKey)
 }
 
 // GetClientFromKey returns YandexClient build from provided key
 func (b *YandexClientBuilder) GetClientFromKey(ctx context.Context, key string) (Client, error) {
-	return GetClient(ctx, key)
+	return getClient(ctx, key)
 }

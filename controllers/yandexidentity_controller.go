@@ -54,11 +54,6 @@ type YandexIdentityReconciler struct {
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
 func (r *YandexIdentityReconciler) Reconcile(ctx context.Context, req ctrl.Request) (_ ctrl.Result, rerr error) {
-	// logger := log.FromContext(ctx)
-
-	ctx, cancel := context.WithTimeout(ctx, r.Config.ReconcileTimeout)
-	defer cancel()
-
 	identity := &infrav1.YandexIdentity{}
 	if err := r.Client.Get(ctx, req.NamespacedName, identity); err != nil {
 		if apierrors.IsNotFound(err) {
@@ -78,7 +73,8 @@ func (r *YandexIdentityReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 
 	// Always close the scope when exiting this function so we can persist any YandexIdentity changes.
 	defer func() {
-		if err := identityScope.PersistIndentityChanges(ctx); err != nil && rerr == nil {
+		err := identityScope.PersistIndentityChanges(ctx)
+		if err != nil && !apierrors.IsNotFound(err) && rerr == nil {
 			rerr = err
 		}
 	}()
@@ -146,7 +142,7 @@ func (r *YandexIdentityReconciler) reconcile(ctx context.Context, identityScope 
 func (r *YandexIdentityReconciler) reconcileDelete(ctx context.Context, identityScope *scope.IdentityScope) (ctrl.Result, error) {
 	logger := log.FromContext(ctx)
 
-	if !controllerutil.ContainsFinalizer(identityScope.Identity, infrav1.ClusterFinalizer) {
+	if !controllerutil.ContainsFinalizer(identityScope.Identity, infrav1.IdentityFinalizer) {
 		logger.Info("no finalizer found on YandexIdentity, skipping deletion reconciliation")
 		return ctrl.Result{}, nil
 	}

@@ -28,9 +28,9 @@ func NewYandexClientBuilder(defaultKey, controllerNamespace string) *YandexClien
 }
 
 // GetClientFromSecret returns YandexClient build from secret and key
-func (b *YandexClientBuilder) GetClientFromSecret(ctx context.Context, cl kube.Client, secretName string, keyName string) (Client, error) {
+func (b *YandexClientBuilder) GetClientFromSecret(ctx context.Context, cl kube.Client, secretName, secretNamespace, keyName string) (Client, error) {
 	secret := &corev1.Secret{}
-	if err := cl.Get(ctx, kube.ObjectKey{Name: secretName, Namespace: b.controllerNamespace}, secret); err != nil {
+	if err := cl.Get(ctx, kube.ObjectKey{Name: secretName, Namespace: secretNamespace}, secret); err != nil {
 		return nil, err
 	}
 

@@ -46,24 +46,9 @@ func NewClusterScope(ctx context.Context, params ClusterScopeParams) (*ClusterSc
 	}
 
 	// Get Yandex Client for cluster
-	var yandexClient yandex.Client
-
-	if params.YandexCluster.Spec.IdentityRef != nil {
-		yc, err := params.Builder.GetClientFromSecret(ctx,
-			params.Client, params.YandexCluster.Spec.IdentityRef.Name, params.YandexCluster.Spec.IdentityRef.Namespace)
-		if err == nil {
-			yandexClient = yc
-		}
-		// no need to return error here, as we can fall back to default client
-	}
-
-	// Fall back to default client if no identity is provided
-	if yandexClient == nil {
-		yc, err := params.Builder.GetDefaultClient(ctx)
-		if err != nil {
-			return nil, err
-		}
-		yandexClient = yc
+	yandexClient, err := getYandexClient(ctx, params)
+	if err != nil {
+		return nil, err
 	}
 
 	helper, err := patch.NewHelper(params.YandexCluster, params.Client)
@@ -202,4 +187,30 @@ func (c *ClusterScope) UpdateIndentityLabels() {
 	}
 
 	c.YandexCluster.Labels["yandexidentity/"+c.YandexCluster.Spec.IdentityRef.Namespace] = c.YandexCluster.Spec.IdentityRef.Name
+}
+
+// getYandexClient returns Yandex Cloud client.
+func getYandexClient(ctx context.Context, params ClusterScopeParams) (yandex.Client, error) {
+	if params.YandexCluster.Spec.IdentityRef != nil {
+		identity := &infrav1.YandexIdentity{}
+		if err := params.Client.Get(ctx, params.YandexCluster.Spec.IdentityRef.NamespacedName(), identity); err != nil {
+			return nil, errors.Wrapf(err, "failed to get identity %s/%s",
+				params.YandexCluster.Spec.IdentityRef.Namespace, params.YandexCluster.Spec.IdentityRef.Name)
+		}
+
+		yc, err := params.Builder.GetClientFromSecret(ctx,
+			params.Client, identity.Spec.SecretName, params.YandexCluster.Spec.IdentityRef.Namespace, identity.Spec.KeyName)
+		if err == nil {
+			return yc, nil
+		}
+		// no need to return error here, as we can fall back to default client
+	}
+
+	// Fall back to default client if no identity is provided
+	yc, err := params.Builder.GetDefaultClient(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return yc, nil
 }

@@ -108,8 +108,6 @@ spec:
                 description: Ready is true when the secret is checked and resource
                   is ready.
                 type: boolean
-            required:
-            - ready
             type: object
         type: object
     served: true

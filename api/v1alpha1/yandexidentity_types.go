@@ -42,7 +42,8 @@ type YandexIdentitySpec struct {
 // YandexIdentityStatus defines the observed state of YandexIdentity.
 type YandexIdentityStatus struct {
 	// Ready is true when the secret is checked and resource is ready.
-	Ready bool `json:"ready"`
+	// +optional
+	Ready bool `json:"ready,omitempty"`
 
 	// Conditions is a list of conditions and their status.
 	// +optional
@@ -75,7 +76,7 @@ type YandexIdentityList struct {
 }
 
 func (i *YandexIdentity) GenerateSecretFinalizer() string {
-	return i.Name + "." + IdentityFinalizer
+	return i.Name + "/" + IdentityFinalizer
 }
 
 // GetConditions returns the list of conditions for an YandexIdentity API object.

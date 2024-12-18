@@ -8,7 +8,6 @@ import (
 	yandex "github.com/yandex-cloud/cluster-api-provider-yandex/internal/pkg/client"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
-	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
 	"sigs.k8s.io/cluster-api/util/patch"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
@@ -142,7 +141,7 @@ func (s *IdentityScope) RemoveSecretFinalizer(ctx context.Context) error {
 
 // UpdateLinkedClusters updates the linked clusters of the identity.
 func (s *IdentityScope) UpdateLinkedClusters(ctx context.Context) error {
-	clusterList := clusterv1.ClusterList{}
+	clusterList := infrav1.YandexClusterList{}
 	if err := s.client.List(ctx, &clusterList, s.generateIdentityLabelSelector()); err != nil {
 		return errors.Wrapf(err, "failed to list clusters linked to identity %s", s.Identity.Name)
 	}

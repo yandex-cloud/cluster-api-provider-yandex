@@ -34,20 +34,20 @@ type IdentityScope struct {
 // NewIdentityScope creates a new IdentityScope.
 func NewIdentityScope(params IdentityScopeParams) (*IdentityScope, error) {
 	if params.Client == nil {
-		return nil, errors.New("failed to generate new scope from nil Client")
+		return nil, errors.New("failed to generate new Identity scope from nil Client")
 	}
 
 	if params.Builder == nil {
-		return nil, errors.New("failed to generate new scope from nil Builder")
+		return nil, errors.New("failed to generate new Identity scope from nil Builder")
 	}
 
 	if params.YandexIdentity == nil {
-		return nil, errors.New("failed to generate new scope from nil YandexIdentity")
+		return nil, errors.New("failed to generate new Identity scope from nil YandexIdentity")
 	}
 
 	helper, err := patch.NewHelper(params.YandexIdentity, params.Client)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to init patch helper")
+		return nil, errors.Wrap(err, "failed to init patch helper for Identity scope")
 	}
 
 	return &IdentityScope{

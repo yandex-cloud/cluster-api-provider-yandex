@@ -39,6 +39,7 @@ import (
 	"github.com/caarlos0/env/v10"
 	"github.com/yandex-cloud/cluster-api-provider-yandex/controllers"
 	yandex "github.com/yandex-cloud/cluster-api-provider-yandex/internal/pkg/client"
+	"github.com/yandex-cloud/cluster-api-provider-yandex/internal/pkg/metrics"
 	"github.com/yandex-cloud/cluster-api-provider-yandex/internal/pkg/options"
 	//+kubebuilder:scaffold:imports
 )
@@ -55,6 +56,7 @@ func init() {
 	utilruntime.Must(clusterv1.AddToScheme(scheme))
 	utilruntime.Must(infrav1.AddToScheme(scheme))
 	//+kubebuilder:scaffold:scheme
+	metrics.RegisterAPIMetrics()
 }
 
 func main() {

@@ -101,10 +101,10 @@ func (r *YandexIdentityReconciler) reconcile(ctx context.Context, identityScope 
 	defer func() {
 		if rerr == nil {
 			identityScope.Identity.Status.Ready = true
-			conditions.MarkTrue(identityScope.Identity, clusterv1.ReadyCondition)
+			conditions.MarkTrue(identityScope.Identity, infrav1.IdentityReadyCondition)
 		} else {
 			identityScope.Identity.Status.Ready = false
-			conditions.MarkFalse(identityScope.Identity, clusterv1.ReadyCondition, "ReconciliationError", clusterv1.ConditionSeverityError, rerr.Error())
+			conditions.MarkFalse(identityScope.Identity, infrav1.IdentityReadyCondition, "ReconciliationError", clusterv1.ConditionSeverityError, rerr.Error())
 		}
 	}()
 

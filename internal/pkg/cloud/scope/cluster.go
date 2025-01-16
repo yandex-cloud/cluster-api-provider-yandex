@@ -177,8 +177,8 @@ func (c *ClusterScope) AppendLabels(l map[string]string) {
 	}
 }
 
-// UpdateIndentityLabels updates the cluster labels with identity reference.
-func (c *ClusterScope) UpdateIndentityLabels() {
+// UpdateIdentityLabels updates the cluster labels with identity reference.
+func (c *ClusterScope) UpdateIdentityLabels() {
 	if c.YandexCluster.Spec.IdentityRef == nil {
 		return
 	}

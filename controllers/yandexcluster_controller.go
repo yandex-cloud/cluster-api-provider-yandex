@@ -118,7 +118,7 @@ func (r *YandexClusterReconciler) reconcile(ctx context.Context, clusterScope *s
 		controllerutil.AddFinalizer(clusterScope.YandexCluster, infrav1.ClusterFinalizer)
 
 		// Set identity labels to YandexCluster.
-		clusterScope.UpdateIndentityLabels()
+		clusterScope.UpdateIdentityLabels()
 
 		logger.Info("Finalizer added to YandexCluster, requeueing")
 		return ctrl.Result{Requeue: true}, nil

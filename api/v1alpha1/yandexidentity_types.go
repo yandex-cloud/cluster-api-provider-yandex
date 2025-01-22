@@ -27,6 +27,8 @@ const (
 	IdentityFinalizer = "yandexidentity.infrastructure.cluster.x-k8s.io"
 )
 
+//+kubebuilder:validation:Required
+
 // YandexIdentitySpec defines the desired state of YandexIdentity.
 type YandexIdentitySpec struct {
 	// Name is the name of a secret in the same namespace as YandexIdentity.
@@ -57,7 +59,7 @@ type YandexIdentityStatus struct {
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
 
-// YandexIdentity is the Schema for the YandexIdentitys API.
+// YandexIdentity is the Schema for the YandexIdentities API.
 type YandexIdentity struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`

@@ -17,7 +17,7 @@ spec:
   - name: v1alpha1
     schema:
       openAPIV3Schema:
-        description: YandexIdentity is the Schema for the YandexIdentitys API.
+        description: YandexIdentity is the Schema for the YandexIdentities API.
         properties:
           apiVersion:
             description: |-

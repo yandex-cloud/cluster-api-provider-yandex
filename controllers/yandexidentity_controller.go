@@ -40,9 +40,9 @@ import (
 // YandexIdentityReconciler reconciles a YandexIdentity object.
 type YandexIdentityReconciler struct {
 	client.Client
-	Scheme              *runtime.Scheme
-	YandexClientBuilder yandex.Builder
-	Config              options.Config
+	Scheme             *runtime.Scheme
+	YandexClientGetter yandex.YandexClientGetter
+	Config             options.Config
 }
 
 //+kubebuilder:rbac:groups=infrastructure.cluster.x-k8s.io,resources=YandexIdentity,verbs=get;list;watch;create;update;patch;delete
@@ -63,9 +63,9 @@ func (r *YandexIdentityReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 	}
 
 	identityScope, err := scope.NewIdentityScope(scope.IdentityScopeParams{
-		Client:         r.Client,
-		Builder:        r.YandexClientBuilder,
-		YandexIdentity: identity,
+		Client:             r.Client,
+		YandexClientGetter: r.YandexClientGetter,
+		YandexIdentity:     identity,
 	})
 	if err != nil {
 		return ctrl.Result{}, errors.Wrap(err, "failed to create scope")

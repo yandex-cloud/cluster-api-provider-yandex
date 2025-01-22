@@ -44,9 +44,9 @@ import (
 // YandexClusterReconciler reconciles a YandexCluster object.
 type YandexClusterReconciler struct {
 	client.Client
-	Scheme              *runtime.Scheme
-	YandexClientBuilder yandex.Builder
-	Config              options.Config
+	Scheme             *runtime.Scheme
+	YandexClientGetter yandex.YandexClientGetter
+	Config             options.Config
 }
 
 //+kubebuilder:rbac:groups=infrastructure.cluster.x-k8s.io,resources=yandexclusters,verbs=get;list;watch;create;update;patch;delete
@@ -86,10 +86,10 @@ func (r *YandexClusterReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 	}
 
 	clusterScope, err := scope.NewClusterScope(ctx, scope.ClusterScopeParams{
-		Client:        r.Client,
-		Cluster:       cluster,
-		YandexCluster: yandexCluster,
-		Builder:       r.YandexClientBuilder,
+		Client:             r.Client,
+		Cluster:            cluster,
+		YandexCluster:      yandexCluster,
+		YandexClientGetter: r.YandexClientGetter,
 	})
 	if err != nil {
 		return ctrl.Result{}, err

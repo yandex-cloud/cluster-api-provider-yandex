@@ -51,8 +51,8 @@ const (
 // YandexMachineReconciler reconciles a YandexMachine object.
 type YandexMachineReconciler struct {
 	client.Client
-	Scheme              *runtime.Scheme
-	YandexClientBuilder yandex.Builder
+	Scheme             *runtime.Scheme
+	YandexClientGetter yandex.YandexClientGetter
 }
 
 //+kubebuilder:rbac:groups="",resources=secrets;,verbs=get;list;watch
@@ -109,10 +109,10 @@ func (r *YandexMachineReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 	}
 
 	clusterScope, err := scope.NewClusterScope(ctx, scope.ClusterScopeParams{
-		Client:        r.Client,
-		Cluster:       cluster,
-		YandexCluster: yandexCluster,
-		Builder:       r.YandexClientBuilder,
+		Client:             r.Client,
+		Cluster:            cluster,
+		YandexCluster:      yandexCluster,
+		YandexClientGetter: r.YandexClientGetter,
 	})
 	if err != nil {
 		return ctrl.Result{}, err

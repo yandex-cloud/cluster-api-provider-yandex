@@ -15,20 +15,18 @@ import (
 
 // IdentityScopeParams defines the input parameters used to create a new IdentityScope.
 type IdentityScopeParams struct {
-	Client         client.Client
-	Builder        yandex.Builder
-	YandexIdentity *infrav1.YandexIdentity
+	Client             client.Client
+	YandexClientGetter yandex.YandexClientGetter
+	YandexIdentity     *infrav1.YandexIdentity
 }
 
 // IdentityScope defines a scope defined around a YandexIdentity.
 type IdentityScope struct {
-	Identity *infrav1.YandexIdentity
-
-	client      client.Client
-	patchHelper *patch.Helper
-
-	builder yandex.Builder
-	secret  *corev1.Secret
+	Identity           *infrav1.YandexIdentity
+	client             client.Client
+	patchHelper        *patch.Helper
+	yandexClientGetter yandex.YandexClientGetter
+	secret             *corev1.Secret
 }
 
 // NewIdentityScope creates a new IdentityScope.
@@ -37,7 +35,7 @@ func NewIdentityScope(params IdentityScopeParams) (*IdentityScope, error) {
 		return nil, errors.New("failed to generate new Identity scope from nil Client")
 	}
 
-	if params.Builder == nil {
+	if params.YandexClientGetter == nil {
 		return nil, errors.New("failed to generate new Identity scope from nil Builder")
 	}
 
@@ -51,10 +49,10 @@ func NewIdentityScope(params IdentityScopeParams) (*IdentityScope, error) {
 	}
 
 	return &IdentityScope{
-		client:      params.Client,
-		Identity:    params.YandexIdentity,
-		builder:     params.Builder,
-		patchHelper: helper,
+		client:             params.Client,
+		Identity:           params.YandexIdentity,
+		yandexClientGetter: params.YandexClientGetter,
+		patchHelper:        helper,
 	}, nil
 }
 
@@ -88,7 +86,7 @@ func (s *IdentityScope) CheckConnectWithIdentity(ctx context.Context) error {
 	}
 
 	// Check if YandexClient can be created
-	yandexClient, err := s.builder.GetClientFromKey(ctx, string(identityKey))
+	yandexClient, err := s.yandexClientGetter.GetFromKey(ctx, string(identityKey))
 	if err != nil {
 		return errors.Wrap(err, "failed to create YandexClient")
 	}

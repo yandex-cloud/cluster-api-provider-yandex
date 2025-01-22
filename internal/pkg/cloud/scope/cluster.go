@@ -23,10 +23,10 @@ const (
 
 // ClusterScopeParams defines the input parameters used to create a new Scope.
 type ClusterScopeParams struct {
-	Client        client.Client
-	Cluster       *clusterv1.Cluster
-	Builder       yandex.Builder
-	YandexCluster *infrav1.YandexCluster
+	Client             client.Client
+	Cluster            *clusterv1.Cluster
+	YandexClientGetter yandex.YandexClientGetter
+	YandexCluster      *infrav1.YandexCluster
 }
 
 // NewClusterScope creates a new Scope from the supplied parameters.
@@ -41,7 +41,7 @@ func NewClusterScope(ctx context.Context, params ClusterScopeParams) (*ClusterSc
 	if params.YandexCluster == nil {
 		return nil, errors.New("failed to generate new scope from nil YandexCluster")
 	}
-	if params.Builder == nil {
+	if params.YandexClientGetter == nil {
 		return nil, errors.New("failed to generate new scope from nil ClientBuilder")
 	}
 
@@ -199,7 +199,7 @@ func getYandexClient(ctx context.Context, params ClusterScopeParams) (yandex.Cli
 				params.YandexCluster.Spec.IdentityRef.Namespace, params.YandexCluster.Spec.IdentityRef.Name)
 		}
 
-		yc, err := params.Builder.GetClientFromSecret(ctx,
+		yc, err := params.YandexClientGetter.GetFromSecret(ctx,
 			params.Client, identity.Spec.SecretName, params.YandexCluster.Spec.IdentityRef.Namespace, identity.Spec.KeyName)
 		if err == nil {
 			return yc, nil
@@ -208,7 +208,7 @@ func getYandexClient(ctx context.Context, params ClusterScopeParams) (yandex.Cli
 	}
 
 	// Fall back to default client if no identity is provided
-	yc, err := params.Builder.GetDefaultClient(ctx)
+	yc, err := params.YandexClientGetter.GetDefault(ctx)
 	if err != nil {
 		return nil, err
 	}

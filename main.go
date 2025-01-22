@@ -118,21 +118,21 @@ func main() {
 		controllerNamespace = defaultNamespace
 	}
 
-	yandexClientBuilder := yandex.NewYandexClientBuilder(cfg.YandexCloudSAKey, controllerNamespace)
+	yandexClientProvider := yandex.NewYandexClientProvider(cfg.YandexCloudSAKey, controllerNamespace)
 
 	if err = (&controllers.YandexClusterReconciler{
-		Client:              mgr.GetClient(),
-		Scheme:              mgr.GetScheme(),
-		YandexClientBuilder: yandexClientBuilder,
-		Config:              cfg,
+		Client:             mgr.GetClient(),
+		Scheme:             mgr.GetScheme(),
+		YandexClientGetter: yandexClientProvider,
+		Config:             cfg,
 	}).SetupWithManager(ctx, mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "YandexCluster")
 		os.Exit(1)
 	}
 	if err = (&controllers.YandexMachineReconciler{
-		Client:              mgr.GetClient(),
-		Scheme:              mgr.GetScheme(),
-		YandexClientBuilder: yandexClientBuilder,
+		Client:             mgr.GetClient(),
+		Scheme:             mgr.GetScheme(),
+		YandexClientGetter: yandexClientProvider,
 	}).SetupWithManager(ctx, mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "YandexMachine")
 		os.Exit(1)
@@ -148,9 +148,9 @@ func main() {
 	}
 
 	if err = (&controllers.YandexIdentityReconciler{
-		Client:              mgr.GetClient(),
-		Scheme:              mgr.GetScheme(),
-		YandexClientBuilder: yandexClientBuilder,
+		Client:             mgr.GetClient(),
+		Scheme:             mgr.GetScheme(),
+		YandexClientGetter: yandexClientProvider,
 	}).SetupWithManager(ctx, mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "YandexIdentity")
 		os.Exit(1)

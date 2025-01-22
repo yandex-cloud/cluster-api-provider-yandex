@@ -9,8 +9,8 @@ import (
 	kube "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-// YandexClientBuilder is a builder for YandexClient
-type YandexClientBuilder struct {
+// YandexClientProvider is a provider for YandexClient
+type YandexClientProvider struct {
 	// defaultKey is a default key for YandexClient from flags
 	// for backward compatibility
 	defaultKey string
@@ -19,16 +19,16 @@ type YandexClientBuilder struct {
 	controllerNamespace string
 }
 
-// NewYandexClientBuilder returns new YandexClientBuilder
-func NewYandexClientBuilder(defaultKey, controllerNamespace string) *YandexClientBuilder {
-	return &YandexClientBuilder{
+// NewYandexClientProvider returns new ClientProvider
+func NewYandexClientProvider(defaultKey, controllerNamespace string) *YandexClientProvider {
+	return &YandexClientProvider{
 		defaultKey:          defaultKey,
 		controllerNamespace: controllerNamespace,
 	}
 }
 
-// GetClientFromSecret returns YandexClient build from secret and key
-func (b *YandexClientBuilder) GetClientFromSecret(ctx context.Context, cl kube.Client, secretName, secretNamespace, keyName string) (Client, error) {
+// GetFromSecret returns YandexClient build from secret and key
+func (b *YandexClientProvider) GetFromSecret(ctx context.Context, cl kube.Client, secretName, secretNamespace, keyName string) (Client, error) {
 	secret := &corev1.Secret{}
 	if err := cl.Get(ctx, kube.ObjectKey{Name: secretName, Namespace: secretNamespace}, secret); err != nil {
 		return nil, err
@@ -42,12 +42,12 @@ func (b *YandexClientBuilder) GetClientFromSecret(ctx context.Context, cl kube.C
 	return getClient(ctx, string(key))
 }
 
-// GetDefaultClient returns YandexClient build from default key
-func (b *YandexClientBuilder) GetDefaultClient(ctx context.Context) (Client, error) {
+// GetDefault returns YandexClient build from default key
+func (b *YandexClientProvider) GetDefault(ctx context.Context) (Client, error) {
 	return getClient(context.Background(), b.defaultKey)
 }
 
-// GetClientFromKey returns YandexClient build from provided key
-func (b *YandexClientBuilder) GetClientFromKey(ctx context.Context, key string) (Client, error) {
+// GetFromKey returns YandexClient build from provided key
+func (b *YandexClientProvider) GetFromKey(ctx context.Context, key string) (Client, error) {
 	return getClient(ctx, key)
 }

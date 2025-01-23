@@ -70,7 +70,7 @@ spec:
     - echo "127.0.0.1   localhost" >>/etc/hosts
     - echo "127.0.0.1   {{ v1.local_hostname }}" >>/etc/hosts
     - echo "{{ v1.local_hostname }}" >/etc/hostname
-  version: "${KUBERNETES_VERSION:=v1.25.14}"
+  version: "${KUBERNETES_VERSION:=v1.31.4}"
 ---
 kind: YandexMachineTemplate
 apiVersion: infrastructure.cluster.x-k8s.io/v1alpha1
@@ -108,7 +108,7 @@ spec:
         role: worker
     spec:
       clusterName: "${CLUSTER_NAME}"
-      version: "${KUBERNETES_VERSION:=v1.25.14}"
+      version: "${KUBERNETES_VERSION:=v1.31.4}"
       bootstrap:
         configRef:
           name: "${CLUSTER_NAME}-worker"

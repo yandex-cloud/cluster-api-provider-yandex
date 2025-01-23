@@ -100,6 +100,13 @@
 
 [Образ](https://yandex.cloud/ru/docs/compute/concepts/image) ОС, который будет развернут на узлах создаваемого кластера, должен быть подготовлен для работы с Kubernetes Cluster API, а также совместим с Compute Cloud.
 
+Вы можете использовать готовый образ ОС на основе Ubuntu 24.04, подготовленный нами для работы с Kubernetes версии 1.31.4. Для этого при [формировании манифеста кластера](#сформируйте-манифесты-кластера) в переменной `YANDEX_CONTROL_PLANE_MACHINE_IMAGE_ID` укажите идентификатор образа `fd8a3kknu25826s8hbq3`.
+
+> [!IMPORTANT]
+> Образ создан исключительно в ознакомительных целях, использовать его в промышленной эксплуатации не рекомендуется.
+
+Вы можете подготовить собственный образ ОС, следуя инструкции ниже:
+
 1. [Соберите](https://image-builder.sigs.k8s.io/capi/capi) образ ОС с помощью утилиты [Image Builder](https://github.com/kubernetes-sigs/image-builder).
 
     См. также [Подготовить образ диска для Compute Cloud](https://yandex.cloud/ru/docs/compute/operations/image-create/custom-image).

@@ -28,6 +28,7 @@ import (
 	capierrors "sigs.k8s.io/cluster-api/errors"
 	"sigs.k8s.io/cluster-api/util"
 	"sigs.k8s.io/cluster-api/util/annotations"
+	"sigs.k8s.io/cluster-api/util/conditions"
 	"sigs.k8s.io/cluster-api/util/predicates"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -40,7 +41,7 @@ import (
 	yandex "github.com/yandex-cloud/cluster-api-provider-yandex/internal/pkg/client"
 	"github.com/yandex-cloud/cluster-api-provider-yandex/internal/pkg/cloud/scope"
 	"github.com/yandex-cloud/cluster-api-provider-yandex/internal/pkg/cloud/services/compute"
-	"github.com/yandex-cloud/cluster-api-provider-yandex/internal/pkg/cloud/services/loadbalancers"
+	loadbalancer "github.com/yandex-cloud/cluster-api-provider-yandex/internal/pkg/cloud/services/loadbalancers"
 )
 
 const (
@@ -170,7 +171,20 @@ func (r *YandexMachineReconciler) reconcile(ctx context.Context, machineScope *s
 		return ctrl.Result{RequeueAfter: RequeueDuration}, nil
 	case infrav1.InstanceStatusRunning:
 		logger.Info("YandexMachine instance is running", "instance-id", machineScope.GetInstanceID())
+
+		// Set ProviderID on the node if not already set
+		if !conditions.IsTrue(machineScope.YandexMachine, infrav1.ProviderIDSetCondition) {
+			if err := machineScope.SetNodeProviderID(ctx); err != nil {
+				conditions.MarkFalse(machineScope.YandexMachine, infrav1.ProviderIDSetCondition, infrav1.ConditionStatusNotfound, clusterv1.ConditionSeverityError, err.Error())
+
+				return ctrl.Result{Requeue: true}, nil
+			}
+
+			conditions.MarkTrue(machineScope.YandexMachine, infrav1.ProviderIDSetCondition)
+		}
+
 		machineScope.SetReady()
+
 		return ctrl.Result{}, nil
 	default:
 		machineScope.SetFailureReason(capierrors.UpdateMachineError)

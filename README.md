@@ -212,6 +212,7 @@ export IMG=cr.yandex/crpsjg1coh47p81vh2lc/capy/cluster-api-provider-yandex:lates
     export YANDEX_FOLDER_ID=<идентификатор_каталога>
     export YANDEX_NETWORK_ID=<идентификатор_сети>
     export YANDEX_SUBNET_ID=<идентификатор_подсети>
+    export YANDEX_ZONE_ID=<идентификатор_зоны>
     ```
 
 1. Сформируйте манифесты кластера:

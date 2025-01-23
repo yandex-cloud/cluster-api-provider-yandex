@@ -228,7 +228,7 @@ export IMG=cr.yandex/crpsjg1coh47p81vh2lc/capy/cluster-api-provider-yandex:lates
 
 ### (Опционально) Настройте эндпоинт API-сервера
 
-Задайте в менифесте `YandexCluster` следующие параметры для L7-балансировщика:
+Задайте в манифесте `YandexCluster` следующие параметры для L7-балансировщика:
 
 ```yaml
   loadBalancer:
@@ -278,6 +278,10 @@ kubectl logs <имя_пода_с_capy-controller-manager> \
     ```bash
     kubectl cluster-info
     ```
+## Установите в созданный кластер CCM
+
+Установите в кластер Cloud Controller Manager для Yandex Cloud:
+* [Cloud Controller Manager for Yandex.Cloud](https://github.com/deckhouse/yandex-cloud-controller-manager)
 
 ## Установите в созданный кластер CNI
 
@@ -286,6 +290,7 @@ kubectl logs <имя_пода_с_capy-controller-manager> \
 Подробнее см. в документации:
 * [Cilium Quick Installation](https://docs.cilium.io/en/stable/gettingstarted/k8s-install-default/)
 * [Quickstart for Calico on Kubernetes](https://docs.tigera.io/calico/latest/getting-started/kubernetes/quickstart)
+
 
 ## Как удалить созданные ресурсы
 

@@ -29,7 +29,10 @@
 1. [Сформируйте манифесты кластера](#сформируйте-манифесты-кластера).
 1. [Разверните кластер](#разверните-кластер).
 1. [Подключитесь к кластеру](#подключитесь-к-кластеру).
+1. [Установите в созданный кластер CCM](#установите-в-созданный-кластер-ccm).
 1. [Установите в созданный кластер CNI](#установите-в-созданный-кластер-cni).
+1. [Проверьте связь управляющего кластера с созданным](#проверьте-связь-управляющего-кластера-с-созданным).
+1. [Добавьте в созданный кластер узел для рабочей нагрузки](#добавьте-в-созданный-кластер-узел-для-рабочей-нагрузки).
 
 Если созданные ресурсы вам больше не нужны, [удалите](#как-удалить-созданные-ресурсы) их.
 
@@ -74,7 +77,7 @@
     Также вы можете развернуть управляющий кластер локально, например с помощью утилиты [kind](https://kind.sigs.k8s.io/).
 
 > [!IMPORTANT]
-> Чтобы иметь возможность загружать Docker-образ c провайдером Yandex Cloud из [реестра](https://yandex.cloud/ru/docs/container-registry/concepts/registry) Yandex Container Registry, у управляющего кластера должен быть доступ в интернет. Например, вы можете [настроить NAT-шлюз](https://yandex.cloud/ru/docs/vpc/operations/create-nat-gateway) в подсети управляющего кластера.
+> Чтобы иметь возможность загружать Docker-образы c компонентами, которые будут развернуты внутри управляющего и создаваемого кластеров, у этих кластеров должен быть доступ в интернет. Например, вы можете [настроить NAT-шлюз](https://yandex.cloud/ru/docs/vpc/operations/create-nat-gateway) в подсетях кластеров.
 
 ## Настройте окружение
 
@@ -115,15 +118,17 @@
 
 ## Получите Docker-образ с провайдером Yandex Cloud
 
-Вы можете [использовать готовый Docker-образ](#использовать-готовый-docker-образ) с провайдером Yandex Cloud из публичного [реестра](https://yandex.cloud/ru/docs/container-registry/concepts/registry) Container Registry или [собрать его самостоятельно](#собрать-docker-образ-из-исходного-кода) из исходного кода.
+Вы можете [использовать готовый Docker-образ](#использовать-готовый-docker-образ) с провайдером Yandex Cloud из публичного [реестра](https://yandex.cloud/ru/docs/container-registry/concepts/registry) Yandex Container Registry или [собрать его самостоятельно](#собрать-docker-образ-из-исходного-кода) из исходного кода.
 
 ### Использовать готовый Docker-образ
 
-Добавьте в переменную окружения `IMG` путь к Docker-образу с провайдером Yandex Cloud в публичном реестре:
+1. [Аутентифицируйтесь](https://yandex.cloud/ru/docs/container-registry/operations/authentication#cred-helper) в реестре Container Registry с помощью Docker credential helper.
 
-```bash
-export IMG=cr.yandex/crpsjg1coh47p81vh2lc/capy/cluster-api-provider-yandex:latest
-```
+1. Добавьте в переменную окружения `IMG` путь к Docker-образу с провайдером Yandex Cloud в публичном реестре:
+
+    ```bash
+    export IMG=cr.yandex/crpsjg1coh47p81vh2lc/capy/cluster-api-provider-yandex:latest
+    ```
 
 ### Собрать Docker-образ из исходного кода
 
@@ -199,11 +204,13 @@ export IMG=cr.yandex/crpsjg1coh47p81vh2lc/capy/cluster-api-provider-yandex:lates
 
 ## Сформируйте манифесты кластера
 
+1. Выберите [зону доступности](https://yandex.cloud/ru/docs/overview/concepts/geo-scope), в которой вы хотите развернуть кластер.
+
 1. Получите идентификаторы ресурсов Yandex Cloud для развертывания кластера:
-    * [образ ОС](https://yandex.cloud/ru/docs/compute/operations/image-control/image-control-get-info)
-    * [каталог](https://yandex.cloud/ru/docs/resource-manager/operations/folder/get-id)
-    * [сеть](https://yandex.cloud/ru/docs/vpc/operations/network-get-info)
-    * [подсеть](https://yandex.cloud/ru/docs/vpc/operations/subnet-get-info)
+    * [образ ОС](https://yandex.cloud/ru/docs/compute/operations/image-control/image-control-get-info);
+    * [каталог](https://yandex.cloud/ru/docs/resource-manager/operations/folder/get-id);
+    * [сеть](https://yandex.cloud/ru/docs/vpc/operations/network-get-info);
+    * [подсеть](https://yandex.cloud/ru/docs/vpc/operations/subnet-get-info) в выбранной зоне доступности.
 
 1. Передайте идентификаторы ресурсов в переменные окружения:
 
@@ -212,7 +219,7 @@ export IMG=cr.yandex/crpsjg1coh47p81vh2lc/capy/cluster-api-provider-yandex:lates
     export YANDEX_FOLDER_ID=<идентификатор_каталога>
     export YANDEX_NETWORK_ID=<идентификатор_сети>
     export YANDEX_SUBNET_ID=<идентификатор_подсети>
-    export YANDEX_ZONE_ID=<идентификатор_зоны>
+    export YANDEX_ZONE_ID=<идентификатор_зоны_доступности>
     ```
 
 1. Сформируйте манифесты кластера:
@@ -280,6 +287,13 @@ kubectl logs <имя_пода_с_capy-controller-manager> \
     kubectl cluster-info
     ```
 
+## Установите в созданный кластер CCM
+
+Для обеспечения связи между ресурсами кластера и ресурсами Yandex Cloud, установите в созданный кластер [Cloud Controller Manager](https://kubernetes.io/docs/concepts/architecture/cloud-controller/), например [yandex-cloud-controller-manager](https://github.com/deckhouse/yandex-cloud-controller-manager/tree/master).
+
+> [!IMPORTANT]
+> Если вы хотите использовать решение `yandex-cloud-controller-manager`, добавьте в пример манифеста [yandex-cloud-controller-manager.yaml](https://github.com/deckhouse/yandex-cloud-controller-manager/blob/master/manifests/yandex-cloud-controller-manager.yaml) для `DaemonSet` актуальную версию Docker-образа и переменную окружения `YANDEX_CLUSTER_NAME` с именем созданного кластера в значении.
+
 ## Установите в созданный кластер CNI
 
 Чтобы обеспечить сетевую функциональность для подов в новом кластере, установите в него [Container Network Interface](https://kubernetes.io/docs/concepts/extend-kubernetes/compute-storage-net/network-plugins/), например [Cilium](https://github.com/cilium/cilium) или [Calico](https://github.com/projectcalico/calico).
@@ -287,6 +301,95 @@ kubectl logs <имя_пода_с_capy-controller-manager> \
 Подробнее см. в документации:
 * [Cilium Quick Installation](https://docs.cilium.io/en/stable/gettingstarted/k8s-install-default/)
 * [Quickstart for Calico on Kubernetes](https://docs.tigera.io/calico/latest/getting-started/kubernetes/quickstart)
+
+## Проверьте связь управляющего кластера с созданным
+
+1. На ВМ, находящейся в той же сети, в которой расположен новый кластер, убедитесь, что все поды с необходимыми системными компонентами развернуты в кластере:
+
+    ```bash
+    kubectl get pods --all-namespaces
+    ```
+
+    Пример вывода:
+
+    ```bash
+    NAMESPACE     NAME                                                       READY   STATUS    RESTARTS   AGE
+    kube-system   calico-kube-controllers-695bcfd99c-rcc42                   1/1     Running   0          3h55m
+    kube-system   calico-node-9qhxj                                          1/1     Running   0          3h55m
+    kube-system   coredns-7c65d6cfc9-52tvn                                   1/1     Running   0          4h50m
+    kube-system   coredns-7c65d6cfc9-dpgvg                                   1/1     Running   0          4h50m
+    kube-system   etcd-capy-cluster-control-plane-p646q                      1/1     Running   0          4h50m
+    kube-system   kube-apiserver-capy-cluster-control-plane-p646q            1/1     Running   0          4h50m
+    kube-system   kube-controller-manager-capy-cluster-control-plane-p646q   1/1     Running   0          4h50m
+    kube-system   kube-proxy-wb7jr                                           1/1     Running   0          4h50m
+    kube-system   kube-scheduler-capy-cluster-control-plane-p646q            1/1     Running   0          4h50m
+    kube-system   yandex-cloud-controller-manager-nwhwv                      1/1     Running   0          26s
+    ```
+
+1. На локальном компьютере проверьте связь управляющего кластера с созданным:
+
+    ```bash
+    clusterctl describe cluster <имя_созданного_кластера>
+    ```
+
+    Пример вывода:
+
+    ```bash
+    NAME                                                             READY  SEVERITY  REASON  SINCE  MESSAGE                                                                           
+    Cluster/capy-cluster                                             True                     10s
+    ├─ClusterInfrastructure - YandexCluster/capy-cluster                                   
+    └─ControlPlane - KubeadmControlPlane/capy-cluster-control-plane  True                     10s                                                                                       
+      └─3 Machines...                                                True                     3m9s   
+      See capy-cluster-control-plane-cf72l, capy-cluster-control-plane-g9jw7, ...
+    ```
+
+## Добавьте в созданный кластер узел для рабочей нагрузки
+
+1. Отредактируйте манифест `MachineDeployment` c параметрами узлов кластера для рабочей нагрузки. Для этого на локальном компьютере выполните команду:
+
+    ```bash
+    kubectl edit machinedeployment <имя_созданного_кластера>-worker
+    ```
+
+    Измените значение `spec.replicas`, например, на `1`.
+
+    За процессом развертывания узла можно следить в [консоли управления](https://console.yandex.cloud/) Yandex Cloud.
+
+1. Проверьте, что новый узел доступен в созданном кластере. Для этого на ВМ, находящейся в той же сети, в которой расположен новый кластер, выполните команду:
+
+    ```bash
+    kubectl get nodes
+    ```
+
+    Пример вывода:
+
+    ```bash
+    NAME                                  STATUS   ROLES           AGE     VERSION
+    capy-cluster-control-plane-cf72l   Ready    control-plane   8m49s   v1.31.4
+    capy-cluster-control-plane-g9jw7   Ready    control-plane   5m46s   v1.31.4
+    capy-cluster-control-plane-p646q   Ready    control-plane   5h1m    v1.31.4
+    capy-cluster-worker-m2bs4-fmghk    Ready    <none>          2m47s   v1.31.4
+    ```
+
+1. На локальном компьютере проверьте, что новый узел доступен из управляющего кластера:
+
+    ```bash
+    clusterctl describe cluster <имя_созданного_кластера>
+    ```
+
+    Пример вывода:
+
+    ```bash
+    NAME                                                                           READY  SEVERITY  REASON  SINCE  MESSAGE
+    Cluster/capy-cluster                                                           True                     8m22s
+    ├─ClusterInfrastructure - YandexCluster/capy-cluster
+    ├─ControlPlane - KubeadmControlPlane/capy-cluster-control-plane                True                     8m22s                                                                                     
+    │ └─3 Machines...                                                              True                     11m    See capy-cluster-control-plane-cf72l, capy-cluster-control-plane-g9jw7, ...  
+    └─Workers                                               
+      └─MachineDeployment/capy-cluster-worker                                      True                     3m31s
+        └─Machine/capy-cluster-worker-m2bs4-fmghk                                  True                     5m
+          └─MachineInfrastructure - YandexMachine/capy-cluster-worker-m2bs4-fmghk     
+    ```
 
 ## Как удалить созданные ресурсы
 

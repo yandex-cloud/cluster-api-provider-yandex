@@ -236,7 +236,7 @@
 
 ### (Опционально) Настройте эндпоинт API-сервера
 
-Задайте в менифесте `YandexCluster` следующие параметры для L7-балансировщика:
+Задайте в манифесте `YandexCluster` следующие параметры для L7-балансировщика:
 
 ```yaml
   loadBalancer:
@@ -289,7 +289,7 @@ kubectl logs <имя_пода_с_capy-controller-manager> \
 
 ## Установите в созданный кластер CCM
 
-Для обеспечения связи между ресурсами кластера и ресурсами Yandex Cloud, установите в созданный кластер [Cloud Controller Manager](https://kubernetes.io/docs/concepts/architecture/cloud-controller/), например [yandex-cloud-controller-manager](https://github.com/deckhouse/yandex-cloud-controller-manager/tree/master).
+Для обеспечения связи между ресурсами кластера и ресурсами Yandex Cloud, установите в созданный кластер [Cloud Controller Manager](https://kubernetes.io/docs/concepts/architecture/cloud-controller/), например [Kubernetes Cloud Controller Manager for Yandex Cloud](https://github.com/deckhouse/yandex-cloud-controller-manager/tree/master).
 
 > [!IMPORTANT]
 > Если вы хотите использовать решение `yandex-cloud-controller-manager`, добавьте в пример манифеста [yandex-cloud-controller-manager.yaml](https://github.com/deckhouse/yandex-cloud-controller-manager/blob/master/manifests/yandex-cloud-controller-manager.yaml) для `DaemonSet` актуальную версию Docker-образа и переменную окружения `YANDEX_CLUSTER_NAME` с именем созданного кластера в значении.

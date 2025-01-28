@@ -292,7 +292,7 @@ kubectl logs <имя_пода_с_capy-controller-manager> \
 Для обеспечения связи между ресурсами кластера и ресурсами Yandex Cloud, установите в созданный кластер [Cloud Controller Manager](https://kubernetes.io/docs/concepts/architecture/cloud-controller/), например [Kubernetes Cloud Controller Manager for Yandex Cloud](https://github.com/deckhouse/yandex-cloud-controller-manager/tree/master).
 
 > [!IMPORTANT]
-> Если вы хотите использовать решение `yandex-cloud-controller-manager`, добавьте в пример манифеста [yandex-cloud-controller-manager.yaml](https://github.com/deckhouse/yandex-cloud-controller-manager/blob/master/manifests/yandex-cloud-controller-manager.yaml) для `DaemonSet` актуальную версию Docker-образа и переменную окружения `YANDEX_CLUSTER_NAME` с именем созданного кластера в значении.
+> Если вы хотите использовать решение Kubernetes Cloud Controller Manager for Yandex Cloud, добавьте в пример манифеста [yandex-cloud-controller-manager.yaml](https://github.com/deckhouse/yandex-cloud-controller-manager/blob/master/manifests/yandex-cloud-controller-manager.yaml) для `DaemonSet` актуальную версию Docker-образа и переменную окружения `YANDEX_CLUSTER_NAME` с именем созданного кластера в значении.
 
 ## Установите в созданный кластер CNI
 
@@ -335,12 +335,11 @@ kubectl logs <имя_пода_с_capy-controller-manager> \
     Пример вывода:
 
     ```bash
-    NAME                                                             READY  SEVERITY  REASON  SINCE  MESSAGE                                                                           
+    NAME                                                             READY  SEVERITY  REASON  SINCE  MESSAGE                                  
     Cluster/capy-cluster                                             True                     10s
     ├─ClusterInfrastructure - YandexCluster/capy-cluster                                   
     └─ControlPlane - KubeadmControlPlane/capy-cluster-control-plane  True                     10s                                                                                       
-      └─3 Machines...                                                True                     3m9s   
-      See capy-cluster-control-plane-cf72l, capy-cluster-control-plane-g9jw7, ...
+      └─3 Machines...                                                True                     3m9s   See capy-cluster-control-plane-cf72l, capy-cluster-control-plane-g9jw7, ...
     ```
 
 ## Добавьте в созданный кластер узел для рабочей нагрузки
@@ -364,7 +363,7 @@ kubectl logs <имя_пода_с_capy-controller-manager> \
     Пример вывода:
 
     ```bash
-    NAME                                  STATUS   ROLES           AGE     VERSION
+    NAME                               STATUS   ROLES           AGE     VERSION
     capy-cluster-control-plane-cf72l   Ready    control-plane   8m49s   v1.31.4
     capy-cluster-control-plane-g9jw7   Ready    control-plane   5m46s   v1.31.4
     capy-cluster-control-plane-p646q   Ready    control-plane   5h1m    v1.31.4

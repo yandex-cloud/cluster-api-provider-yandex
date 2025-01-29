@@ -32,7 +32,6 @@
 1. [Установите в созданный кластер CCM](#установите-в-созданный-кластер-ccm).
 1. [Установите в созданный кластер CNI](#установите-в-созданный-кластер-cni).
 1. [Проверьте связь управляющего кластера с созданным](#проверьте-связь-управляющего-кластера-с-созданным).
-1. [Добавьте в созданный кластер узел для рабочей нагрузки](#добавьте-в-созданный-кластер-узел-для-рабочей-нагрузки).
 
 Если созданные ресурсы вам больше не нужны, [удалите](#как-удалить-созданные-ресурсы) их.
 
@@ -234,6 +233,14 @@
 > [!IMPORTANT]
 > После создания кластера, присвоить L7-балансировщику фиксированный IP-адрес будет нельзя.
 
+Согласно сгенерированному манифесту будут развернуты три узла с Control Plane. Если вы хотите также сразу развернуть узлы для рабочей нагрузки, выполните команду:
+
+```bash
+clusterctl generate cluster <имя_создаваемого_кластера> \
+  --worker-machine-count <количество_узлов_для_рабочей_нагрузки> \
+  --from templates/cluster-template.yaml > /tmp/capy-cluster.yaml
+```
+
 ### (Опционально) Настройте эндпоинт API-сервера
 
 Задайте в манифесте `YandexCluster` следующие параметры для L7-балансировщика:
@@ -340,54 +347,6 @@ kubectl logs <имя_пода_с_capy-controller-manager> \
     ├─ClusterInfrastructure - YandexCluster/capy-cluster                                   
     └─ControlPlane - KubeadmControlPlane/capy-cluster-control-plane  True                     10s                                                                                       
       └─3 Machines...                                                True                     3m9s   See capy-cluster-control-plane-cf72l, capy-cluster-control-plane-g9jw7, ...
-    ```
-
-## Добавьте в созданный кластер узел для рабочей нагрузки
-
-1. Отредактируйте манифест `MachineDeployment` c параметрами узлов кластера для рабочей нагрузки. Для этого на локальном компьютере выполните команду:
-
-    ```bash
-    kubectl edit machinedeployment <имя_созданного_кластера>-worker
-    ```
-
-    Измените значение `spec.replicas`, например, на `1`.
-
-    За процессом развертывания узла можно следить в [консоли управления](https://console.yandex.cloud/) Yandex Cloud.
-
-1. Проверьте, что новый узел доступен в созданном кластере. Для этого на ВМ, находящейся в той же сети, в которой расположен новый кластер, выполните команду:
-
-    ```bash
-    kubectl get nodes
-    ```
-
-    Пример вывода:
-
-    ```bash
-    NAME                               STATUS   ROLES           AGE     VERSION
-    capy-cluster-control-plane-cf72l   Ready    control-plane   8m49s   v1.31.4
-    capy-cluster-control-plane-g9jw7   Ready    control-plane   5m46s   v1.31.4
-    capy-cluster-control-plane-p646q   Ready    control-plane   5h1m    v1.31.4
-    capy-cluster-worker-m2bs4-fmghk    Ready    <none>          2m47s   v1.31.4
-    ```
-
-1. На локальном компьютере проверьте, что новый узел доступен из управляющего кластера:
-
-    ```bash
-    clusterctl describe cluster <имя_созданного_кластера>
-    ```
-
-    Пример вывода:
-
-    ```bash
-    NAME                                                                           READY  SEVERITY  REASON  SINCE  MESSAGE
-    Cluster/capy-cluster                                                           True                     8m22s
-    ├─ClusterInfrastructure - YandexCluster/capy-cluster
-    ├─ControlPlane - KubeadmControlPlane/capy-cluster-control-plane                True                     8m22s                                                                                     
-    │ └─3 Machines...                                                              True                     11m    See capy-cluster-control-plane-cf72l, capy-cluster-control-plane-g9jw7, ...  
-    └─Workers                                               
-      └─MachineDeployment/capy-cluster-worker                                      True                     3m31s
-        └─Machine/capy-cluster-worker-m2bs4-fmghk                                  True                     5m
-          └─MachineInfrastructure - YandexMachine/capy-cluster-worker-m2bs4-fmghk     
     ```
 
 ## Как удалить созданные ресурсы

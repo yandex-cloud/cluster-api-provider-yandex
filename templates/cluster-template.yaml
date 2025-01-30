@@ -12,7 +12,7 @@ spec:
     listener:
       subnet:
         id: ${YANDEX_SUBNET_ID}
-        zoneID: ${YANDEX_ZONE_ID:=ru-central1-a}
+        zoneID: ${YANDEX_ZONE_ID}
 ---
 apiVersion: cluster.x-k8s.io/v1beta1
 kind: Cluster
@@ -79,7 +79,7 @@ metadata:
 spec:
   template:
     spec:
-      zoneID: ${YANDEX_ZONE_ID:=ru-central1-a}
+      zoneID: ${YANDEX_ZONE_ID}
       platformID: "${YANDEX_CONTROL_PLANE_PLATFORM_ID:=standard-v3}"
       resources:
         cores: ${YANDEX_CONTROL_PLANE_MACHINE_CORES:=2}
@@ -126,7 +126,7 @@ metadata:
 spec:
   template:
     spec:
-      zoneID: ${YANDEX_ZONE_ID:=ru-central1-a}
+      zoneID: ${YANDEX_ZONE_ID}
       platformID: "${YANDEX_NODE_MACHINE_PLATFORM_ID:=standard-v3}"
       resources:
         cores: ${YANDEX_NODE_MACHINE_CORES:=2}

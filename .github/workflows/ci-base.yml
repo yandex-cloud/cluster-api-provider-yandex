@@ -30,7 +30,7 @@ jobs:
         with:
           args: --timeout=5m
           # Require: The version of golangci-lint to use.
-          version: v1.55.2
+          version: v1.63.4
 
   test:
     needs: golangci

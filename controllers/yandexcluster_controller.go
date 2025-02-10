@@ -124,14 +124,14 @@ func (r *YandexClusterReconciler) reconcile(ctx context.Context, clusterScope *s
 	lb := loadbalancer.New(clusterScope)
 	if err := lb.Reconcile(ctx); err != nil {
 		conditions.MarkFalse(clusterScope.YandexCluster, infrav1.LoadBalancerReadyCondition,
-			"load balancer reconcile error", clusterv1.ConditionSeverityError, err.Error())
+			"load balancer reconcile error", clusterv1.ConditionSeverityError, "%s", err.Error())
 		return ctrl.Result{}, fmt.Errorf("error reconciling load balancer: %w", err)
 	}
 
 	active, err := lb.IsActive(ctx)
 	if err != nil {
 		conditions.MarkFalse(clusterScope.YandexCluster, infrav1.LoadBalancerReadyCondition,
-			"load balancer reconcile error", clusterv1.ConditionSeverityError, err.Error())
+			"load balancer reconcile error", clusterv1.ConditionSeverityError, "%s", err.Error())
 		return ctrl.Result{}, fmt.Errorf("error reconciling load balancer: %w", err)
 	}
 	if !active {
@@ -144,7 +144,7 @@ func (r *YandexClusterReconciler) reconcile(ctx context.Context, clusterScope *s
 	state, err := lb.Describe(ctx)
 	if err != nil {
 		conditions.MarkFalse(clusterScope.YandexCluster, infrav1.LoadBalancerReadyCondition,
-			"load balancer reconcile error", clusterv1.ConditionSeverityError, err.Error())
+			"load balancer reconcile error", clusterv1.ConditionSeverityError, "%s", err.Error())
 		return ctrl.Result{}, fmt.Errorf("error reconciling load balancer: %w", err)
 	}
 

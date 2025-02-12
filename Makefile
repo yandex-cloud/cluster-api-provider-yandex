@@ -45,8 +45,7 @@ manifests: controller-gen ## Generate WebhookConfiguration, ClusterRole and Cust
 .PHONY: generate
 generate: controller-gen mockgen ## Generate code containing mocks and DeepCopy, DeepCopyInto, and DeepCopyObject method implementations.
 	$(CONTROLLER_GEN) object:headerFile="hack/boilerplate.go.txt" paths="./..."
-	go generate ./...
-
+	PATH=$$PATH:$(LOCALBIN) go generate ./...
 
 .PHONY: fmt
 fmt: ## Run go fmt against code.
@@ -145,7 +144,7 @@ GOLANGCI_LINT ?= $(LOCALBIN)/golangci-lint
 ## Tool Versions
 KUSTOMIZE_VERSION ?= v5.3.0
 CONTROLLER_TOOLS_VERSION ?= v0.16.5
-GOLANGCI_LINT_VER ?= v1.55.2
+GOLANGCI_LINT_VER ?= v1.63.4
 MOCKGEN_VERSION ?= v0.4.0
 
 KUSTOMIZE_INSTALL_SCRIPT ?= "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh"
@@ -160,9 +159,9 @@ $(CONTROLLER_GEN): $(LOCALBIN)
 	GOBIN=$(LOCALBIN) go install sigs.k8s.io/controller-tools/cmd/controller-gen@$(CONTROLLER_TOOLS_VERSION)
 
 .PHONY: mockgen
-mockgen: $(MOCKGEN)## Download mockgen locally if necessary.
+mockgen: $(MOCKGEN) ## Download mockgen locally if necessary.
 $(MOCKGEN): $(LOCALBIN)
-	@GOBIN=$(TESTBINS) go install go.uber.org/mock/mockgen@$(MOCKGEN_VERSION)
+	@GOBIN=$(LOCALBIN) go install go.uber.org/mock/mockgen@$(MOCKGEN_VERSION)
 
 .PHONY: envtest
 envtest: $(ENVTEST) ## Download envtest-setup locally if necessary.

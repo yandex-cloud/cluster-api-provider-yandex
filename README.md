@@ -82,7 +82,6 @@
 
 1. Установите следующие инструменты:
     * [Go](https://go.dev/doc/install) версии 1.22.0 и выше;
-    * [gomock](https://github.com/golang/mock#installation) версии 1.6.0;
     * [docker](https://www.docker.com/) версии 17.03 и выше;
     * [kubectl](https://kubernetes.io/docs/tasks/tools/#kubectl) версии 1.11.3 и выше;
     * [clusterctl](https://cluster-api.sigs.k8s.io/user/quick-start#install-clusterctl) версии 1.5.0 и выше.

@@ -15,6 +15,7 @@ limitations under the License.
 package controllers //nolint:testpackage // private variables access
 
 import (
+	"context"
 	"time"
 
 	. "github.com/onsi/ginkgo/v2"
@@ -22,7 +23,7 @@ import (
 
 	"github.com/yandex-cloud/cluster-api-provider-yandex/internal/pkg/client/mock_client"
 	"github.com/yandex-cloud/cluster-api-provider-yandex/internal/pkg/cloud/scope"
-	"github.com/yandex-cloud/cluster-api-provider-yandex/internal/pkg/cloud/services/loadbalancers"
+	loadbalancer "github.com/yandex-cloud/cluster-api-provider-yandex/internal/pkg/cloud/services/loadbalancers"
 	"go.uber.org/mock/gomock"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -47,6 +48,12 @@ var _ = Describe("YandexMachine reconciliation check", func() {
 		//+kubebuilder:scaffold:webhook
 		e.controller = gomock.NewController(GinkgoT())
 		e.mockClient = mock_client.NewMockClient(e.controller)
+		e.mockClientGetter = mock_client.NewMockYandexClientGetter(e.controller)
+		e.mockClientGetter.EXPECT().GetDefault(gomock.Any()).
+			DoAndReturn(func(_ context.Context) (*mock_client.MockClient, error) {
+				return e.mockClient, nil
+			}).AnyTimes()
+		e.mockClient.EXPECT().Close(gomock.Any()).Return(nil).AnyTimes()
 		testNamespace, err = e.CreateNamespace(ctx, "machine-check")
 		Expect(err).ToNot(HaveOccurred())
 	})
@@ -68,8 +75,8 @@ var _ = Describe("YandexMachine reconciliation check", func() {
 			Expect(e.Create(ctx, ym)).To(Succeed())
 
 			reconciler := &YandexMachineReconciler{
-				Client:       k8sClient,
-				YandexClient: e.mockClient,
+				Client:             k8sClient,
+				YandexClientGetter: e.mockClientGetter,
 			}
 
 			result, err := reconciler.Reconcile(ctx, e.getReconcileRequest(ym.Namespace, ym.Name))
@@ -84,8 +91,8 @@ var _ = Describe("YandexMachine reconciliation check", func() {
 			Expect(e.Create(ctx, ym)).To(Succeed())
 
 			reconciler := &YandexMachineReconciler{
-				Client:       k8sClient,
-				YandexClient: e.mockClient,
+				Client:             k8sClient,
+				YandexClientGetter: e.mockClientGetter,
 			}
 
 			result, err := reconciler.Reconcile(ctx, e.getReconcileRequest(ym.Namespace, ym.Name))
@@ -104,8 +111,8 @@ var _ = Describe("YandexMachine reconciliation check", func() {
 			Expect(e.Create(ctx, ym)).To(Succeed())
 
 			reconciler := &YandexMachineReconciler{
-				Client:       k8sClient,
-				YandexClient: e.mockClient,
+				Client:             k8sClient,
+				YandexClientGetter: e.mockClientGetter,
 			}
 			result, err := reconciler.Reconcile(ctx, e.getReconcileRequest(ym.Namespace, ym.Name))
 			Expect(err).NotTo(HaveOccurred())
@@ -123,8 +130,8 @@ var _ = Describe("YandexMachine reconciliation check", func() {
 		Expect(e.Create(ctx, ym)).To(Succeed())
 
 		reconciler := &YandexMachineReconciler{
-			Client:       k8sClient,
-			YandexClient: e.mockClient,
+			Client:             k8sClient,
+			YandexClientGetter: e.mockClientGetter,
 		}
 
 		addr := "1.2.3.4"
@@ -178,8 +185,8 @@ var _ = Describe("YandexMachine reconciliation check", func() {
 		tgName := "targetgroup"
 		e.setNewCPYandexMachineReconcileMocks(addr, tgName)
 		reconciler := &YandexMachineReconciler{
-			Client:       k8sClient,
-			YandexClient: e.mockClient,
+			Client:             k8sClient,
+			YandexClientGetter: e.mockClientGetter,
 		}
 
 		result, err := reconciler.Reconcile(ctx, e.getReconcileRequest(ym.Namespace, ym.Name))
@@ -209,8 +216,8 @@ var _ = Describe("YandexMachine reconciliation check", func() {
 		Expect(e.Create(ctx, ym)).To(Succeed())
 
 		reconciler := &YandexMachineReconciler{
-			Client:       k8sClient,
-			YandexClient: e.mockClient,
+			Client:             k8sClient,
+			YandexClientGetter: e.mockClientGetter,
 		}
 
 		e.setNewYandexMachineErrorReconcileMocks()
@@ -263,8 +270,8 @@ var _ = Describe("YandexMachine reconciliation check", func() {
 		tgName := "targetgroup"
 		e.setNewCPYandexMachineErrorReconcileMocks(addr, tgName)
 		reconciler := &YandexMachineReconciler{
-			Client:       k8sClient,
-			YandexClient: e.mockClient,
+			Client:             k8sClient,
+			YandexClientGetter: e.mockClientGetter,
 		}
 
 		// target group add error.
@@ -319,6 +326,12 @@ var _ = Describe("YandexMachine deletions checks", func() {
 		//+kubebuilder:scaffold:webhook
 		e.controller = gomock.NewController(GinkgoT())
 		e.mockClient = mock_client.NewMockClient(e.controller)
+		e.mockClientGetter = mock_client.NewMockYandexClientGetter(e.controller)
+		e.mockClientGetter.EXPECT().GetDefault(gomock.Any()).
+			DoAndReturn(func(_ context.Context) (*mock_client.MockClient, error) {
+				return e.mockClient, nil
+			}).AnyTimes()
+		e.mockClient.EXPECT().Close(gomock.Any()).Return(nil).AnyTimes()
 		testNamespace, err = e.CreateNamespace(ctx, "machine-delete")
 		Expect(err).ToNot(HaveOccurred())
 	})
@@ -334,15 +347,15 @@ var _ = Describe("YandexMachine deletions checks", func() {
 			controllerutil.AddFinalizer(ym, infrav1.MachineFinalizer)
 
 			reconciler := &YandexMachineReconciler{
-				Client:       e.Client,
-				YandexClient: e.mockClient,
+				Client:             e.Client,
+				YandexClientGetter: e.mockClientGetter,
 			}
 
 			clusterScope, err := scope.NewClusterScope(ctx, scope.ClusterScopeParams{
-				Client:        e.Client,
-				Cluster:       e.getCAPIClusterWithInfrastructureReference(testNamespace.Name),
-				YandexCluster: e.getYandexClusterWithOwnerReference(testNamespace.Name),
-				YandexClient:  e.mockClient,
+				Client:             e.Client,
+				Cluster:            e.getCAPIClusterWithInfrastructureReference(testNamespace.Name),
+				YandexCluster:      e.getYandexClusterWithOwnerReference(testNamespace.Name),
+				YandexClientGetter: e.mockClientGetter,
 			})
 			Expect(err).NotTo(HaveOccurred())
 
@@ -370,15 +383,15 @@ var _ = Describe("YandexMachine deletions checks", func() {
 		controllerutil.AddFinalizer(ym, infrav1.MachineFinalizer)
 
 		reconciler := &YandexMachineReconciler{
-			Client:       e.Client,
-			YandexClient: e.mockClient,
+			Client:             e.Client,
+			YandexClientGetter: e.mockClientGetter,
 		}
 
 		clusterScope, err := scope.NewClusterScope(ctx, scope.ClusterScopeParams{
-			Client:        e.Client,
-			Cluster:       e.getCAPIClusterWithInfrastructureReference(testNamespace.Name),
-			YandexCluster: e.getYandexClusterWithOwnerReference(testNamespace.Name),
-			YandexClient:  e.mockClient,
+			Client:             e.Client,
+			Cluster:            e.getCAPIClusterWithInfrastructureReference(testNamespace.Name),
+			YandexCluster:      e.getYandexClusterWithOwnerReference(testNamespace.Name),
+			YandexClientGetter: e.mockClientGetter,
 		})
 		Expect(err).NotTo(HaveOccurred())
 
@@ -407,15 +420,15 @@ var _ = Describe("YandexMachine deletions checks", func() {
 		controllerutil.AddFinalizer(ym, infrav1.MachineFinalizer)
 
 		reconciler := &YandexMachineReconciler{
-			Client:       e.Client,
-			YandexClient: e.mockClient,
+			Client:             e.Client,
+			YandexClientGetter: e.mockClientGetter,
 		}
 
 		clusterScope, err := scope.NewClusterScope(ctx, scope.ClusterScopeParams{
-			Client:        e.Client,
-			Cluster:       e.getCAPIClusterWithInfrastructureReference(testNamespace.Name),
-			YandexCluster: e.getYandexClusterWithOwnerReference(testNamespace.Name),
-			YandexClient:  e.mockClient,
+			Client:             e.Client,
+			Cluster:            e.getCAPIClusterWithInfrastructureReference(testNamespace.Name),
+			YandexCluster:      e.getYandexClusterWithOwnerReference(testNamespace.Name),
+			YandexClientGetter: e.mockClientGetter,
 		})
 		Expect(err).NotTo(HaveOccurred())
 
@@ -460,15 +473,15 @@ var _ = Describe("YandexMachine deletions checks", func() {
 		controllerutil.AddFinalizer(ym, infrav1.MachineFinalizer)
 
 		reconciler := &YandexMachineReconciler{
-			Client:       e.Client,
-			YandexClient: e.mockClient,
+			Client:             e.Client,
+			YandexClientGetter: e.mockClientGetter,
 		}
 
 		clusterScope, err := scope.NewClusterScope(ctx, scope.ClusterScopeParams{
-			Client:        e.Client,
-			Cluster:       e.getCAPIClusterWithInfrastructureReference(testNamespace.Name),
-			YandexCluster: e.getYandexClusterWithOwnerReference(testNamespace.Name),
-			YandexClient:  e.mockClient,
+			Client:             e.Client,
+			Cluster:            e.getCAPIClusterWithInfrastructureReference(testNamespace.Name),
+			YandexCluster:      e.getYandexClusterWithOwnerReference(testNamespace.Name),
+			YandexClientGetter: e.mockClientGetter,
 		})
 		Expect(err).NotTo(HaveOccurred())
 
@@ -523,15 +536,15 @@ var _ = Describe("YandexMachine deletions checks", func() {
 		})
 
 		reconciler := &YandexMachineReconciler{
-			Client:       e.Client,
-			YandexClient: e.mockClient,
+			Client:             e.Client,
+			YandexClientGetter: e.mockClientGetter,
 		}
 
 		clusterScope, err := scope.NewClusterScope(ctx, scope.ClusterScopeParams{
-			Client:        e.Client,
-			Cluster:       e.getCAPIClusterWithInfrastructureReference(testNamespace.Name),
-			YandexCluster: e.getYandexClusterWithOwnerReference(testNamespace.Name),
-			YandexClient:  e.mockClient,
+			Client:             e.Client,
+			Cluster:            e.getCAPIClusterWithInfrastructureReference(testNamespace.Name),
+			YandexCluster:      e.getYandexClusterWithOwnerReference(testNamespace.Name),
+			YandexClientGetter: e.mockClientGetter,
 		})
 		Expect(err).NotTo(HaveOccurred())
 

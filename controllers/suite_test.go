@@ -45,14 +45,14 @@ import (
 )
 
 var (
-	cfg               *rest.Config
-	mockClientBuilder *mock_client.MockBuilder
-	mockClient        *mock_client.MockClient
-	k8sClient         client.Client
-	testEnv           *envtest.Environment
-	ctx               context.Context
-	cancel            context.CancelFunc
-	scheme            = runtime.NewScheme()
+	cfg              *rest.Config
+	mockClientGetter *mock_client.MockYandexClientGetter
+	mockClient       *mock_client.MockClient
+	k8sClient        client.Client
+	testEnv          *envtest.Environment
+	ctx              context.Context
+	cancel           context.CancelFunc
+	scheme           = runtime.NewScheme()
 )
 
 func TestAPIs(t *testing.T) {
@@ -102,7 +102,7 @@ var _ = BeforeSuite(func() {
 	Expect(err).ToNot(HaveOccurred(), "Failed to create manager")
 
 	gmc := gomock.NewController(GinkgoT())
-	mockClientBuilder = mock_client.NewMockBuilder(gmc)
+	mockClientGetter = mock_client.NewMockYandexClientGetter(gmc)
 	mockClient = mock_client.NewMockClient(gmc)
 
 	mockClient.EXPECT().Close(gomock.Any()).Return(nil).AnyTimes()

@@ -51,13 +51,16 @@ type Client interface {
 	Close(ctx context.Context) error
 }
 
-//go:generate mockgen -build_flags=--mod=mod -package mock_client -destination=mock_client/builder.go . Builder
+//go:generate mockgen -build_flags=--mod=mod -package mock_client -destination=mock_client/identity.go . YandexClientGetter
 
-// Builder defines interfaces for YandexClientBuilder
-type Builder interface {
-	// GetClientFromSecret returns YandexClient with secretName and keyName
-	GetClientFromSecret(ctx context.Context, cl kube.Client, secretName string, keyName string) (Client, error)
+// YandexClientGetter defines interfaces for YandexClientProvider
+type YandexClientGetter interface {
+	// GetFromSecret returns YandexClient with secretName and keyName
+	GetFromSecret(ctx context.Context, cl kube.Client, secretName, secretNamespace, keyName string) (Client, error)
 
-	// GetDefaultClient returns YandexClient with defaultKey
-	GetDefaultClient() (Client, error)
+	// GetDefault returns YandexClient with defaultKey
+	GetDefault(ctx context.Context) (Client, error)
+
+	// GetFromKey returns YandexClient with key
+	GetFromKey(ctx context.Context, key string) (Client, error)
 }

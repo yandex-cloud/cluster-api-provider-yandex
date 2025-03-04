@@ -18,6 +18,7 @@ package v1alpha1
 
 import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
 )
 
@@ -74,7 +75,7 @@ type YandexClusterSpec struct {
 
 	// IdentityRef is a reference to a YandexIdentity resource.
 	// +optional
-	IdentityRef *IdentityReference `json:"identityRef"`
+	IdentityRef *IdentityReference `json:"identityRef,omitempty"`
 }
 
 // LoadBalancerSpec is a loadbalancer configuration for the kubernetes cluster API.
@@ -179,6 +180,14 @@ type IdentityReference struct {
 
 	// Namespace is the namespace of the YandexIdentity resource.
 	Namespace string `json:"namespace"`
+}
+
+// NamespacedName returns the namespaced name of the YandexIdentity resource.
+func (ir *IdentityReference) NamespacedName() types.NamespacedName {
+	return types.NamespacedName{
+		Namespace: ir.Namespace,
+		Name:      ir.Name,
+	}
 }
 
 // YandexClusterStatus defines the observed state of YandexCluster.

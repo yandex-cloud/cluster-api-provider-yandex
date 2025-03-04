@@ -37,16 +37,16 @@ import (
 	infrav1 "github.com/yandex-cloud/cluster-api-provider-yandex/api/v1alpha1"
 	yandex "github.com/yandex-cloud/cluster-api-provider-yandex/internal/pkg/client"
 	"github.com/yandex-cloud/cluster-api-provider-yandex/internal/pkg/cloud/scope"
-	"github.com/yandex-cloud/cluster-api-provider-yandex/internal/pkg/cloud/services/loadbalancers"
+	loadbalancer "github.com/yandex-cloud/cluster-api-provider-yandex/internal/pkg/cloud/services/loadbalancers"
 	"github.com/yandex-cloud/cluster-api-provider-yandex/internal/pkg/options"
 )
 
 // YandexClusterReconciler reconciles a YandexCluster object.
 type YandexClusterReconciler struct {
 	client.Client
-	Scheme              *runtime.Scheme
-	YandexClientBuilder yandex.Builder
-	Config              options.Config
+	Scheme             *runtime.Scheme
+	YandexClientGetter yandex.YandexClientGetter
+	Config             options.Config
 }
 
 //+kubebuilder:rbac:groups=infrastructure.cluster.x-k8s.io,resources=yandexclusters,verbs=get;list;watch;create;update;patch;delete
@@ -85,41 +85,11 @@ func (r *YandexClusterReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 		return ctrl.Result{}, nil
 	}
 
-	// Get Yandex Client for cluster
-	var yandexClient yandex.Client
-
-	if yandexCluster.Spec.IdentityRef != nil {
-		yc, err := r.YandexClientBuilder.GetClientFromSecret(ctx, r.Client, yandexCluster.Spec.IdentityRef.Name, yandexCluster.Spec.IdentityRef.Namespace)
-		if err != nil {
-			logger.Info("Unable to get YandexClient from secret, will try to fallback to default client", "error", err)
-		} else {
-			yandexClient = yc
-		}
-	}
-
-	// Fall back to default client if no identity is provided
-	if yandexClient == nil {
-		logger.Info("No identityRef provided, using default client")
-
-		yc, err := r.YandexClientBuilder.GetDefaultClient()
-		if err != nil {
-			return ctrl.Result{}, err
-		}
-		yandexClient = yc
-	}
-
-	// close the client when we're done
-	defer func() {
-		if err := yandexClient.Close(ctx); err != nil && rerr == nil {
-			rerr = err
-		}
-	}()
-
 	clusterScope, err := scope.NewClusterScope(ctx, scope.ClusterScopeParams{
-		Client:        r.Client,
-		Cluster:       cluster,
-		YandexCluster: yandexCluster,
-		YandexClient:  yandexClient,
+		Client:             r.Client,
+		Cluster:            cluster,
+		YandexCluster:      yandexCluster,
+		YandexClientGetter: r.YandexClientGetter,
 	})
 	if err != nil {
 		return ctrl.Result{}, err
@@ -146,6 +116,7 @@ func (r *YandexClusterReconciler) reconcile(ctx context.Context, clusterScope *s
 
 	if !controllerutil.ContainsFinalizer(clusterScope.YandexCluster, infrav1.ClusterFinalizer) {
 		controllerutil.AddFinalizer(clusterScope.YandexCluster, infrav1.ClusterFinalizer)
+
 		logger.Info("Finalizer added to YandexCluster, requeueing")
 		return ctrl.Result{Requeue: true}, nil
 	}

@@ -9,6 +9,7 @@ import (
 	"github.com/pkg/errors"
 	infrav1 "github.com/yandex-cloud/cluster-api-provider-yandex/api/v1alpha1"
 	yandex "github.com/yandex-cloud/cluster-api-provider-yandex/internal/pkg/client"
+
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
 	"sigs.k8s.io/cluster-api/util/patch"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -22,10 +23,10 @@ const (
 
 // ClusterScopeParams defines the input parameters used to create a new Scope.
 type ClusterScopeParams struct {
-	Client        client.Client
-	Cluster       *clusterv1.Cluster
-	YandexCluster *infrav1.YandexCluster
-	YandexClient  yandex.Client
+	Client             client.Client
+	Cluster            *clusterv1.Cluster
+	YandexClientGetter yandex.YandexClientGetter
+	YandexCluster      *infrav1.YandexCluster
 }
 
 // NewClusterScope creates a new Scope from the supplied parameters.
@@ -40,8 +41,14 @@ func NewClusterScope(ctx context.Context, params ClusterScopeParams) (*ClusterSc
 	if params.YandexCluster == nil {
 		return nil, errors.New("failed to generate new scope from nil YandexCluster")
 	}
-	if params.YandexClient == nil {
-		return nil, errors.New("failed to generate new scope from nil YandexClient")
+	if params.YandexClientGetter == nil {
+		return nil, errors.New("failed to generate new scope from nil ClientBuilder")
+	}
+
+	// Get Yandex Client for cluster
+	yandexClient, err := getYandexClient(ctx, params)
+	if err != nil {
+		return nil, err
 	}
 
 	helper, err := patch.NewHelper(params.YandexCluster, params.Client)
@@ -54,7 +61,7 @@ func NewClusterScope(ctx context.Context, params ClusterScopeParams) (*ClusterSc
 		Cluster:       params.Cluster,
 		YandexCluster: params.YandexCluster,
 		patchHelper:   helper,
-		yandexClient:  params.YandexClient,
+		yandexClient:  yandexClient,
 	}, nil
 }
 
@@ -75,7 +82,13 @@ func (c *ClusterScope) PatchObject(ctx context.Context) error {
 
 // Close closes the current scope persisting the cluster configuration and status.
 func (c *ClusterScope) Close(ctx context.Context) error {
-	return c.PatchObject(ctx)
+	// first path the object
+	if err := c.PatchObject(ctx); err != nil {
+		return err
+	}
+
+	// close the client, since we've build it inside the scope
+	return c.yandexClient.Close(ctx)
 }
 
 // Name returns the CAPI cluster name.
@@ -151,4 +164,41 @@ func (c *ClusterScope) generateName() string {
 // clearString remove all non alphnumeric characters from input.
 func (c *ClusterScope) clearString(str string) string {
 	return nonAlphanumericRegex.ReplaceAllString(str, "")
+}
+
+// AppendLabels appends labels to the cluster.
+func (c *ClusterScope) AppendLabels(l map[string]string) {
+	if c.Cluster.Labels == nil {
+		c.Cluster.Labels = make(map[string]string)
+	}
+
+	for k, v := range l {
+		c.Cluster.Labels[k] = v
+	}
+}
+
+// getYandexClient returns Yandex Cloud client.
+func getYandexClient(ctx context.Context, params ClusterScopeParams) (yandex.Client, error) {
+	if params.YandexCluster.Spec.IdentityRef != nil {
+		identity := &infrav1.YandexIdentity{}
+		if err := params.Client.Get(ctx, params.YandexCluster.Spec.IdentityRef.NamespacedName(), identity); err != nil {
+			return nil, errors.Wrapf(err, "failed to get identity %s/%s",
+				params.YandexCluster.Spec.IdentityRef.Namespace, params.YandexCluster.Spec.IdentityRef.Name)
+		}
+
+		yc, err := params.YandexClientGetter.GetFromSecret(ctx,
+			params.Client, identity.Spec.SecretName, params.YandexCluster.Spec.IdentityRef.Namespace, identity.Spec.KeyName)
+		if err == nil {
+			return yc, nil
+		}
+		// no need to return error here, as we can fall back to default client
+	}
+
+	// Fall back to default client if no identity is provided
+	yc, err := params.YandexClientGetter.GetDefault(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return yc, nil
 }

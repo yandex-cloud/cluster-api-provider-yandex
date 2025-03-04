@@ -107,27 +107,44 @@ func (r *YandexIdentityReconciler) reconcile(ctx context.Context, identityScope 
 			conditions.MarkTrue(identityScope.Identity, infrav1.IdentityReadyCondition)
 		} else {
 			identityScope.Identity.Status.Ready = false
-			conditions.MarkFalse(identityScope.Identity, infrav1.IdentityReadyCondition, "ReconciliationError", clusterv1.ConditionSeverityError, rerr.Error())
+			conditions.MarkFalse(identityScope.Identity,
+				infrav1.IdentityReadyCondition,
+				"ReconciliationError",
+				clusterv1.ConditionSeverityError,
+				"%s",
+				rerr.Error())
 		}
 	}()
 
 	secretChanged, err := identityScope.IsSecretChanged(ctx)
 	if err != nil {
 		conditions.MarkFalse(identityScope.Identity,
-			infrav1.IdentityValidCondition, "identity secret validation error", clusterv1.ConditionSeverityError, err.Error())
+			infrav1.IdentityValidCondition,
+			"identity secret validation error",
+			clusterv1.ConditionSeverityError,
+			"%s",
+			err.Error())
 		return ctrl.Result{}, errors.Wrap(err, "failed to check identity key")
 	}
 
 	if secretChanged {
 		if err := identityScope.CheckConnectWithIdentity(ctx); err != nil {
 			conditions.MarkFalse(identityScope.Identity,
-				infrav1.IdentityValidCondition, "identity check error", clusterv1.ConditionSeverityError, err.Error())
+				infrav1.IdentityValidCondition,
+				"identity check error",
+				clusterv1.ConditionSeverityError,
+				"%s",
+				err.Error())
 			return ctrl.Result{}, errors.Wrap(err, "failed to check connection with identity")
 		}
 
 		if err := identityScope.SetSecretHash(ctx); err != nil {
 			conditions.MarkFalse(identityScope.Identity,
-				infrav1.IdentityValidCondition, "identity key hash update error", clusterv1.ConditionSeverityError, err.Error())
+				infrav1.IdentityValidCondition,
+				"identity key hash update error",
+				clusterv1.ConditionSeverityError,
+				"%s",
+				err.Error())
 			return ctrl.Result{}, errors.Wrap(err, "failed to set key hash")
 		}
 	}
@@ -137,7 +154,11 @@ func (r *YandexIdentityReconciler) reconcile(ctx context.Context, identityScope 
 
 	if err := identityScope.SetSecretFinalizerAndOwner(ctx); err != nil {
 		conditions.MarkFalse(identityScope.Identity,
-			infrav1.IdentitySecretUpdatedCondition, "secret update error", clusterv1.ConditionSeverityError, err.Error())
+			infrav1.IdentitySecretUpdatedCondition,
+			"secret update error",
+			clusterv1.ConditionSeverityError,
+			"%s",
+			err.Error())
 		return ctrl.Result{}, errors.Wrap(err, "failed to set secret finalizer")
 	}
 
@@ -146,7 +167,11 @@ func (r *YandexIdentityReconciler) reconcile(ctx context.Context, identityScope 
 
 	if err := identityScope.UpdateLinkedClusters(ctx); err != nil {
 		conditions.MarkFalse(identityScope.Identity,
-			infrav1.IdentityLinkedClustersUpdatedCondition, "linked clusters update error", clusterv1.ConditionSeverityError, err.Error())
+			infrav1.IdentityLinkedClustersUpdatedCondition,
+			"linked clusters update error",
+			clusterv1.ConditionSeverityError,
+			"%s",
+			err.Error())
 		return ctrl.Result{}, errors.Wrap(err, "failed to update linked clusters")
 	}
 

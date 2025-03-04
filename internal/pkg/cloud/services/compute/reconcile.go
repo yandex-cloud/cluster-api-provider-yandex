@@ -32,7 +32,7 @@ func (s *Service) Reconcile(ctx context.Context) error {
 		newInstanceID, err := s.createComputeInstance(ctx, client)
 		if err != nil {
 			conditions.MarkFalse(s.scope.YandexMachine,
-				infrav1.ConditionStatusRunning, infrav1.ConditionStatusNotfound, clusterv1.ConditionSeverityError, err.Error())
+				infrav1.ConditionStatusRunning, infrav1.ConditionStatusNotfound, clusterv1.ConditionSeverityError, "%s", err.Error())
 			return err
 		}
 
@@ -46,11 +46,11 @@ func (s *Service) Reconcile(ctx context.Context) error {
 		conditions.MarkUnknown(s.scope.YandexMachine,
 			infrav1.ConditionStatusProvisioning,
 			infrav1.ConditionStatusNotfound,
-			err.Error())
+			"%s", err.Error())
 		conditions.MarkUnknown(s.scope.YandexMachine,
 			infrav1.ConditionStatusRunning,
 			infrav1.ConditionStatusNotfound,
-			err.Error())
+			"%s", err.Error())
 		return fmt.Errorf("unable to find compute instance %v: %w", s.scope.GetInstanceID(), err)
 	}
 
@@ -62,7 +62,7 @@ func (s *Service) Reconcile(ctx context.Context) error {
 				infrav1.ConditionStatusRunning,
 				infrav1.ConditionStatusError,
 				clusterv1.ConditionSeverityError,
-				err.Error())
+				"%s", err.Error())
 			return err
 		}
 

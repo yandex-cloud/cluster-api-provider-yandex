@@ -251,6 +251,39 @@ var _ = Describe("YandexMachine reconciliation check", func() {
 		Expect(ym.GetFinalizers()).To(Equal([]string{infrav1.MachineFinalizer}))
 	})
 
+	It("should fail machine creation when yandex cloud instance was deleted by someone else", func() {
+		Expect(e.Create(ctx, e.getCAPIClusterWithInfrastructureReference(testNamespace.Name))).To(Succeed())
+		Expect(e.Create(ctx, e.getYandexClusterWithOwnerReference(testNamespace.Name))).To(Succeed())
+		Expect(e.Create(ctx, e.getMachineWithInfrastructureRef(testNamespace.Name))).To(Succeed())
+		Expect(e.Create(ctx, e.getBootstrapSecret(testNamespace.Name))).To(Succeed())
+		ym := e.getYandexMachineWithOwnerRef(testNamespace.Name)
+		Expect(e.Create(ctx, ym)).To(Succeed())
+
+		reconciler := &YandexMachineReconciler{
+			Client:       k8sClient,
+			YandexClient: e.mockClient,
+		}
+
+		e.setYandexMachineNotFoundReconcileMocks()
+		// got machine creation api error.
+		result, err := reconciler.Reconcile(ctx, e.getReconcileRequest(ym.Namespace, ym.Name))
+		Expect(err).NotTo(HaveOccurred())
+		Expect(result.RequeueAfter).To(Equal(RequeueDuration))
+		ym = &infrav1.YandexMachine{}
+		Eventually(func() bool {
+			key := client.ObjectKey{
+				Name:      e.machineName,
+				Namespace: testNamespace.Name,
+			}
+			err = e.Get(ctx, key, ym)
+			return (err == nil &&
+				ym.Status.InstanceStatus != nil &&
+				*ym.Status.InstanceStatus == infrav1.InstanceStatusDeleted)
+		}, e.reconcileTimeout).Should(BeTrue())
+		Expect(ym.Status.FailureReason).ToNot(BeNil())
+		Expect(ym.Status.FailureMessage).ToNot(BeNil())
+	})
+
 	It("should error and retry to add node to ALB target group on load balancer api error", func() {
 		Expect(e.Create(ctx, e.getCAPIClusterWithInfrastructureReference(testNamespace.Name))).To(Succeed())
 		Expect(e.Create(ctx, e.getYandexClusterWithOwnerReference(testNamespace.Name))).To(Succeed())
@@ -570,5 +603,4 @@ var _ = Describe("YandexMachine deletions checks", func() {
 		Expect(controllerutil.ContainsFinalizer(machineScope.YandexMachine, infrav1.ClusterFinalizer)).To(BeFalse())
 		Expect(result.RequeueAfter).To(BeZero())
 	})
-
 })

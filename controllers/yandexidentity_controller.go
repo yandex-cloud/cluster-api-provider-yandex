@@ -190,17 +190,6 @@ func (r *YandexIdentityReconciler) reconcileDelete(ctx context.Context, identity
 		return ctrl.Result{}, nil
 	}
 
-	linkedToClusters, err := identityScope.IsLinkedToCluster(ctx)
-	if err != nil {
-		return ctrl.Result{}, errors.Wrap(err, "failed to check if identity is linked to cluster")
-	}
-
-	if linkedToClusters {
-		logger.Info("identity is still used by clusters, skipping deletion", "clusters", identityScope.Identity.Status.LinkedClusters)
-
-		return ctrl.Result{RequeueAfter: RequeueDuration}, nil
-	}
-
 	if err := identityScope.RemoveSecretFinalizer(ctx); err != nil {
 		return ctrl.Result{}, errors.Wrap(err, "failed to remove secret finalizer")
 	}

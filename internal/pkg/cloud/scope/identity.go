@@ -3,6 +3,7 @@ package scope
 import (
 	"context"
 	"crypto/sha256"
+	"fmt"
 
 	"github.com/pkg/errors"
 	infrav1 "github.com/yandex-cloud/cluster-api-provider-yandex/api/v1alpha1"
@@ -230,11 +231,5 @@ func (s *IdentityScope) getIdentityKeyHash(ctx context.Context) (string, error) 
 		return "", err
 	}
 
-	sha256Hash := sha256.New()
-	_, err = sha256Hash.Write([]byte(key))
-	if err != nil {
-		return "", errors.Wrap(err, "failed to write to sha256 hash")
-	}
-
-	return string(sha256Hash.Sum([]byte{})), nil
+	return fmt.Sprintf("%x", sha256.Sum256([]byte(key))), nil
 }

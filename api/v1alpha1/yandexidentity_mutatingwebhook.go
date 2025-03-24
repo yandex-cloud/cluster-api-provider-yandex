@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/pkg/errors"
+	admissionv1 "k8s.io/api/admission/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 )
@@ -14,18 +15,29 @@ import (
 
 type yandexIdentityAdmitter struct {
 	platformClient client.Client
+	decoder        *admission.Decoder
 }
 
 // NewYandexIdentityDeletionBlocker returns a new admission.Handler that prevents deletion of YandexIdentity objects
 // that are linked to YandexCluster objects.
-func NewYandexIdentityDeletionBlocker(platformClient client.Client) admission.Handler {
-	return &yandexIdentityAdmitter{platformClient: platformClient}
+func NewYandexIdentityDeletionBlocker(platformClient client.Client, decoder *admission.Decoder) admission.Handler {
+	return &yandexIdentityAdmitter{
+		platformClient: platformClient,
+		decoder:        decoder,
+	}
 }
 
+// Handle checks if the YandexIdentity object is linked to any YandexCluster objects.
+// If it is, the deletion is blocked.
 func (m *yandexIdentityAdmitter) Handle(ctx context.Context, req admission.Request) admission.Response {
-	identity, ok := req.Object.Object.(*YandexIdentity)
-	if !ok {
-		return admission.Errored(http.StatusBadRequest, errors.New("failed to convert runtime Object to YandexIdentity"))
+	if req.Operation != admissionv1.Delete {
+		return admission.Allowed("only delete operation is allowed")
+	}
+
+	identity := &YandexIdentity{}
+	//
+	if err := m.decoder.DecodeRaw(req.OldObject, identity); err != nil {
+		return admission.Errored(http.StatusBadRequest, errors.Wrap(err, "failed to decode request"))
 	}
 
 	clusterList := YandexClusterList{}

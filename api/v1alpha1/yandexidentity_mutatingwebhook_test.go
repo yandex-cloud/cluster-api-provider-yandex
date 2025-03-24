@@ -2,6 +2,7 @@ package v1alpha1
 
 import (
 	"context"
+	"encoding/json"
 	"reflect"
 	"testing"
 
@@ -19,6 +20,23 @@ func Test_yandexIdentityAdmitter_Handle(t *testing.T) {
 		return
 	}
 
+	generateRequestWithIdentity := func(identity *YandexIdentity) admission.Request {
+		objRaw, err := json.Marshal(identity)
+		if err != nil {
+			t.Error(err)
+			return admission.Request{}
+		}
+
+		return admission.Request{
+			AdmissionRequest: admissionv1.AdmissionRequest{
+				Operation: admissionv1.Delete,
+				OldObject: runtime.RawExtension{
+					Raw: objRaw,
+				},
+			},
+		}
+	}
+
 	tests := []struct {
 		name    string
 		objects []runtime.Object
@@ -28,18 +46,12 @@ func Test_yandexIdentityAdmitter_Handle(t *testing.T) {
 		{
 			name:    "identity is not linked to any cluster",
 			objects: []runtime.Object{},
-			req: admission.Request{
-				AdmissionRequest: admissionv1.AdmissionRequest{
-					Object: runtime.RawExtension{
-						Object: &YandexIdentity{
-							ObjectMeta: metav1.ObjectMeta{
-								Name:      "test",
-								Namespace: "test",
-							},
-						},
-					},
+			req: generateRequestWithIdentity(&YandexIdentity{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test",
+					Namespace: "test",
 				},
-			},
+			}),
 			want: admission.Allowed("identity is not linked to any cluster"),
 		},
 		{
@@ -55,18 +67,12 @@ func Test_yandexIdentityAdmitter_Handle(t *testing.T) {
 					},
 				},
 			},
-			req: admission.Request{
-				AdmissionRequest: admissionv1.AdmissionRequest{
-					Object: runtime.RawExtension{
-						Object: &YandexIdentity{
-							ObjectMeta: metav1.ObjectMeta{
-								Name:      "test",
-								Namespace: "test",
-							},
-						},
-					},
+			req: generateRequestWithIdentity(&YandexIdentity{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test",
+					Namespace: "test",
 				},
-			},
+			}),
 			want: admission.Denied("identity is linked to clusters"),
 		},
 		{
@@ -82,18 +88,12 @@ func Test_yandexIdentityAdmitter_Handle(t *testing.T) {
 					},
 				},
 			},
-			req: admission.Request{
-				AdmissionRequest: admissionv1.AdmissionRequest{
-					Object: runtime.RawExtension{
-						Object: &YandexIdentity{
-							ObjectMeta: metav1.ObjectMeta{
-								Name:      "test",
-								Namespace: "test",
-							},
-						},
-					},
+			req: generateRequestWithIdentity(&YandexIdentity{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test",
+					Namespace: "test",
 				},
-			},
+			}),
 			want: admission.Allowed("identity is not linked to any cluster"),
 		},
 	}
@@ -104,10 +104,88 @@ func Test_yandexIdentityAdmitter_Handle(t *testing.T) {
 
 			m := &yandexIdentityAdmitter{
 				platformClient: fakeClient,
+				decoder:        admission.NewDecoder(scheme),
 			}
 			if got := m.Handle(context.TODO(), tt.req); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("yandexIdentityAdmitter.Handle() = %v, want %v", got, tt.want)
 			}
 		})
 	}
+
+	// special cases
+	t.Run("create request", func(t *testing.T) {
+		wantCode := int32(200)
+		m := &yandexIdentityAdmitter{
+			platformClient: fake.NewClientBuilder().Build(),
+			decoder:        admission.NewDecoder(runtime.NewScheme()),
+		}
+
+		got := m.Handle(context.TODO(), admission.Request{
+			AdmissionRequest: admissionv1.AdmissionRequest{
+				Operation: admissionv1.Create,
+				// empty object to fail decoding
+			},
+		})
+
+		if got.Result.Code != wantCode {
+			t.Errorf("yandexIdentityAdmitter.Handle() = %v, want code %d", got, wantCode)
+		}
+	})
+
+	t.Run("update request", func(t *testing.T) {
+		wantCode := int32(200)
+		m := &yandexIdentityAdmitter{
+			platformClient: fake.NewClientBuilder().Build(),
+			decoder:        admission.NewDecoder(runtime.NewScheme()),
+		}
+
+		got := m.Handle(context.TODO(), admission.Request{
+			AdmissionRequest: admissionv1.AdmissionRequest{
+				Operation: admissionv1.Update,
+				// empty object to fail decoding
+			},
+		})
+
+		if got.Result.Code != wantCode {
+			t.Errorf("yandexIdentityAdmitter.Handle() = %v, want code %d", got, wantCode)
+		}
+	})
+
+	t.Run("failed to decode request", func(t *testing.T) {
+		wantCode := int32(400)
+		m := &yandexIdentityAdmitter{
+			platformClient: fake.NewClientBuilder().Build(),
+			decoder:        admission.NewDecoder(runtime.NewScheme()),
+		}
+
+		got := m.Handle(context.TODO(), admission.Request{
+			AdmissionRequest: admissionv1.AdmissionRequest{
+				Operation: admissionv1.Delete,
+				// empty object to fail decoding
+			},
+		})
+
+		if got.Result.Code != wantCode {
+			t.Errorf("yandexIdentityAdmitter.Handle() = %v, want code %d", got, wantCode)
+		}
+	})
+
+	t.Run("failed to list clusters", func(t *testing.T) {
+		wantCode := int32(500)
+		m := &yandexIdentityAdmitter{
+			platformClient: fake.NewClientBuilder().Build(),
+			decoder:        admission.NewDecoder(scheme),
+		}
+
+		got := m.Handle(context.TODO(), generateRequestWithIdentity(&YandexIdentity{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "test",
+				Namespace: "test",
+			},
+		}))
+
+		if got.Result.Code != wantCode {
+			t.Errorf("yandexIdentityAdmitter.Handle() = %v, want code %d", got, wantCode)
+		}
+	})
 }

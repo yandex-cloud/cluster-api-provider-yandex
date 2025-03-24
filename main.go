@@ -29,6 +29,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
+	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 
 	infrav1 "github.com/yandex-cloud/cluster-api-provider-yandex/api/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
@@ -169,7 +170,10 @@ func main() {
 
 	mgr.GetWebhookServer().Register("/mutate-infrastructure-cluster-x-k8s-io-v1alpha1-yandexidentity",
 		&webhook.Admission{
-			Handler: infrav1.NewYandexIdentityDeletionBlocker(mgr.GetClient()),
+			Handler: infrav1.NewYandexIdentityDeletionBlocker(
+				mgr.GetClient(),
+				admission.NewDecoder(mgr.GetScheme()),
+			),
 		})
 
 	if err := mgr.AddHealthzCheck("healthz", healthz.Ping); err != nil {

@@ -10,7 +10,7 @@ webhooks:
     service:
       name: webhook-service
       namespace: system
-      path: /mutate-infrastructure-cluster-x-k8s-io-v1alpha1-yandexcluster
+      path: /mutate-infrastructure-cluster-x-k8s-io-v1alpha1-yandexcluster-identitylink
   failurePolicy: Fail
   matchPolicy: Equivalent
   name: mutation.yandexclusters.infrastructure.cluster.x-k8s.io

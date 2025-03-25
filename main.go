@@ -163,9 +163,11 @@ func main() {
 	}
 	//+kubebuilder:scaffold:builder
 
-	mgr.GetWebhookServer().Register("/mutate-infrastructure-cluster-x-k8s-io-v1alpha1-yandexcluster",
+	mgr.GetWebhookServer().Register("/mutate-infrastructure-cluster-x-k8s-io-v1alpha1-yandexcluster-identitylink",
 		&webhook.Admission{
-			Handler: infrav1.NewYandexClusterAdmitter(),
+			Handler: infrav1.NewYandexClusterAdmitter(
+				admission.NewDecoder(mgr.GetScheme()),
+			),
 		})
 
 	mgr.GetWebhookServer().Register("/mutate-infrastructure-cluster-x-k8s-io-v1alpha1-yandexidentity",

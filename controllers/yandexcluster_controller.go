@@ -37,16 +37,16 @@ import (
 	infrav1 "github.com/yandex-cloud/cluster-api-provider-yandex/api/v1alpha1"
 	yandex "github.com/yandex-cloud/cluster-api-provider-yandex/internal/pkg/client"
 	"github.com/yandex-cloud/cluster-api-provider-yandex/internal/pkg/cloud/scope"
-	"github.com/yandex-cloud/cluster-api-provider-yandex/internal/pkg/cloud/services/loadbalancers"
+	loadbalancer "github.com/yandex-cloud/cluster-api-provider-yandex/internal/pkg/cloud/services/loadbalancers"
 	"github.com/yandex-cloud/cluster-api-provider-yandex/internal/pkg/options"
 )
 
 // YandexClusterReconciler reconciles a YandexCluster object.
 type YandexClusterReconciler struct {
 	client.Client
-	Scheme       *runtime.Scheme
-	YandexClient yandex.Client
-	Config       options.Config
+	Scheme             *runtime.Scheme
+	YandexClientGetter yandex.YandexClientGetter
+	Config             options.Config
 }
 
 //+kubebuilder:rbac:groups=infrastructure.cluster.x-k8s.io,resources=yandexclusters,verbs=get;list;watch;create;update;patch;delete
@@ -86,10 +86,10 @@ func (r *YandexClusterReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 	}
 
 	clusterScope, err := scope.NewClusterScope(ctx, scope.ClusterScopeParams{
-		Client:        r.Client,
-		Cluster:       cluster,
-		YandexCluster: yandexCluster,
-		YandexClient:  r.YandexClient,
+		Client:             r.Client,
+		Cluster:            cluster,
+		YandexCluster:      yandexCluster,
+		YandexClientGetter: r.YandexClientGetter,
 	})
 	if err != nil {
 		return ctrl.Result{}, err
@@ -116,6 +116,7 @@ func (r *YandexClusterReconciler) reconcile(ctx context.Context, clusterScope *s
 
 	if !controllerutil.ContainsFinalizer(clusterScope.YandexCluster, infrav1.ClusterFinalizer) {
 		controllerutil.AddFinalizer(clusterScope.YandexCluster, infrav1.ClusterFinalizer)
+
 		logger.Info("Finalizer added to YandexCluster, requeueing")
 		return ctrl.Result{Requeue: true}, nil
 	}

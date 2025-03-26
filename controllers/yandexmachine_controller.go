@@ -40,7 +40,7 @@ import (
 	yandex "github.com/yandex-cloud/cluster-api-provider-yandex/internal/pkg/client"
 	"github.com/yandex-cloud/cluster-api-provider-yandex/internal/pkg/cloud/scope"
 	"github.com/yandex-cloud/cluster-api-provider-yandex/internal/pkg/cloud/services/compute"
-	"github.com/yandex-cloud/cluster-api-provider-yandex/internal/pkg/cloud/services/loadbalancers"
+	loadbalancer "github.com/yandex-cloud/cluster-api-provider-yandex/internal/pkg/cloud/services/loadbalancers"
 )
 
 const (
@@ -51,8 +51,8 @@ const (
 // YandexMachineReconciler reconciles a YandexMachine object.
 type YandexMachineReconciler struct {
 	client.Client
-	Scheme       *runtime.Scheme
-	YandexClient yandex.Client
+	Scheme             *runtime.Scheme
+	YandexClientGetter yandex.YandexClientGetter
 }
 
 //+kubebuilder:rbac:groups="",resources=secrets;,verbs=get;list;watch
@@ -109,10 +109,10 @@ func (r *YandexMachineReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 	}
 
 	clusterScope, err := scope.NewClusterScope(ctx, scope.ClusterScopeParams{
-		Client:        r.Client,
-		Cluster:       cluster,
-		YandexCluster: yandexCluster,
-		YandexClient:  r.YandexClient,
+		Client:             r.Client,
+		Cluster:            cluster,
+		YandexCluster:      yandexCluster,
+		YandexClientGetter: r.YandexClientGetter,
 	})
 	if err != nil {
 		return ctrl.Result{}, err

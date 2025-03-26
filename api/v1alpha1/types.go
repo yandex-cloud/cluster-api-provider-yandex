@@ -53,3 +53,8 @@ const (
 	// LoadBalancerFailedReason used when an error occurs during load balancer reconciliation.
 	LoadBalancerFailedReason = "LoadBalancerFailed"
 )
+
+const (
+	// ProviderIDSetCondition reports on whether the providerID was successfully set on the node.
+	ProviderIDSetCondition clusterv1.ConditionType = "ProviderIDSet"
+)

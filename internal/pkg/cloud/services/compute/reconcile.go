@@ -43,6 +43,22 @@ func (s *Service) Reconcile(ctx context.Context) error {
 	// Find compute instance and set status.
 	vm, err := client.ComputeGet(ctx, s.scope.GetInstanceID())
 	if err != nil {
+		if ycerrors.IsNotFound(err) {
+			logger.Info("unable to find compute instance in yandex cloud")
+			s.scope.SetInstanceStatus(infrav1.InstanceStatusDeleted)
+			conditions.MarkTrue(s.scope.YandexMachine, infrav1.ConditionStatusNotfound)
+			conditions.MarkFalse(s.scope.YandexMachine,
+				infrav1.ConditionStatusProvisioning,
+				infrav1.ConditionStatusError,
+				clusterv1.ConditionSeverityError,
+				"%s", err.Error())
+			conditions.MarkFalse(s.scope.YandexMachine,
+				infrav1.ConditionStatusRunning,
+				infrav1.ConditionStatusError,
+				clusterv1.ConditionSeverityError,
+				"%s", err.Error())
+			return nil
+		}
 		conditions.MarkUnknown(s.scope.YandexMachine,
 			infrav1.ConditionStatusProvisioning,
 			infrav1.ConditionStatusNotfound,

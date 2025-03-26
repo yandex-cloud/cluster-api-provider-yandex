@@ -308,6 +308,10 @@ func (s *Service) addTargetALB(ctx context.Context, ipAddress, subnetID string) 
 		return err
 	}
 
+	if tg == nil {
+		return nil
+	}
+
 	if s.isAddressRegisteredALB(ipAddress, subnetID, tg) {
 		return nil
 	}

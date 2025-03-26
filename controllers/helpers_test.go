@@ -1072,6 +1072,50 @@ func (c *ClusterTestEnv) setNewCPYandexMachineReconcileMocks(address, targetGrou
 	)
 }
 
+// setNewWithoutTargetGroupCPYandexMachineReconcileMocks mocks the YandexClient API calls on YandexMachine with controlplane role reconciliation without having Target Group.
+func (c *ClusterTestEnv) setNewWithoutTargetGroupCPYandexMachineReconcileMocks(address string) {
+	const mockID string = "123"
+
+	gomock.InOrder(
+		e.mockClient.EXPECT().ComputeCreate(gomock.Any(), gomock.Any()).
+			DoAndReturn(func(_ context.Context, req *compute.CreateInstanceRequest) (string, error) {
+				logFunctionCalls(
+					"ComputeCreate",
+					map[string]interface{}{"request": req},
+					[]interface{}{mockID, nil})
+				return mockID, nil
+			}),
+		e.mockClient.EXPECT().ComputeGet(gomock.Any(), mockID).
+			DoAndReturn(func(_ context.Context, id string) (*compute.Instance, error) {
+				instance := &compute.Instance{
+					Name:   c.machineName,
+					Id:     mockID,
+					Status: compute.Instance_RUNNING,
+					NetworkInterfaces: []*compute.NetworkInterface{
+						{
+							PrimaryV4Address: &compute.PrimaryAddress{
+								Address: address,
+							},
+						},
+					},
+				}
+				logFunctionCalls(
+					"ComputeGet",
+					map[string]interface{}{"id": id},
+					[]interface{}{instance, nil})
+				return instance, nil
+			}),
+		e.mockClient.EXPECT().ALBTargetGroupGetByName(gomock.Any(), gomock.Any(), gomock.Any()).
+			DoAndReturn(func(_ context.Context, name, zone string) (*alb.TargetGroup, error) {
+				logFunctionCalls(
+					"ALBTargetGroupGetByName",
+					map[string]interface{}{"name": name, "zone": zone},
+					[]interface{}{nil, nil})
+				return nil, nil
+			}),
+	)
+}
+
 // setNewCPYandexMachineErrorReconcileMock mocks the YandexClient API calls on controlplane role reconciliation with API error.
 func (c *ClusterTestEnv) setNewCPYandexMachineErrorReconcileMocks(address, targetGroup string) {
 	const mockID string = "123"

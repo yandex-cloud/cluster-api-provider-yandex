@@ -114,6 +114,61 @@ var _ = Describe("YandexMachine reconciliation check", func() {
 		})
 	})
 
+	When("Creating an YandexMachine with nil TargetGroup", func() {
+		It("should not error and get ready status eventually", func() {
+			Expect(e.Create(ctx, e.getCAPIClusterWithInfrastructureReference(testNamespace.Name))).To(Succeed())
+			Expect(e.Create(ctx, e.getYandexClusterWithOwnerReference(testNamespace.Name))).To(Succeed())
+			Expect(e.Create(ctx, e.getMachineWithInfrastructureRef(testNamespace.Name))).To(Succeed())
+			Expect(e.Create(ctx, e.getBootstrapSecret(testNamespace.Name))).To(Succeed())
+			ym := e.getYandexMachineWithOwnerRef(testNamespace.Name)
+			Expect(e.Create(ctx, ym)).To(Succeed())
+
+			reconciler := &YandexMachineReconciler{
+				Client:       k8sClient,
+				YandexClient: e.mockClient,
+			}
+
+			addr := "1.2.3.4"
+			e.setNewYandexMachineReconcileMocks(addr)
+			result, err := reconciler.Reconcile(ctx, e.getReconcileRequest(ym.Namespace, ym.Name))
+			Expect(err).NotTo(HaveOccurred())
+
+			// On the first reconcile the YandexMachine have to be in STARTING status.
+			ym = &infrav1.YandexMachine{}
+			Eventually(func() bool {
+				key := client.ObjectKey{
+					Name:      e.machineName,
+					Namespace: testNamespace.Name,
+				}
+				err = e.Get(ctx, key, ym)
+
+				return (err == nil &&
+					ym.Status.InstanceStatus != nil &&
+					*ym.Status.InstanceStatus == infrav1.InstanceStatusStarting)
+			}, e.reconcileTimeout).Should(BeTrue())
+			Expect(result.RequeueAfter).To(Equal(RequeueDuration))
+			Expect(ym.Status.Ready).To(BeFalse())
+			Expect(ym.GetFinalizers()).To(Equal([]string{infrav1.MachineFinalizer}))
+
+			result, err = reconciler.Reconcile(ctx, e.getReconcileRequest(ym.Namespace, ym.Name))
+			Expect(err).NotTo(HaveOccurred())
+
+			// On the second reconcile the YandexMachine have to be READY.
+			ym = &infrav1.YandexMachine{}
+			Eventually(func() bool {
+				key := client.ObjectKey{
+					Name:      e.machineName,
+					Namespace: testNamespace.Name,
+				}
+				err := e.Get(ctx, key, ym)
+				return (err == nil && ym.Status.Ready == true)
+			}, e.reconcileTimeout).Should(BeTrue())
+			Expect(result.Requeue).To(BeFalse())
+			Expect(result.RequeueAfter).To(BeZero())
+			Expect(ym.Status.Addresses[0].Address).To(Equal(addr))
+		})
+	})
+
 	It("should not error and get ready status eventually", func() {
 		Expect(e.Create(ctx, e.getCAPIClusterWithInfrastructureReference(testNamespace.Name))).To(Succeed())
 		Expect(e.Create(ctx, e.getYandexClusterWithOwnerReference(testNamespace.Name))).To(Succeed())

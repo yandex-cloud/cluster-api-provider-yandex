@@ -603,4 +603,65 @@ var _ = Describe("YandexMachine deletions checks", func() {
 		Expect(controllerutil.ContainsFinalizer(machineScope.YandexMachine, infrav1.ClusterFinalizer)).To(BeFalse())
 		Expect(result.RequeueAfter).To(BeZero())
 	})
+
+	It("should delete control plane YandexMachine without target group", func() {
+		const (
+			id      string = "123"
+			address string = "1.2.3.4"
+		)
+
+		ym := e.getYandexMachineWithOwnerRef(testNamespace.Name)
+		controllerutil.AddFinalizer(ym, infrav1.MachineFinalizer)
+		ym.Status.Addresses = append(ym.Status.Addresses, corev1.NodeAddress{
+			Address: address,
+		})
+
+		reconciler := &YandexMachineReconciler{
+			Client:       e.Client,
+			YandexClient: e.mockClient,
+		}
+
+		clusterScope, err := scope.NewClusterScope(ctx, scope.ClusterScopeParams{
+			Client:        e.Client,
+			Cluster:       e.getCAPIClusterWithInfrastructureReference(testNamespace.Name),
+			YandexCluster: e.getYandexClusterWithOwnerReference(testNamespace.Name),
+			YandexClient:  e.mockClient,
+		})
+		Expect(err).NotTo(HaveOccurred())
+
+		// No API defaults here, so we have to set load balancer type
+		clusterScope.YandexCluster.Spec.LoadBalancer.Type = infrav1.LoadBalancerTypeALB
+		machineScope, err := scope.NewMachineScope(scope.MachineScopeParams{
+			Client:        e.Client,
+			Machine:       e.getCPMachineWithInfrastructureRef(testNamespace.Name),
+			LoadBalancer:  loadbalancer.New(clusterScope),
+			ClusterGetter: clusterScope,
+			YandexMachine: ym,
+		})
+		Expect(err).NotTo(HaveOccurred())
+		machineScope.SetProviderID(id)
+
+		// Deregister from ALB and send compute deletion request.
+		e.setCPYandexMachineWithoutTargetGroupDeleteMocks(id, address)
+		result, err := reconciler.reconcileDelete(ctx, machineScope)
+		Expect(err).NotTo(HaveOccurred())
+		Expect(result.RequeueAfter).To(Equal(RequeueDuration))
+		status := machineScope.GetInstanceStatus()
+		Expect(status).NotTo(BeNil())
+		Expect(*status).To(Equal(infrav1.InstanceStatusRunning))
+
+		// Get DELETING status.
+		result, err = reconciler.reconcileDelete(ctx, machineScope)
+		Expect(err).NotTo(HaveOccurred())
+		Expect(result.RequeueAfter).To(Equal(RequeueDuration))
+		status = machineScope.GetInstanceStatus()
+		Expect(status).NotTo(BeNil())
+		Expect(*status).To(Equal(infrav1.InstanceStatusDeleting))
+
+		// YandexCloud VM deleted.
+		result, err = reconciler.reconcileDelete(ctx, machineScope)
+		Expect(err).NotTo(HaveOccurred())
+		Expect(controllerutil.ContainsFinalizer(machineScope.YandexMachine, infrav1.ClusterFinalizer)).To(BeFalse())
+		Expect(result.RequeueAfter).To(BeZero())
+	})
 })

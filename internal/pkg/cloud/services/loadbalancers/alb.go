@@ -308,6 +308,10 @@ func (s *Service) addTargetALB(ctx context.Context, ipAddress, subnetID string) 
 		return err
 	}
 
+	if tg == nil {
+		return nil
+	}
+
 	if s.isAddressRegisteredALB(ipAddress, subnetID, tg) {
 		return nil
 	}
@@ -329,6 +333,10 @@ func (s *Service) removeTargetALB(ctx context.Context, ipAddress, subnetID strin
 	tg, err := s.scope.GetClient().ALBTargetGroupGetByName(ctx, s.scope.GetFolderID(), builder.GetName())
 	if err != nil {
 		return err
+	}
+
+	if tg == nil {
+		return nil
 	}
 
 	if !s.isAddressRegisteredALB(ipAddress, subnetID, tg) {

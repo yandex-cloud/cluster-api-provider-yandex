@@ -308,6 +308,10 @@ func (s *Service) addTargetALB(ctx context.Context, ipAddress, subnetID string) 
 		return err
 	}
 
+	if tg == nil {
+		return nil
+	}
+
 	if s.isAddressRegisteredALB(ipAddress, subnetID, tg) {
 		return nil
 	}
@@ -331,6 +335,10 @@ func (s *Service) removeTargetALB(ctx context.Context, ipAddress, subnetID strin
 		return err
 	}
 
+	if tg == nil {
+		return nil
+	}
+
 	if !s.isAddressRegisteredALB(ipAddress, subnetID, tg) {
 		return nil
 	}
@@ -342,10 +350,6 @@ func (s *Service) removeTargetALB(ctx context.Context, ipAddress, subnetID strin
 
 // isAddressRegisteredALB checks that the instance address is already registered to the ALB target group.
 func (s *Service) isAddressRegisteredALB(addr, subnetID string, tg *alb.TargetGroup) bool {
-	if tg == nil {
-		return false
-	}
-
 	for _, target := range tg.Targets {
 		ipAddress := &alb.Target_IpAddress{IpAddress: addr}
 		if reflect.DeepEqual(target.AddressType, ipAddress) && target.SubnetId == subnetID {

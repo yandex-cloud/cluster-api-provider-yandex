@@ -18,6 +18,7 @@ package v1alpha1
 
 import (
 	"reflect"
+	"regexp"
 
 	"github.com/pkg/errors"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -31,6 +32,14 @@ import (
 
 // log is for logging in this package.
 var ymtlog = logf.Log.WithName("yandexmachinetemplate-resource")
+
+// regex for validating machine template webhook
+//   - It must start with a lowercase letter (a-z).
+//   - It can contain 0 to 55 (excluding the first and last character) additional characters, which may include lowercase letters (a-z), digits (0-9), and hyphens (-).
+//   - If additional characters are present, the string must end with a letter or a digit (it cannot end with a hyphen).
+//   - The 57-character limit exists because a YandexMachine name is generated from the YandexMachineTemplate name
+//     with a 6-character postfix (e.g., "-12345"), and the total allowed length is 63 characters.
+var nameRegex = regexp.MustCompile("^[a-z]([-a-z0-9]{0,55}[a-z0-9])?$")
 
 // SetupWebhookWithManager creates an YandexMachineTemplate validation webhook.
 func (t *YandexMachineTemplate) SetupWebhookWithManager(mgr ctrl.Manager) error {
@@ -58,6 +67,14 @@ func (t *YandexMachineTemplate) ValidateCreate() (admission.Warnings, error) {
 
 	if t.Spec.Template.Spec.ProviderID != nil {
 		allErrs = append(allErrs, field.Forbidden(field.NewPath("spec", "template", "spec", "providerID"), "cannot be set in templates"))
+	}
+
+	if !nameRegex.MatchString(t.Name) {
+		allErrs = append(allErrs, field.Invalid(
+			field.NewPath("metadata", "name"),
+			t.Name,
+			"may contain lowercase Latin letters, digits, and hyphens. The first character must be a letter, and the hyphen cannot be the last character, max 57 symbols"),
+		)
 	}
 
 	if len(allErrs) == 0 {

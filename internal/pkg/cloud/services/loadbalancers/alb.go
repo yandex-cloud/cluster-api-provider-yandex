@@ -309,7 +309,7 @@ func (s *Service) addTargetALB(ctx context.Context, ipAddress, subnetID string) 
 	}
 
 	if tg == nil {
-		return nil
+		return fmt.Errorf("target group with name %s not found", builder.GetName())
 	}
 
 	if s.isAddressRegisteredALB(ipAddress, subnetID, tg) {
@@ -335,6 +335,8 @@ func (s *Service) removeTargetALB(ctx context.Context, ipAddress, subnetID strin
 		return err
 	}
 
+	// If TargetGroup is nil, it means the user deleted it manually.
+	// In this case, we take no action and consider it a normal scenario.
 	if tg == nil {
 		return nil
 	}

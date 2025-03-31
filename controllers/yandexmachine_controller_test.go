@@ -251,6 +251,39 @@ var _ = Describe("YandexMachine reconciliation check", func() {
 		Expect(ym.GetFinalizers()).To(Equal([]string{infrav1.MachineFinalizer}))
 	})
 
+	It("should fail machine creation when yandex cloud target group was deleted by someone", func() {
+		Expect(e.Create(ctx, e.getCAPIClusterWithInfrastructureReference(testNamespace.Name))).To(Succeed())
+		Expect(e.Create(ctx, e.getYandexClusterWithOwnerReference(testNamespace.Name))).To(Succeed())
+		Expect(e.Create(ctx, e.getCPMachineWithInfrastructureRef(testNamespace.Name))).To(Succeed())
+		Expect(e.Create(ctx, e.getBootstrapSecret(testNamespace.Name))).To(Succeed())
+		ym := e.getYandexMachineWithOwnerRef(testNamespace.Name)
+		Expect(e.Create(ctx, ym)).To(Succeed())
+
+		addr := "1.2.3.4"
+		e.setNewCPYandexMachineWithoutTargetGroupErrorReconcileMocks(addr)
+		reconciler := &YandexMachineReconciler{
+			Client:       k8sClient,
+			YandexClient: e.mockClient,
+		}
+
+		result, err := reconciler.Reconcile(ctx, e.getReconcileRequest(ym.Namespace, ym.Name))
+		Expect(err).To(HaveOccurred())
+		Expect(result.RequeueAfter).To(BeZero())
+		ym = &infrav1.YandexMachine{}
+		Eventually(func() bool {
+			key := client.ObjectKey{
+				Name:      e.machineName,
+				Namespace: testNamespace.Name,
+			}
+
+			err = e.Get(ctx, key, ym)
+
+			return (err == nil &&
+				ym.Status.Conditions == nil)
+		}, e.reconcileTimeout).Should(BeTrue())
+		Expect(ym.Status.Ready).To(BeFalse())
+	})
+
 	It("should fail machine creation when yandex cloud instance was deleted by someone else", func() {
 		Expect(e.Create(ctx, e.getCAPIClusterWithInfrastructureReference(testNamespace.Name))).To(Succeed())
 		Expect(e.Create(ctx, e.getYandexClusterWithOwnerReference(testNamespace.Name))).To(Succeed())

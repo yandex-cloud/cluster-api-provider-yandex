@@ -47,7 +47,63 @@ func TestYandexMachineTemplate_ValidateCreate(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: "invalid template create",
+			name: "template with invalid symbols in name create",
+			template: &infrav1.YandexMachineTemplate{
+				ObjectMeta: v1.ObjectMeta{Name: "ymt-invalid-v1.0"},
+				Spec: infrav1.YandexMachineTemplateSpec{
+					Template: infrav1.YandexMachineTemplateResource{
+						Spec: infrav1.YandexMachineSpec{
+							ZoneID: ptr.To("ru-central1-a"),
+						},
+					},
+				},
+			},
+			wantErr: true,
+		},
+		{
+			name: "template with invalid length name create",
+			template: &infrav1.YandexMachineTemplate{
+				ObjectMeta: v1.ObjectMeta{Name: "ymt-very-looooooooooooooooooooooooooooooooooooooooooooooong-name"},
+				Spec: infrav1.YandexMachineTemplateSpec{
+					Template: infrav1.YandexMachineTemplateResource{
+						Spec: infrav1.YandexMachineSpec{
+							ZoneID: ptr.To("ru-central1-a"),
+						},
+					},
+				},
+			},
+			wantErr: true,
+		},
+		{
+			name: "template with invalid first charter name create",
+			template: &infrav1.YandexMachineTemplate{
+				ObjectMeta: v1.ObjectMeta{Name: "8yml-invalid"},
+				Spec: infrav1.YandexMachineTemplateSpec{
+					Template: infrav1.YandexMachineTemplateResource{
+						Spec: infrav1.YandexMachineSpec{
+							ZoneID: ptr.To("ru-central1-a"),
+						},
+					},
+				},
+			},
+			wantErr: true,
+		},
+		{
+			name: "template with invalid last charter name create",
+			template: &infrav1.YandexMachineTemplate{
+				ObjectMeta: v1.ObjectMeta{Name: "yml-invalid-"},
+				Spec: infrav1.YandexMachineTemplateSpec{
+					Template: infrav1.YandexMachineTemplateResource{
+						Spec: infrav1.YandexMachineSpec{
+							ZoneID: ptr.To("ru-central1-a"),
+						},
+					},
+				},
+			},
+			wantErr: true,
+		},
+		{
+			name: "template with invalid providerID create",
 			template: &infrav1.YandexMachineTemplate{
 				ObjectMeta: v1.ObjectMeta{Name: "ymt-valid"},
 				Spec: infrav1.YandexMachineTemplateSpec{

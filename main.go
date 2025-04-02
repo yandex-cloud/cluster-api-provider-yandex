@@ -28,8 +28,11 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
+	"sigs.k8s.io/controller-runtime/pkg/webhook"
+	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 
 	infrav1 "github.com/yandex-cloud/cluster-api-provider-yandex/api/v1alpha1"
+	corev1 "k8s.io/api/core/v1"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
@@ -50,9 +53,12 @@ var (
 	cfg      options.Config
 )
 
+const defaultNamespace = "capy-system"
+
 //nolint:gochecknoinits // kubebuilder scaffold
 func init() {
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
+	utilruntime.Must(corev1.AddToScheme(scheme))
 	utilruntime.Must(clusterv1.AddToScheme(scheme))
 	utilruntime.Must(infrav1.AddToScheme(scheme))
 	//+kubebuilder:scaffold:scheme
@@ -108,29 +114,27 @@ func main() {
 		os.Exit(1)
 	}
 
-	yandexClient, err := yandex.GetClient(ctx, cfg.YandexCloudSAKey)
-	if err != nil {
-		setupLog.Error(err, "unable to init Yandex SDK client")
-		os.Exit(1)
+	controllerNamespace := os.Getenv("NAMESPACE")
+	if controllerNamespace == "" {
+		setupLog.Info("NAMESPACE env is not set, using default ", "namespace", defaultNamespace)
+		controllerNamespace = defaultNamespace
 	}
 
-	defer func() {
-		yandexClient.Close(ctx)
-	}()
+	yandexClientProvider := yandex.NewYandexClientProvider(cfg.YandexCloudSAKey, controllerNamespace)
 
 	if err = (&controllers.YandexClusterReconciler{
-		Client:       mgr.GetClient(),
-		Scheme:       mgr.GetScheme(),
-		YandexClient: yandexClient,
-		Config:       cfg,
+		Client:             mgr.GetClient(),
+		Scheme:             mgr.GetScheme(),
+		YandexClientGetter: yandexClientProvider,
+		Config:             cfg,
 	}).SetupWithManager(ctx, mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "YandexCluster")
 		os.Exit(1)
 	}
 	if err = (&controllers.YandexMachineReconciler{
-		Client:       mgr.GetClient(),
-		Scheme:       mgr.GetScheme(),
-		YandexClient: yandexClient,
+		Client:             mgr.GetClient(),
+		Scheme:             mgr.GetScheme(),
+		YandexClientGetter: yandexClientProvider,
 	}).SetupWithManager(ctx, mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "YandexMachine")
 		os.Exit(1)
@@ -145,11 +149,34 @@ func main() {
 		os.Exit(1)
 	}
 
+	if err = (&controllers.YandexIdentityReconciler{
+		Client:             mgr.GetClient(),
+		Scheme:             mgr.GetScheme(),
+		YandexClientGetter: yandexClientProvider,
+	}).SetupWithManager(ctx, mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "YandexIdentity")
+		os.Exit(1)
+	}
 	if err = (&infrav1.YandexCluster{}).SetupWebhookWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create webhook", "webhook", "YandexCluster")
 		os.Exit(1)
 	}
 	//+kubebuilder:scaffold:builder
+
+	mgr.GetWebhookServer().Register("/mutate-infrastructure-cluster-x-k8s-io-v1alpha1-yandexcluster-identitylink",
+		&webhook.Admission{
+			Handler: infrav1.NewYandexClusterAdmitter(
+				admission.NewDecoder(mgr.GetScheme()),
+			),
+		})
+
+	mgr.GetWebhookServer().Register("/mutate-infrastructure-cluster-x-k8s-io-v1alpha1-yandexidentity",
+		&webhook.Admission{
+			Handler: infrav1.NewYandexIdentityDeletionBlocker(
+				mgr.GetClient(),
+				admission.NewDecoder(mgr.GetScheme()),
+			),
+		})
 
 	if err := mgr.AddHealthzCheck("healthz", healthz.Ping); err != nil {
 		setupLog.Error(err, "unable to set up health check")

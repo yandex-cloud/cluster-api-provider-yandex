@@ -50,6 +50,7 @@ type ClusterTestEnv struct {
 	client.Client
 	controller               *gomock.Controller
 	mockClient               *mock_client.MockClient
+	mockClientGetter         *mock_client.MockYandexClientGetter
 	clusterName              string
 	machineName              string
 	secretName               string

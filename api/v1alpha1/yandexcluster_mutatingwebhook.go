@@ -50,7 +50,13 @@ func (m *yandexClusterAdmitter) Handle(_ context.Context, req admission.Request)
 				upd.Labels = map[string]string{}
 			}
 
+			// add new label
 			upd.Labels[key] = val
+
+			// remove old label if it exists
+			if currentValue != "" {
+				delete(upd.Labels, currentValue)
+			}
 
 			rawUpdate, err := json.Marshal(upd)
 			if err != nil {

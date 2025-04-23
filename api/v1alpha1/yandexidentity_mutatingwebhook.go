@@ -31,7 +31,7 @@ func NewYandexIdentityDeletionBlocker(platformClient client.Client, decoder *adm
 // If it is, the deletion is blocked.
 func (m *yandexIdentityAdmitter) Handle(ctx context.Context, req admission.Request) admission.Response {
 	if req.Operation != admissionv1.Delete {
-		return admission.Allowed("only delete operation is allowed")
+		return admission.Allowed("non delete operations are allowed")
 	}
 
 	identity := &YandexIdentity{}
@@ -44,7 +44,7 @@ func (m *yandexIdentityAdmitter) Handle(ctx context.Context, req admission.Reque
 	if err := m.platformClient.List(ctx, &clusterList, client.MatchingLabels(identity.GenerateLabelsForCluster())); err != nil {
 		return admission.Errored(
 			http.StatusInternalServerError,
-			errors.Wrapf(err, "failed to list clusters linked to identity %s", identity.Name),
+			errors.Wrapf(err, "failed to list clusters linked to identity %s/%s", identity.Namespace, identity.Name),
 		)
 	}
 

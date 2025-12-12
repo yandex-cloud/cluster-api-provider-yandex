@@ -180,6 +180,47 @@ func parseProviderID(id string) string {
 	return strings.TrimPrefix(id, ProviderIDPrefix)
 }
 
+// GetZoneID returns the zone ID for VM placement.
+func (m *MachineScope) GetZoneID() (string, error) {
+	if m.YandexMachine.Spec.ZoneID != nil && *m.YandexMachine.Spec.ZoneID != "" {
+		return *m.YandexMachine.Spec.ZoneID, nil
+	}
+
+	if m.Machine.Spec.FailureDomain == nil || *m.Machine.Spec.FailureDomain == "" {
+		return "", errors.New("zone not specified: set YandexMachine.spec.zoneID or Machine.spec.failureDomain")
+	}
+
+	return *m.Machine.Spec.FailureDomain, nil
+}
+
+// GetSubnetID returns the subnet ID for VM placement.
+func (m *MachineScope) GetSubnetID() (string, error) {
+	if len(m.YandexMachine.Spec.NetworkInterfaces) > 0 {
+		return m.YandexMachine.Spec.NetworkInterfaces[0].SubnetID, nil
+	}
+
+	zoneID, err := m.GetZoneID()
+	if err != nil {
+		return "", errors.Wrap(err, "cannot determine subnet without zone")
+	}
+
+	subnetID := m.findSubnetByZone(zoneID)
+	if subnetID == "" {
+		return "", fmt.Errorf("no subnet found for zone %s in cluster failure domains", zoneID)
+	}
+
+	return subnetID, nil
+}
+
+func (m *MachineScope) findSubnetByZone(zoneID string) string {
+	for _, fd := range m.ClusterGetter.GetFailureDomains() {
+		if fd.ZoneID == zoneID {
+			return fd.SubnetID
+		}
+	}
+	return ""
+}
+
 // GetInstanceReq returns YandexCloud compute instance creation request.
 func (m *MachineScope) GetInstanceReq() (*compute.CreateInstanceRequest, error) {
 	bootstrapData, err := m.GetBootstrapData()
@@ -187,10 +228,16 @@ func (m *MachineScope) GetInstanceReq() (*compute.CreateInstanceRequest, error) 
 		return nil, err
 	}
 
+	zoneID, err := m.GetZoneID()
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get zone ID")
+	}
+
 	memory, ok := m.YandexMachine.Spec.Resources.Memory.AsInt64()
 	if !ok {
 		return nil, errors.New("failed to parse instance's memory from yandex machine specification")
 	}
+
 	resourcesSpec := &compute.ResourcesSpec{
 		Cores:  m.YandexMachine.Spec.Resources.Cores,
 		Memory: memory,
@@ -202,22 +249,11 @@ func (m *MachineScope) GetInstanceReq() (*compute.CreateInstanceRequest, error) 
 		resourcesSpec.CoreFraction = *m.YandexMachine.Spec.Resources.CoreFraction
 	}
 
-	networkInterfacesSpecs := make([]*compute.NetworkInterfaceSpec, 0)
-
-	for _, networkInterface := range m.YandexMachine.Spec.NetworkInterfaces {
-		networkInterfaceSpec := &compute.NetworkInterfaceSpec{
-			SubnetId:             networkInterface.SubnetID,
-			PrimaryV4AddressSpec: &compute.PrimaryAddressSpec{},
-		}
-		if networkInterface.HasPublicIP != nil && *networkInterface.HasPublicIP {
-			networkInterfaceSpec.PrimaryV4AddressSpec = &compute.PrimaryAddressSpec{
-				OneToOneNatSpec: &compute.OneToOneNatSpec{
-					IpVersion: compute.IpVersion_IPV4,
-				},
-			}
-		}
-		networkInterfacesSpecs = append(networkInterfacesSpecs, networkInterfaceSpec)
+	networkInterfacesSpecs, err := m.buildNetworkInterfaceSpecs()
+	if err != nil {
+		return nil, err
 	}
+
 	bootDiskSize, ok := m.YandexMachine.Spec.BootDisk.Size.AsInt64()
 	if !ok {
 		return nil, errors.New("failed to parse instance's boot disk size from yandex machine specification")
@@ -226,7 +262,7 @@ func (m *MachineScope) GetInstanceReq() (*compute.CreateInstanceRequest, error) 
 	return &compute.CreateInstanceRequest{
 		FolderId:   m.ClusterGetter.GetFolderID(),
 		Name:       m.YandexMachine.GetName(),
-		ZoneId:     *m.YandexMachine.Spec.ZoneID,
+		ZoneId:     zoneID,
 		PlatformId: *m.YandexMachine.Spec.PlatformID,
 		Metadata: map[string]string{
 			"user-data": bootstrapData,
@@ -248,4 +284,43 @@ func (m *MachineScope) GetInstanceReq() (*compute.CreateInstanceRequest, error) 
 		},
 		NetworkInterfaceSpecs: networkInterfacesSpecs,
 	}, nil
+}
+
+func (m *MachineScope) buildNetworkInterfaceSpecs() ([]*compute.NetworkInterfaceSpec, error) {
+	if len(m.YandexMachine.Spec.NetworkInterfaces) > 0 {
+		return m.buildExplicitNetworkInterfaceSpecs(), nil
+	}
+
+	subnetID, err := m.GetSubnetID()
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get subnet ID")
+	}
+
+	return []*compute.NetworkInterfaceSpec{
+		{
+			SubnetId:             subnetID,
+			PrimaryV4AddressSpec: &compute.PrimaryAddressSpec{},
+		},
+	}, nil
+}
+
+func (m *MachineScope) buildExplicitNetworkInterfaceSpecs() []*compute.NetworkInterfaceSpec {
+	specs := make([]*compute.NetworkInterfaceSpec, 0, len(m.YandexMachine.Spec.NetworkInterfaces))
+
+	for _, networkInterface := range m.YandexMachine.Spec.NetworkInterfaces {
+		spec := &compute.NetworkInterfaceSpec{
+			SubnetId:             networkInterface.SubnetID,
+			PrimaryV4AddressSpec: &compute.PrimaryAddressSpec{},
+		}
+		if networkInterface.HasPublicIP != nil && *networkInterface.HasPublicIP {
+			spec.PrimaryV4AddressSpec = &compute.PrimaryAddressSpec{
+				OneToOneNatSpec: &compute.OneToOneNatSpec{
+					IpVersion: compute.IpVersion_IPV4,
+				},
+			}
+		}
+		specs = append(specs, spec)
+	}
+
+	return specs
 }

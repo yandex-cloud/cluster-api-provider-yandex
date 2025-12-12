@@ -24,6 +24,7 @@ import (
 type MockClient struct {
 	ctrl     *gomock.Controller
 	recorder *MockClientMockRecorder
+	isgomock struct{}
 }
 
 // MockClientMockRecorder is the mock recorder for MockClient.
@@ -44,326 +45,326 @@ func (m *MockClient) EXPECT() *MockClientMockRecorder {
 }
 
 // ALBAddTarget mocks base method.
-func (m *MockClient) ALBAddTarget(arg0 context.Context, arg1 *apploadbalancer.AddTargetsRequest) (*operation.Operation, error) {
+func (m *MockClient) ALBAddTarget(ctx context.Context, req *apploadbalancer.AddTargetsRequest) (*operation.Operation, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ALBAddTarget", arg0, arg1)
+	ret := m.ctrl.Call(m, "ALBAddTarget", ctx, req)
 	ret0, _ := ret[0].(*operation.Operation)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // ALBAddTarget indicates an expected call of ALBAddTarget.
-func (mr *MockClientMockRecorder) ALBAddTarget(arg0, arg1 any) *gomock.Call {
+func (mr *MockClientMockRecorder) ALBAddTarget(ctx, req any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ALBAddTarget", reflect.TypeOf((*MockClient)(nil).ALBAddTarget), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ALBAddTarget", reflect.TypeOf((*MockClient)(nil).ALBAddTarget), ctx, req)
 }
 
 // ALBBackendGroupCreate mocks base method.
-func (m *MockClient) ALBBackendGroupCreate(arg0 context.Context, arg1 *apploadbalancer.CreateBackendGroupRequest) (string, error) {
+func (m *MockClient) ALBBackendGroupCreate(ctx context.Context, req *apploadbalancer.CreateBackendGroupRequest) (string, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ALBBackendGroupCreate", arg0, arg1)
+	ret := m.ctrl.Call(m, "ALBBackendGroupCreate", ctx, req)
 	ret0, _ := ret[0].(string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // ALBBackendGroupCreate indicates an expected call of ALBBackendGroupCreate.
-func (mr *MockClientMockRecorder) ALBBackendGroupCreate(arg0, arg1 any) *gomock.Call {
+func (mr *MockClientMockRecorder) ALBBackendGroupCreate(ctx, req any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ALBBackendGroupCreate", reflect.TypeOf((*MockClient)(nil).ALBBackendGroupCreate), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ALBBackendGroupCreate", reflect.TypeOf((*MockClient)(nil).ALBBackendGroupCreate), ctx, req)
 }
 
 // ALBBackendGroupDelete mocks base method.
-func (m *MockClient) ALBBackendGroupDelete(arg0 context.Context, arg1 string) error {
+func (m *MockClient) ALBBackendGroupDelete(ctx context.Context, id string) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ALBBackendGroupDelete", arg0, arg1)
+	ret := m.ctrl.Call(m, "ALBBackendGroupDelete", ctx, id)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // ALBBackendGroupDelete indicates an expected call of ALBBackendGroupDelete.
-func (mr *MockClientMockRecorder) ALBBackendGroupDelete(arg0, arg1 any) *gomock.Call {
+func (mr *MockClientMockRecorder) ALBBackendGroupDelete(ctx, id any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ALBBackendGroupDelete", reflect.TypeOf((*MockClient)(nil).ALBBackendGroupDelete), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ALBBackendGroupDelete", reflect.TypeOf((*MockClient)(nil).ALBBackendGroupDelete), ctx, id)
 }
 
 // ALBBackendGroupGet mocks base method.
-func (m *MockClient) ALBBackendGroupGet(arg0 context.Context, arg1 string) (*apploadbalancer.BackendGroup, error) {
+func (m *MockClient) ALBBackendGroupGet(ctx context.Context, id string) (*apploadbalancer.BackendGroup, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ALBBackendGroupGet", arg0, arg1)
+	ret := m.ctrl.Call(m, "ALBBackendGroupGet", ctx, id)
 	ret0, _ := ret[0].(*apploadbalancer.BackendGroup)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // ALBBackendGroupGet indicates an expected call of ALBBackendGroupGet.
-func (mr *MockClientMockRecorder) ALBBackendGroupGet(arg0, arg1 any) *gomock.Call {
+func (mr *MockClientMockRecorder) ALBBackendGroupGet(ctx, id any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ALBBackendGroupGet", reflect.TypeOf((*MockClient)(nil).ALBBackendGroupGet), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ALBBackendGroupGet", reflect.TypeOf((*MockClient)(nil).ALBBackendGroupGet), ctx, id)
 }
 
 // ALBBackendGroupGetByName mocks base method.
-func (m *MockClient) ALBBackendGroupGetByName(arg0 context.Context, arg1, arg2 string) (*apploadbalancer.BackendGroup, error) {
+func (m *MockClient) ALBBackendGroupGetByName(ctx context.Context, id, name string) (*apploadbalancer.BackendGroup, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ALBBackendGroupGetByName", arg0, arg1, arg2)
+	ret := m.ctrl.Call(m, "ALBBackendGroupGetByName", ctx, id, name)
 	ret0, _ := ret[0].(*apploadbalancer.BackendGroup)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // ALBBackendGroupGetByName indicates an expected call of ALBBackendGroupGetByName.
-func (mr *MockClientMockRecorder) ALBBackendGroupGetByName(arg0, arg1, arg2 any) *gomock.Call {
+func (mr *MockClientMockRecorder) ALBBackendGroupGetByName(ctx, id, name any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ALBBackendGroupGetByName", reflect.TypeOf((*MockClient)(nil).ALBBackendGroupGetByName), arg0, arg1, arg2)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ALBBackendGroupGetByName", reflect.TypeOf((*MockClient)(nil).ALBBackendGroupGetByName), ctx, id, name)
 }
 
 // ALBCreate mocks base method.
-func (m *MockClient) ALBCreate(arg0 context.Context, arg1 *apploadbalancer.CreateLoadBalancerRequest) (string, error) {
+func (m *MockClient) ALBCreate(ctx context.Context, req *apploadbalancer.CreateLoadBalancerRequest) (string, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ALBCreate", arg0, arg1)
+	ret := m.ctrl.Call(m, "ALBCreate", ctx, req)
 	ret0, _ := ret[0].(string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // ALBCreate indicates an expected call of ALBCreate.
-func (mr *MockClientMockRecorder) ALBCreate(arg0, arg1 any) *gomock.Call {
+func (mr *MockClientMockRecorder) ALBCreate(ctx, req any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ALBCreate", reflect.TypeOf((*MockClient)(nil).ALBCreate), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ALBCreate", reflect.TypeOf((*MockClient)(nil).ALBCreate), ctx, req)
 }
 
 // ALBDelete mocks base method.
-func (m *MockClient) ALBDelete(arg0 context.Context, arg1 string) error {
+func (m *MockClient) ALBDelete(ctx context.Context, id string) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ALBDelete", arg0, arg1)
+	ret := m.ctrl.Call(m, "ALBDelete", ctx, id)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // ALBDelete indicates an expected call of ALBDelete.
-func (mr *MockClientMockRecorder) ALBDelete(arg0, arg1 any) *gomock.Call {
+func (mr *MockClientMockRecorder) ALBDelete(ctx, id any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ALBDelete", reflect.TypeOf((*MockClient)(nil).ALBDelete), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ALBDelete", reflect.TypeOf((*MockClient)(nil).ALBDelete), ctx, id)
 }
 
 // ALBGet mocks base method.
-func (m *MockClient) ALBGet(arg0 context.Context, arg1 string) (*apploadbalancer.LoadBalancer, error) {
+func (m *MockClient) ALBGet(ctx context.Context, id string) (*apploadbalancer.LoadBalancer, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ALBGet", arg0, arg1)
+	ret := m.ctrl.Call(m, "ALBGet", ctx, id)
 	ret0, _ := ret[0].(*apploadbalancer.LoadBalancer)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // ALBGet indicates an expected call of ALBGet.
-func (mr *MockClientMockRecorder) ALBGet(arg0, arg1 any) *gomock.Call {
+func (mr *MockClientMockRecorder) ALBGet(ctx, id any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ALBGet", reflect.TypeOf((*MockClient)(nil).ALBGet), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ALBGet", reflect.TypeOf((*MockClient)(nil).ALBGet), ctx, id)
 }
 
 // ALBGetByName mocks base method.
-func (m *MockClient) ALBGetByName(arg0 context.Context, arg1, arg2 string) (*apploadbalancer.LoadBalancer, error) {
+func (m *MockClient) ALBGetByName(ctx context.Context, id, name string) (*apploadbalancer.LoadBalancer, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ALBGetByName", arg0, arg1, arg2)
+	ret := m.ctrl.Call(m, "ALBGetByName", ctx, id, name)
 	ret0, _ := ret[0].(*apploadbalancer.LoadBalancer)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // ALBGetByName indicates an expected call of ALBGetByName.
-func (mr *MockClientMockRecorder) ALBGetByName(arg0, arg1, arg2 any) *gomock.Call {
+func (mr *MockClientMockRecorder) ALBGetByName(ctx, id, name any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ALBGetByName", reflect.TypeOf((*MockClient)(nil).ALBGetByName), arg0, arg1, arg2)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ALBGetByName", reflect.TypeOf((*MockClient)(nil).ALBGetByName), ctx, id, name)
 }
 
 // ALBGetTargetGroup mocks base method.
-func (m *MockClient) ALBGetTargetGroup(arg0 context.Context, arg1 string) (*apploadbalancer.TargetGroup, error) {
+func (m *MockClient) ALBGetTargetGroup(ctx context.Context, targetGroupID string) (*apploadbalancer.TargetGroup, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ALBGetTargetGroup", arg0, arg1)
+	ret := m.ctrl.Call(m, "ALBGetTargetGroup", ctx, targetGroupID)
 	ret0, _ := ret[0].(*apploadbalancer.TargetGroup)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // ALBGetTargetGroup indicates an expected call of ALBGetTargetGroup.
-func (mr *MockClientMockRecorder) ALBGetTargetGroup(arg0, arg1 any) *gomock.Call {
+func (mr *MockClientMockRecorder) ALBGetTargetGroup(ctx, targetGroupID any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ALBGetTargetGroup", reflect.TypeOf((*MockClient)(nil).ALBGetTargetGroup), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ALBGetTargetGroup", reflect.TypeOf((*MockClient)(nil).ALBGetTargetGroup), ctx, targetGroupID)
 }
 
 // ALBRemoveTarget mocks base method.
-func (m *MockClient) ALBRemoveTarget(arg0 context.Context, arg1 *apploadbalancer.RemoveTargetsRequest) (*operation.Operation, error) {
+func (m *MockClient) ALBRemoveTarget(ctx context.Context, req *apploadbalancer.RemoveTargetsRequest) (*operation.Operation, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ALBRemoveTarget", arg0, arg1)
+	ret := m.ctrl.Call(m, "ALBRemoveTarget", ctx, req)
 	ret0, _ := ret[0].(*operation.Operation)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // ALBRemoveTarget indicates an expected call of ALBRemoveTarget.
-func (mr *MockClientMockRecorder) ALBRemoveTarget(arg0, arg1 any) *gomock.Call {
+func (mr *MockClientMockRecorder) ALBRemoveTarget(ctx, req any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ALBRemoveTarget", reflect.TypeOf((*MockClient)(nil).ALBRemoveTarget), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ALBRemoveTarget", reflect.TypeOf((*MockClient)(nil).ALBRemoveTarget), ctx, req)
 }
 
 // ALBTargetGroupCreate mocks base method.
-func (m *MockClient) ALBTargetGroupCreate(arg0 context.Context, arg1 *apploadbalancer.CreateTargetGroupRequest) (string, error) {
+func (m *MockClient) ALBTargetGroupCreate(ctx context.Context, req *apploadbalancer.CreateTargetGroupRequest) (string, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ALBTargetGroupCreate", arg0, arg1)
+	ret := m.ctrl.Call(m, "ALBTargetGroupCreate", ctx, req)
 	ret0, _ := ret[0].(string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // ALBTargetGroupCreate indicates an expected call of ALBTargetGroupCreate.
-func (mr *MockClientMockRecorder) ALBTargetGroupCreate(arg0, arg1 any) *gomock.Call {
+func (mr *MockClientMockRecorder) ALBTargetGroupCreate(ctx, req any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ALBTargetGroupCreate", reflect.TypeOf((*MockClient)(nil).ALBTargetGroupCreate), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ALBTargetGroupCreate", reflect.TypeOf((*MockClient)(nil).ALBTargetGroupCreate), ctx, req)
 }
 
 // ALBTargetGroupDelete mocks base method.
-func (m *MockClient) ALBTargetGroupDelete(arg0 context.Context, arg1 string) error {
+func (m *MockClient) ALBTargetGroupDelete(ctx context.Context, id string) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ALBTargetGroupDelete", arg0, arg1)
+	ret := m.ctrl.Call(m, "ALBTargetGroupDelete", ctx, id)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // ALBTargetGroupDelete indicates an expected call of ALBTargetGroupDelete.
-func (mr *MockClientMockRecorder) ALBTargetGroupDelete(arg0, arg1 any) *gomock.Call {
+func (mr *MockClientMockRecorder) ALBTargetGroupDelete(ctx, id any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ALBTargetGroupDelete", reflect.TypeOf((*MockClient)(nil).ALBTargetGroupDelete), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ALBTargetGroupDelete", reflect.TypeOf((*MockClient)(nil).ALBTargetGroupDelete), ctx, id)
 }
 
 // ALBTargetGroupGet mocks base method.
-func (m *MockClient) ALBTargetGroupGet(arg0 context.Context, arg1 string) (*apploadbalancer.TargetGroup, error) {
+func (m *MockClient) ALBTargetGroupGet(ctx context.Context, id string) (*apploadbalancer.TargetGroup, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ALBTargetGroupGet", arg0, arg1)
+	ret := m.ctrl.Call(m, "ALBTargetGroupGet", ctx, id)
 	ret0, _ := ret[0].(*apploadbalancer.TargetGroup)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // ALBTargetGroupGet indicates an expected call of ALBTargetGroupGet.
-func (mr *MockClientMockRecorder) ALBTargetGroupGet(arg0, arg1 any) *gomock.Call {
+func (mr *MockClientMockRecorder) ALBTargetGroupGet(ctx, id any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ALBTargetGroupGet", reflect.TypeOf((*MockClient)(nil).ALBTargetGroupGet), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ALBTargetGroupGet", reflect.TypeOf((*MockClient)(nil).ALBTargetGroupGet), ctx, id)
 }
 
 // ALBTargetGroupGetByName mocks base method.
-func (m *MockClient) ALBTargetGroupGetByName(arg0 context.Context, arg1, arg2 string) (*apploadbalancer.TargetGroup, error) {
+func (m *MockClient) ALBTargetGroupGetByName(ctx context.Context, id, name string) (*apploadbalancer.TargetGroup, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ALBTargetGroupGetByName", arg0, arg1, arg2)
+	ret := m.ctrl.Call(m, "ALBTargetGroupGetByName", ctx, id, name)
 	ret0, _ := ret[0].(*apploadbalancer.TargetGroup)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // ALBTargetGroupGetByName indicates an expected call of ALBTargetGroupGetByName.
-func (mr *MockClientMockRecorder) ALBTargetGroupGetByName(arg0, arg1, arg2 any) *gomock.Call {
+func (mr *MockClientMockRecorder) ALBTargetGroupGetByName(ctx, id, name any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ALBTargetGroupGetByName", reflect.TypeOf((*MockClient)(nil).ALBTargetGroupGetByName), arg0, arg1, arg2)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ALBTargetGroupGetByName", reflect.TypeOf((*MockClient)(nil).ALBTargetGroupGetByName), ctx, id, name)
 }
 
 // Close mocks base method.
-func (m *MockClient) Close(arg0 context.Context) error {
+func (m *MockClient) Close(ctx context.Context) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Close", arg0)
+	ret := m.ctrl.Call(m, "Close", ctx)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // Close indicates an expected call of Close.
-func (mr *MockClientMockRecorder) Close(arg0 any) *gomock.Call {
+func (mr *MockClientMockRecorder) Close(ctx any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Close", reflect.TypeOf((*MockClient)(nil).Close), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Close", reflect.TypeOf((*MockClient)(nil).Close), ctx)
 }
 
 // ComputeCreate mocks base method.
-func (m *MockClient) ComputeCreate(arg0 context.Context, arg1 *compute.CreateInstanceRequest) (string, error) {
+func (m *MockClient) ComputeCreate(ctx context.Context, req *compute.CreateInstanceRequest) (string, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ComputeCreate", arg0, arg1)
+	ret := m.ctrl.Call(m, "ComputeCreate", ctx, req)
 	ret0, _ := ret[0].(string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // ComputeCreate indicates an expected call of ComputeCreate.
-func (mr *MockClientMockRecorder) ComputeCreate(arg0, arg1 any) *gomock.Call {
+func (mr *MockClientMockRecorder) ComputeCreate(ctx, req any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ComputeCreate", reflect.TypeOf((*MockClient)(nil).ComputeCreate), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ComputeCreate", reflect.TypeOf((*MockClient)(nil).ComputeCreate), ctx, req)
 }
 
 // ComputeDelete mocks base method.
-func (m *MockClient) ComputeDelete(arg0 context.Context, arg1 string) error {
+func (m *MockClient) ComputeDelete(ctx context.Context, id string) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ComputeDelete", arg0, arg1)
+	ret := m.ctrl.Call(m, "ComputeDelete", ctx, id)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // ComputeDelete indicates an expected call of ComputeDelete.
-func (mr *MockClientMockRecorder) ComputeDelete(arg0, arg1 any) *gomock.Call {
+func (mr *MockClientMockRecorder) ComputeDelete(ctx, id any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ComputeDelete", reflect.TypeOf((*MockClient)(nil).ComputeDelete), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ComputeDelete", reflect.TypeOf((*MockClient)(nil).ComputeDelete), ctx, id)
 }
 
 // ComputeGet mocks base method.
-func (m *MockClient) ComputeGet(arg0 context.Context, arg1 string) (*compute.Instance, error) {
+func (m *MockClient) ComputeGet(ctx context.Context, id string) (*compute.Instance, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ComputeGet", arg0, arg1)
+	ret := m.ctrl.Call(m, "ComputeGet", ctx, id)
 	ret0, _ := ret[0].(*compute.Instance)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // ComputeGet indicates an expected call of ComputeGet.
-func (mr *MockClientMockRecorder) ComputeGet(arg0, arg1 any) *gomock.Call {
+func (mr *MockClientMockRecorder) ComputeGet(ctx, id any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ComputeGet", reflect.TypeOf((*MockClient)(nil).ComputeGet), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ComputeGet", reflect.TypeOf((*MockClient)(nil).ComputeGet), ctx, id)
 }
 
 // NLBAddTarget mocks base method.
-func (m *MockClient) NLBAddTarget(arg0 context.Context, arg1 *loadbalancer.AddTargetsRequest) (*operation.Operation, error) {
+func (m *MockClient) NLBAddTarget(ctx context.Context, req *loadbalancer.AddTargetsRequest) (*operation.Operation, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "NLBAddTarget", arg0, arg1)
+	ret := m.ctrl.Call(m, "NLBAddTarget", ctx, req)
 	ret0, _ := ret[0].(*operation.Operation)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // NLBAddTarget indicates an expected call of NLBAddTarget.
-func (mr *MockClientMockRecorder) NLBAddTarget(arg0, arg1 any) *gomock.Call {
+func (mr *MockClientMockRecorder) NLBAddTarget(ctx, req any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NLBAddTarget", reflect.TypeOf((*MockClient)(nil).NLBAddTarget), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NLBAddTarget", reflect.TypeOf((*MockClient)(nil).NLBAddTarget), ctx, req)
 }
 
 // NLBGetTargetGroup mocks base method.
-func (m *MockClient) NLBGetTargetGroup(arg0 context.Context, arg1 string) (*loadbalancer.TargetGroup, error) {
+func (m *MockClient) NLBGetTargetGroup(ctx context.Context, targetGroupID string) (*loadbalancer.TargetGroup, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "NLBGetTargetGroup", arg0, arg1)
+	ret := m.ctrl.Call(m, "NLBGetTargetGroup", ctx, targetGroupID)
 	ret0, _ := ret[0].(*loadbalancer.TargetGroup)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // NLBGetTargetGroup indicates an expected call of NLBGetTargetGroup.
-func (mr *MockClientMockRecorder) NLBGetTargetGroup(arg0, arg1 any) *gomock.Call {
+func (mr *MockClientMockRecorder) NLBGetTargetGroup(ctx, targetGroupID any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NLBGetTargetGroup", reflect.TypeOf((*MockClient)(nil).NLBGetTargetGroup), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NLBGetTargetGroup", reflect.TypeOf((*MockClient)(nil).NLBGetTargetGroup), ctx, targetGroupID)
 }
 
 // NLBRemoveTarget mocks base method.
-func (m *MockClient) NLBRemoveTarget(arg0 context.Context, arg1 *loadbalancer.RemoveTargetsRequest) (*operation.Operation, error) {
+func (m *MockClient) NLBRemoveTarget(ctx context.Context, req *loadbalancer.RemoveTargetsRequest) (*operation.Operation, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "NLBRemoveTarget", arg0, arg1)
+	ret := m.ctrl.Call(m, "NLBRemoveTarget", ctx, req)
 	ret0, _ := ret[0].(*operation.Operation)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // NLBRemoveTarget indicates an expected call of NLBRemoveTarget.
-func (mr *MockClientMockRecorder) NLBRemoveTarget(arg0, arg1 any) *gomock.Call {
+func (mr *MockClientMockRecorder) NLBRemoveTarget(ctx, req any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NLBRemoveTarget", reflect.TypeOf((*MockClient)(nil).NLBRemoveTarget), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NLBRemoveTarget", reflect.TypeOf((*MockClient)(nil).NLBRemoveTarget), ctx, req)
 }

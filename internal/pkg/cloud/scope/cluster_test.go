@@ -26,6 +26,50 @@ import (
 	"sigs.k8s.io/cluster-api/api/v1beta1"
 )
 
+func TestClusterScope_GetFailureDomains(t *testing.T) {
+	g := NewWithT(t)
+
+	tests := []struct {
+		testName string
+		scope    *scope.ClusterScope
+		want     []infrav1.FailureDomainSpec
+	}{
+		{
+			testName: "Return empty slice if no failure domains configured",
+			scope: &scope.ClusterScope{
+				YandexCluster: &infrav1.YandexCluster{},
+			},
+			want: nil,
+		},
+		{
+			testName: "Return configured failure domains",
+			scope: &scope.ClusterScope{
+				YandexCluster: &infrav1.YandexCluster{
+					Spec: infrav1.YandexClusterSpec{
+						FailureDomains: []infrav1.FailureDomainSpec{
+							{ZoneID: "ru-central1-a", SubnetID: "subnet-a"},
+							{ZoneID: "ru-central1-b", SubnetID: "subnet-b"},
+							{ZoneID: "ru-central1-d", SubnetID: "subnet-d"},
+						},
+					},
+				},
+			},
+			want: []infrav1.FailureDomainSpec{
+				{ZoneID: "ru-central1-a", SubnetID: "subnet-a"},
+				{ZoneID: "ru-central1-b", SubnetID: "subnet-b"},
+				{ZoneID: "ru-central1-d", SubnetID: "subnet-d"},
+			},
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.testName, func(_ *testing.T) {
+			got := test.scope.GetFailureDomains()
+			g.Expect(got).To(Equal(test.want))
+		})
+	}
+}
+
 func TestCLoudScope_GetLBName(t *testing.T) {
 	g := NewWithT(t)
 

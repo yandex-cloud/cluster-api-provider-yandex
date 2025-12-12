@@ -217,6 +217,7 @@ func (s *Service) reconcileALB(ctx context.Context, backendGroupID string) error
 		WithFolder(s.scope.GetFolderID()).
 		WithBackendGroupID(backendGroupID).
 		WithNetworkID(s.scope.GetNetworkID()).
+		WithFailureDomains(s.scope.GetFailureDomains()).
 		WithLabels(s.scope.GetLabels())
 
 	lb, err := client.ALBGetByName(ctx, s.scope.GetFolderID(), builder.GetName())
@@ -225,8 +226,11 @@ func (s *Service) reconcileALB(ctx context.Context, backendGroupID string) error
 	}
 	switch {
 	case lb != nil && lb.Status == alb.LoadBalancer_ACTIVE && s.scope.GetLBSpec().Listener.Address != "":
-		// TODO: add support for external balancers
-		lbAddress, lbPort := s.getInternalAddress(lb), s.getInternalPort(lb)
+		lbAddress, err := s.getListenerAddress(lb)
+		if err != nil {
+			return err
+		}
+		lbPort := s.getListenerPort(lb)
 		// TODO: reconile LB listener address/port in https://github.com/yandex-cloud/cluster-api-provider-yandex/issues/17
 		if lbAddress != "" && s.scope.GetLBSpec().Listener.Address != lbAddress {
 			return fmt.Errorf(
@@ -267,11 +271,18 @@ func (s *Service) reconcileALB(ctx context.Context, backendGroupID string) error
 	return nil
 }
 
-func (s *Service) getInternalAddress(lb *alb.LoadBalancer) string {
-	return lb.Listeners[0].GetEndpoints()[0].Addresses[0].GetInternalIpv4Address().Address
+func (s *Service) getListenerAddress(lb *alb.LoadBalancer) (string, error) {
+	addr := lb.Listeners[0].GetEndpoints()[0].Addresses[0]
+	if internal := addr.GetInternalIpv4Address(); internal != nil {
+		return internal.Address, nil
+	}
+	if external := addr.GetExternalIpv4Address(); external != nil {
+		return external.Address, nil
+	}
+	return "", fmt.Errorf("ALB listener has no IPv4 address")
 }
 
-func (s *Service) getInternalPort(lb *alb.LoadBalancer) int32 {
+func (s *Service) getListenerPort(lb *alb.LoadBalancer) int32 {
 	return int32(lb.Listeners[0].GetEndpoints()[0].Ports[0])
 }
 
@@ -286,10 +297,13 @@ func (s *Service) describeALB(ctx context.Context) (infrav1.LoadBalancerStatus, 
 		return infrav1.LoadBalancerStatus{}, err
 	}
 
-	// TODO: external address support.
+	listenerAddress, err := s.getListenerAddress(lb)
+	if err != nil {
+		return infrav1.LoadBalancerStatus{}, err
+	}
 	status := infrav1.LoadBalancerStatus{
-		ListenerAddress: s.getInternalAddress(lb),
-		ListenerPort:    s.getInternalPort(lb),
+		ListenerAddress: listenerAddress,
+		ListenerPort:    s.getListenerPort(lb),
 	}
 	return status, nil
 }

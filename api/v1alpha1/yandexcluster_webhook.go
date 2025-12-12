@@ -63,6 +63,15 @@ var (
 // Default implements webhook.Defaulter so a webhook will be registered for the type.
 func (c *YandexCluster) Default() {
 	yandexclusterlog.Info("default", "name", c.Name)
+
+	// fill listener subnet from first failure domain
+	if c.Spec.LoadBalancer.Listener.Internal &&
+		c.Spec.LoadBalancer.Listener.Subnet.ID == "" &&
+		len(c.Spec.FailureDomains) > 0 {
+		fd := c.Spec.FailureDomains[0]
+		c.Spec.LoadBalancer.Listener.Subnet.ID = fd.SubnetID
+		c.Spec.LoadBalancer.Listener.Subnet.ZoneID = fd.ZoneID
+	}
 }
 
 // ValidateCreate implements webhook.Validator so a webhook will be registered for the type.
@@ -81,6 +90,16 @@ func (c *YandexCluster) ValidateCreate() (admission.Warnings, error) {
 		allErrs = append(allErrs,
 			field.Invalid(field.NewPath("spec", "loadBalancer", "listener", "address"),
 				c.Spec.LoadBalancer.Listener.Address, "field must be a valid IPv4 address"),
+		)
+	}
+
+	// subnet required only for internal listener without FailureDomains
+	if c.Spec.LoadBalancer.Listener.Internal &&
+		c.Spec.LoadBalancer.Listener.Subnet.ID == "" &&
+		len(c.Spec.FailureDomains) == 0 {
+		allErrs = append(allErrs,
+			field.Required(field.NewPath("spec", "loadBalancer", "listener", "subnet"),
+				"subnet is required for internal listener when failureDomains is not specified"),
 		)
 	}
 

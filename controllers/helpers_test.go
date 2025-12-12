@@ -807,6 +807,7 @@ func (c *ClusterTestEnv) getYandexMachine(nsName string) *infrav1.YandexMachine 
 			Namespace: nsName,
 		},
 		Spec: infrav1.YandexMachineSpec{
+			ZoneID: ptr.To("ru-central1-a"),
 			Resources: infrav1.Resources{
 				Memory: resource.MustParse("1Gi"),
 				Cores:  1,

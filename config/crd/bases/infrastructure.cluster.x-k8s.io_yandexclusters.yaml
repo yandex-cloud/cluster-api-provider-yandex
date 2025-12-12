@@ -70,6 +70,33 @@ spec:
                 - host
                 - port
                 type: object
+              failureDomains:
+                description: |-
+                  FailureDomains defines the availability zones for the cluster.
+                  Each failure domain specifies a zone and subnet for machine placement.
+                items:
+                  description: FailureDomainSpec defines a failure domain (availability
+                    zone) for the cluster.
+                  properties:
+                    controlPlane:
+                      default: true
+                      description: ControlPlane indicates whether this zone can host
+                        control plane nodes.
+                      type: boolean
+                    subnetID:
+                      description: SubnetID is the subnet to use in this zone.
+                      minLength: 1
+                      type: string
+                    zoneID:
+                      description: ZoneID is the Yandex Cloud zone identifier (e.g.,
+                        "ru-central1-a").
+                      minLength: 1
+                      type: string
+                  required:
+                  - subnetID
+                  - zoneID
+                  type: object
+                type: array
               folderID:
                 description: FolderID is the identifier of YandexCloud folder to deploy
                   the cluster to.
@@ -144,6 +171,8 @@ spec:
                       subnet:
                         description: |-
                           Load balancer listener will be located in this subnet.
+                          Required for internal listener when FailureDomains is not specified.
+                          If not specified and FailureDomains is set, uses first failure domain.
                           More information https://yandex.cloud/ru/docs/vpc/concepts/network#subnet.
                         properties:
                           id:
@@ -155,8 +184,6 @@ spec:
                               zone where the subnet resides.
                             type: string
                         type: object
-                    required:
-                    - subnet
                     type: object
                   name:
                     description: |-
@@ -251,6 +278,28 @@ spec:
                   - type
                   type: object
                 type: array
+              failureDomains:
+                additionalProperties:
+                  description: |-
+                    FailureDomainSpec is the Schema for Cluster API failure domains.
+                    It allows controllers to understand how many failure domains a cluster can optionally span across.
+                  properties:
+                    attributes:
+                      additionalProperties:
+                        type: string
+                      description: Attributes is a free form map of attributes an
+                        infrastructure provider might use or require.
+                      type: object
+                    controlPlane:
+                      description: ControlPlane determines if this failure domain
+                        is suitable for use by control plane machines.
+                      type: boolean
+                  type: object
+                description: |-
+                  FailureDomains contains the failure domains (zones) available for this cluster.
+                  This is populated by the controller and consumed by KubeadmControlPlane
+                  for machine distribution across zones.
+                type: object
               loadBalancerStatus:
                 description: LoadBalancerStatus encapsulates load balancer resources.
                 properties:

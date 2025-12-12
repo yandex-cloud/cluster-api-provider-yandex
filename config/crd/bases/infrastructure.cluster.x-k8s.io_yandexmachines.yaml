@@ -68,8 +68,9 @@ spec:
                 - size
                 type: object
               networkInterfaces:
-                description: NetworkInterfaces is a network interfaces configurations
-                  for YandexCloud VM
+                description: |-
+                  NetworkInterfaces is a network interfaces configurations for YandexCloud VM.
+                  If not specified, the subnet will be determined from the cluster's failure domain.
                 items:
                   description: NetworkInterface defines the network interface configuration
                     of YandexCloud VM.
@@ -138,13 +139,12 @@ spec:
                 - memory
                 type: object
               zoneID:
-                default: ru-central1-d
-                description: ZoneID is the identifier of YandexCloud availability
-                  zone.
+                description: |-
+                  ZoneID is the identifier of YandexCloud availability zone.
+                  If not specified, the zone will be determined from Machine.spec.failureDomain.
                 type: string
             required:
             - bootDisk
-            - networkInterfaces
             - resources
             type: object
           status:

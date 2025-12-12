@@ -22,6 +22,7 @@ import (
 type MockYandexClientGetter struct {
 	ctrl     *gomock.Controller
 	recorder *MockYandexClientGetterMockRecorder
+	isgomock struct{}
 }
 
 // MockYandexClientGetterMockRecorder is the mock recorder for MockYandexClientGetter.
@@ -42,46 +43,46 @@ func (m *MockYandexClientGetter) EXPECT() *MockYandexClientGetterMockRecorder {
 }
 
 // GetDefault mocks base method.
-func (m *MockYandexClientGetter) GetDefault(arg0 context.Context) (client.Client, error) {
+func (m *MockYandexClientGetter) GetDefault(ctx context.Context) (client.Client, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetDefault", arg0)
+	ret := m.ctrl.Call(m, "GetDefault", ctx)
 	ret0, _ := ret[0].(client.Client)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetDefault indicates an expected call of GetDefault.
-func (mr *MockYandexClientGetterMockRecorder) GetDefault(arg0 any) *gomock.Call {
+func (mr *MockYandexClientGetterMockRecorder) GetDefault(ctx any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDefault", reflect.TypeOf((*MockYandexClientGetter)(nil).GetDefault), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDefault", reflect.TypeOf((*MockYandexClientGetter)(nil).GetDefault), ctx)
 }
 
 // GetFromKey mocks base method.
-func (m *MockYandexClientGetter) GetFromKey(arg0 context.Context, arg1 string) (client.Client, error) {
+func (m *MockYandexClientGetter) GetFromKey(ctx context.Context, key string) (client.Client, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetFromKey", arg0, arg1)
+	ret := m.ctrl.Call(m, "GetFromKey", ctx, key)
 	ret0, _ := ret[0].(client.Client)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetFromKey indicates an expected call of GetFromKey.
-func (mr *MockYandexClientGetterMockRecorder) GetFromKey(arg0, arg1 any) *gomock.Call {
+func (mr *MockYandexClientGetterMockRecorder) GetFromKey(ctx, key any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetFromKey", reflect.TypeOf((*MockYandexClientGetter)(nil).GetFromKey), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetFromKey", reflect.TypeOf((*MockYandexClientGetter)(nil).GetFromKey), ctx, key)
 }
 
 // GetFromSecret mocks base method.
-func (m *MockYandexClientGetter) GetFromSecret(arg0 context.Context, arg1 client0.Client, arg2, arg3, arg4 string) (client.Client, error) {
+func (m *MockYandexClientGetter) GetFromSecret(ctx context.Context, cl client0.Client, secretName, secretNamespace, keyName string) (client.Client, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetFromSecret", arg0, arg1, arg2, arg3, arg4)
+	ret := m.ctrl.Call(m, "GetFromSecret", ctx, cl, secretName, secretNamespace, keyName)
 	ret0, _ := ret[0].(client.Client)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetFromSecret indicates an expected call of GetFromSecret.
-func (mr *MockYandexClientGetterMockRecorder) GetFromSecret(arg0, arg1, arg2, arg3, arg4 any) *gomock.Call {
+func (mr *MockYandexClientGetterMockRecorder) GetFromSecret(ctx, cl, secretName, secretNamespace, keyName any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetFromSecret", reflect.TypeOf((*MockYandexClientGetter)(nil).GetFromSecret), arg0, arg1, arg2, arg3, arg4)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetFromSecret", reflect.TypeOf((*MockYandexClientGetter)(nil).GetFromSecret), ctx, cl, secretName, secretNamespace, keyName)
 }

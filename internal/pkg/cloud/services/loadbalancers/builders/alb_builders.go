@@ -43,6 +43,7 @@ type ALBBuilder struct {
 	name             string
 	backendGroupID   string
 	additionalLabels infrav1.Labels
+	failureDomains   []infrav1.FailureDomainSpec
 }
 
 // NewALBTargetGroupBuilder returns the new ALBTargetGroupBuilder.
@@ -276,6 +277,12 @@ func (a *ALBBuilder) WithLabels(labels infrav1.Labels) *ALBBuilder {
 	return a
 }
 
+// WithFailureDomains sets failure domains for multi-zone ALB allocation.
+func (a *ALBBuilder) WithFailureDomains(fds []infrav1.FailureDomainSpec) *ALBBuilder {
+	a.failureDomains = fds
+	return a
+}
+
 // Build  prepares and returns the ALB creation request.
 func (a *ALBBuilder) Build() (*alb.CreateLoadBalancerRequest, error) {
 	request := &alb.CreateLoadBalancerRequest{
@@ -285,13 +292,21 @@ func (a *ALBBuilder) Build() (*alb.CreateLoadBalancerRequest, error) {
 		Description: describePrefix + a.clusterName + " loadbalancer",
 	}
 
-	// Single zone allocation only in alpha version.
-	request.SetAllocationPolicy(&alb.AllocationPolicy{
-		Locations: []*alb.Location{{
+	// Multi-zone allocation if FailureDomains provided, otherwise single zone.
+	locations := make([]*alb.Location, 0, len(a.failureDomains)+1)
+	for _, fd := range a.failureDomains {
+		locations = append(locations, &alb.Location{
+			ZoneId:   fd.ZoneID,
+			SubnetId: fd.SubnetID,
+		})
+	}
+	if len(locations) == 0 {
+		locations = append(locations, &alb.Location{
 			ZoneId:   a.lbs.Listener.Subnet.ZoneID,
 			SubnetId: a.lbs.Listener.Subnet.ID,
-		}},
-	})
+		})
+	}
+	request.SetAllocationPolicy(&alb.AllocationPolicy{Locations: locations})
 
 	if a.additionalLabels != nil {
 		request.SetLabels(a.additionalLabels)
@@ -314,13 +329,22 @@ func (a *ALBBuilder) GetName() string {
 
 // createListenerSpec prepares and returns the ALB Listener specification.
 func (a *ALBBuilder) createListenerSpec(address string, port int32, subnetID, backendID string) []*alb.ListenerSpec {
-	intAddressSpec := &alb.InternalIpv4AddressSpec{}
-	if address != "" {
-		intAddressSpec.SetAddress(address)
-	}
-	intAddressSpec.SetSubnetId(subnetID)
 	addressSpec := &alb.AddressSpec{}
-	addressSpec.SetInternalIpv4AddressSpec(intAddressSpec)
+
+	if a.lbs.Listener.Internal {
+		intAddressSpec := &alb.InternalIpv4AddressSpec{}
+		if address != "" {
+			intAddressSpec.SetAddress(address)
+		}
+		intAddressSpec.SetSubnetId(subnetID)
+		addressSpec.SetInternalIpv4AddressSpec(intAddressSpec)
+	} else {
+		extAddressSpec := &alb.ExternalIpv4AddressSpec{}
+		if address != "" {
+			extAddressSpec.SetAddress(address)
+		}
+		addressSpec.SetExternalIpv4AddressSpec(extAddressSpec)
+	}
 
 	endpointSpec := &alb.EndpointSpec{}
 	endpointSpec.SetPorts([]int64{int64(port)})

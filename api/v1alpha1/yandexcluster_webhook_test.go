@@ -24,6 +24,81 @@ import (
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
 )
 
+func TestYandexCluster_Default(t *testing.T) {
+	tests := []struct {
+		name           string
+		cluster        *infrav1.YandexCluster
+		expectedZoneID string
+		expectedID     string
+	}{
+		{
+			name: "internal listener with failureDomains fills subnet from first FD",
+			cluster: &infrav1.YandexCluster{
+				Spec: infrav1.YandexClusterSpec{
+					FailureDomains: []infrav1.FailureDomainSpec{
+						{ZoneID: "ru-central1-a", SubnetID: "subnet-a"},
+						{ZoneID: "ru-central1-b", SubnetID: "subnet-b"},
+					},
+					LoadBalancer: infrav1.LoadBalancerSpec{
+						Listener: infrav1.ListenerSpec{
+							Internal: true,
+						},
+					},
+				},
+			},
+			expectedZoneID: "ru-central1-a",
+			expectedID:     "subnet-a",
+		},
+		{
+			name: "internal listener with explicit subnet keeps it",
+			cluster: &infrav1.YandexCluster{
+				Spec: infrav1.YandexClusterSpec{
+					FailureDomains: []infrav1.FailureDomainSpec{
+						{ZoneID: "ru-central1-a", SubnetID: "subnet-a"},
+					},
+					LoadBalancer: infrav1.LoadBalancerSpec{
+						Listener: infrav1.ListenerSpec{
+							Internal: true,
+							Subnet: infrav1.SubnetSpec{
+								ZoneID: "ru-central1-b",
+								ID:     "explicit-subnet",
+							},
+						},
+					},
+				},
+			},
+			expectedZoneID: "ru-central1-b",
+			expectedID:     "explicit-subnet",
+		},
+		{
+			name: "external listener does not fill subnet",
+			cluster: &infrav1.YandexCluster{
+				Spec: infrav1.YandexClusterSpec{
+					FailureDomains: []infrav1.FailureDomainSpec{
+						{ZoneID: "ru-central1-a", SubnetID: "subnet-a"},
+					},
+					LoadBalancer: infrav1.LoadBalancerSpec{
+						Listener: infrav1.ListenerSpec{
+							Internal: false,
+						},
+					},
+				},
+			},
+			expectedZoneID: "",
+			expectedID:     "",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			g := NewWithT(t)
+			tt.cluster.Default()
+			g.Expect(tt.cluster.Spec.LoadBalancer.Listener.Subnet.ZoneID).To(Equal(tt.expectedZoneID))
+			g.Expect(tt.cluster.Spec.LoadBalancer.Listener.Subnet.ID).To(Equal(tt.expectedID))
+		})
+	}
+}
+
 func TestYandexCluster_ValidateCreate(t *testing.T) {
 	y := NewWithT(t)
 	tests := []struct {
@@ -337,6 +412,58 @@ func TestYandexCluster_ValidateCreate(t *testing.T) {
 				},
 			},
 			wantErr: true,
+		},
+		{
+			name: "internal listener without subnet and without failureDomains - error",
+			YandexCluster: &infrav1.YandexCluster{
+				Spec: infrav1.YandexClusterSpec{
+					LoadBalancer: infrav1.LoadBalancerSpec{
+						Type: infrav1.LoadBalancerTypeALB,
+						Listener: infrav1.ListenerSpec{
+							Internal: true,
+						},
+					},
+				},
+			},
+			wantErr: true,
+		},
+		{
+			name: "internal listener without subnet but with failureDomains - valid",
+			YandexCluster: &infrav1.YandexCluster{
+				Spec: infrav1.YandexClusterSpec{
+					FailureDomains: []infrav1.FailureDomainSpec{
+						{ZoneID: "ru-central1-a", SubnetID: "subnet-a"},
+					},
+					LoadBalancer: infrav1.LoadBalancerSpec{
+						Type: infrav1.LoadBalancerTypeALB,
+						Listener: infrav1.ListenerSpec{
+							Internal: true,
+							Subnet: infrav1.SubnetSpec{
+								ZoneID: "ru-central1-a",
+								ID:     "subnet-a",
+							},
+						},
+					},
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "external listener without subnet - valid",
+			YandexCluster: &infrav1.YandexCluster{
+				Spec: infrav1.YandexClusterSpec{
+					FailureDomains: []infrav1.FailureDomainSpec{
+						{ZoneID: "ru-central1-a", SubnetID: "subnet-a"},
+					},
+					LoadBalancer: infrav1.LoadBalancerSpec{
+						Type: infrav1.LoadBalancerTypeALB,
+						Listener: infrav1.ListenerSpec{
+							Internal: false,
+						},
+					},
+				},
+			},
+			wantErr: false,
 		},
 	}
 

@@ -121,6 +121,8 @@ func (r *YandexClusterReconciler) reconcile(ctx context.Context, clusterScope *s
 		return ctrl.Result{Requeue: true}, nil
 	}
 
+	r.reconcileFailureDomains(clusterScope)
+
 	// Get loadbalancer service and reconcile load balancer.
 	lb := loadbalancer.New(clusterScope)
 	if err := lb.Reconcile(ctx); err != nil {
@@ -178,6 +180,23 @@ func (r *YandexClusterReconciler) reconcile(ctx context.Context, clusterScope *s
 		return ctrl.Result{},
 			fmt.Errorf("YandexCluster controlPlaneEndpoint differs from the load balancer listener values. The cluster has become unrecoverable and should be manually deleted")
 	}
+}
+
+// reconcileFailureDomains populates Status.FailureDomains from Spec.FailureDomains.
+// This allows KubeadmControlPlane to see available zones for control plane distribution.
+func (r *YandexClusterReconciler) reconcileFailureDomains(clusterScope *scope.ClusterScope) {
+	domains := clusterScope.GetFailureDomains()
+	if len(domains) == 0 {
+		return
+	}
+
+	failureDomains := make(clusterv1.FailureDomains)
+	for _, d := range domains {
+		failureDomains[d.ZoneID] = clusterv1.FailureDomainSpec{
+			ControlPlane: d.ControlPlane,
+		}
+	}
+	clusterScope.YandexCluster.Status.FailureDomains = failureDomains
 }
 
 // reconcileDelete it is a part of reconciliation loop in case of YandexCluster delete.

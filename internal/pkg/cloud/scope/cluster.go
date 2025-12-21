@@ -145,6 +145,11 @@ func (c *ClusterScope) GetLBSpec() infrav1.LoadBalancerSpec {
 	return c.YandexCluster.Spec.LoadBalancer
 }
 
+// GetFailureDomains returns the failure domains configured for this cluster.
+func (c *ClusterScope) GetFailureDomains() []infrav1.FailureDomainSpec {
+	return c.YandexCluster.Spec.FailureDomains
+}
+
 // generateName generates a resource name via:
 // 1. concatenating the cluster name to the suffix provided
 // 2. computing a hash for name, if resulting name length greater than

@@ -40,6 +40,7 @@ type ClusterGetter interface {
 	GetLBSpec() infrav1.LoadBalancerSpec
 	GetLBName() string
 	GetFolderID() string
+	GetFailureDomains() []infrav1.FailureDomainSpec
 }
 
 // ClusterSetter is an interface which can set cluster information.

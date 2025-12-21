@@ -39,8 +39,8 @@ type YandexMachineSpec struct {
 	ProviderID *string `json:"providerID,omitempty"`
 
 	// ZoneID is the identifier of YandexCloud availability zone.
+	// If not specified, the zone will be determined from Machine.spec.failureDomain.
 	// +optional
-	// +kubebuilder:default=ru-central1-d
 	ZoneID *string `json:"zoneID,omitempty"`
 
 	// PlatformID is the identifier of YandexCloud current CPU model.
@@ -57,8 +57,10 @@ type YandexMachineSpec struct {
 	// Resources contains computing resources of YandexCloud VM.
 	Resources Resources `json:"resources"`
 
-	// NetworkInterfaces is a network interfaces configurations for YandexCloud VM
-	NetworkInterfaces []NetworkInterface `json:"networkInterfaces"`
+	// NetworkInterfaces is a network interfaces configurations for YandexCloud VM.
+	// If not specified, the subnet will be determined from the cluster's failure domain.
+	// +optional
+	NetworkInterfaces []NetworkInterface `json:"networkInterfaces,omitempty"`
 }
 
 // NetworkInterface defines the network interface configuration of YandexCloud VM.

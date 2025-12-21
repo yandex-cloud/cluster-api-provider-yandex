@@ -184,8 +184,12 @@ func (s *Service) registerControlPlane(ctx context.Context) error {
 		return fmt.Errorf("no addresses registered for YandexMachne %s", s.scope.Name())
 	}
 
+	subnetID, err := s.scope.GetSubnetID()
+	if err != nil {
+		return fmt.Errorf("failed to get subnet ID for YandexMachine %s: %w", s.scope.Name(), err)
+	}
+
 	address := addresses[0].Address
-	subnetID := s.scope.YandexMachine.Spec.NetworkInterfaces[0].SubnetID
 	return s.scope.LoadBalancer.AddTarget(ctx, address, subnetID)
 }
 
@@ -199,7 +203,11 @@ func (s *Service) deregisterControlPlane(ctx context.Context) error {
 		return nil
 	}
 
+	subnetID, err := s.scope.GetSubnetID()
+	if err != nil {
+		return fmt.Errorf("failed to get subnet ID for YandexMachine %s: %w", s.scope.Name(), err)
+	}
+
 	address := addresses[0].Address
-	subnetID := s.scope.YandexMachine.Spec.NetworkInterfaces[0].SubnetID
 	return s.scope.LoadBalancer.RemoveTarget(ctx, address, subnetID)
 }

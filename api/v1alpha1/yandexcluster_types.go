@@ -48,6 +48,22 @@ type Labels map[string]string
 // ALB https://yandex.cloud/ru/services/application-load-balancer .
 type LoadBalancerType string
 
+// FailureDomainSpec defines a failure domain (availability zone) for the cluster.
+type FailureDomainSpec struct {
+	// ZoneID is the Yandex Cloud zone identifier (e.g., "ru-central1-a").
+	// +kubebuilder:validation:MinLength=1
+	ZoneID string `json:"zoneID"`
+
+	// SubnetID is the subnet to use in this zone.
+	// +kubebuilder:validation:MinLength=1
+	SubnetID string `json:"subnetID"`
+
+	// ControlPlane indicates whether this zone can host control plane nodes.
+	// +optional
+	// +kubebuilder:default=true
+	ControlPlane bool `json:"controlPlane,omitempty"`
+}
+
 // YandexClusterSpec defines the desired state of YandexCluster.
 type YandexClusterSpec struct {
 	// NetworkSpec encapsulates all things related to Yandex network.
@@ -76,6 +92,11 @@ type YandexClusterSpec struct {
 	// IdentityRef is a reference to a YandexIdentity resource.
 	// +optional
 	IdentityRef *IdentityReference `json:"identityRef,omitempty"`
+
+	// FailureDomains defines the availability zones for the cluster.
+	// Each failure domain specifies a zone and subnet for machine placement.
+	// +optional
+	FailureDomains []FailureDomainSpec `json:"failureDomains,omitempty"`
 }
 
 // LoadBalancerSpec is a loadbalancer configuration for the kubernetes cluster API.
@@ -139,9 +160,11 @@ type ListenerSpec struct {
 	Internal bool `json:"internal,omitempty"`
 
 	// Load balancer listener will be located in this subnet.
+	// Required for internal listener when FailureDomains is not specified.
+	// If not specified and FailureDomains is set, uses first failure domain.
 	// More information https://yandex.cloud/ru/docs/vpc/concepts/network#subnet.
-	// +required
-	Subnet SubnetSpec `json:"subnet"`
+	// +optional
+	Subnet SubnetSpec `json:"subnet,omitempty"`
 }
 
 // SubnetSpec configures an Yandex Subnet.
@@ -197,6 +220,12 @@ type YandexClusterStatus struct {
 	Ready        bool                 `json:"ready"`
 	LoadBalancer LoadBalancerStatus   `json:"loadBalancerStatus,omitempty"`
 	Conditions   clusterv1.Conditions `json:"conditions,omitempty"`
+
+	// FailureDomains contains the failure domains (zones) available for this cluster.
+	// This is populated by the controller and consumed by KubeadmControlPlane
+	// for machine distribution across zones.
+	// +optional
+	FailureDomains clusterv1.FailureDomains `json:"failureDomains,omitempty"`
 }
 
 // LoadBalancerStatus encapsulates load balancer resources.

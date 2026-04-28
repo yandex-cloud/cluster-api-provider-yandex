@@ -24,10 +24,9 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/validation/field"
-	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
+	clusterv1 "sigs.k8s.io/cluster-api/api/core/v1beta2"
 	ctrl "sigs.k8s.io/controller-runtime"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
-	"sigs.k8s.io/controller-runtime/pkg/webhook"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 )
 
@@ -55,10 +54,10 @@ func (c *YandexCluster) SetupWebhookWithManager(mgr ctrl.Manager) error {
 //nolint:lll // controller-gen marker
 //+kubebuilder:webhook:verbs=create;update,path=/validate-infrastructure-cluster-x-k8s-io-v1alpha1-yandexcluster,mutating=false,failurePolicy=fail,matchPolicy=Equivalent,groups=infrastructure.cluster.x-k8s.io,resources=yandexclusters,versions=v1alpha1,name=validation.yandexclusters.infrastructure.cluster.x-k8s.io,sideEffects=None,admissionReviewVersions=v1beta1
 
-var (
-	_ webhook.Defaulter = &YandexCluster{}
-	_ webhook.Validator = &YandexCluster{}
-)
+// var (
+// 	_ webhook.Defaulter = &YandexCluster{}
+// 	_ webhook.Validator = &YandexCluster{}
+// )
 
 // Default implements webhook.Defaulter so a webhook will be registered for the type.
 func (c *YandexCluster) Default() {
@@ -84,7 +83,7 @@ func (c *YandexCluster) ValidateCreate() (admission.Warnings, error) {
 		)
 	}
 
-	if !reflect.DeepEqual(c.Spec.ControlPlaneEndpoint, clusterv1.APIEndpoint{}) {
+	if !c.Spec.ControlPlaneEndpoint.IsZero() {
 		allErrs = append(allErrs, isControlPlaneEndpointValid(c.Spec.ControlPlaneEndpoint)...)
 	}
 
@@ -113,7 +112,7 @@ func (c *YandexCluster) ValidateUpdate(oldRaw runtime.Object) (admission.Warning
 	// We allow you to change the ControlPlaneEndpoint only if this field has not been set before.
 	// In all other cases, this field is immutable.
 	if !reflect.DeepEqual(c.Spec.ControlPlaneEndpoint, old.Spec.ControlPlaneEndpoint) {
-		if reflect.DeepEqual(old.Spec.ControlPlaneEndpoint, clusterv1.APIEndpoint{}) {
+		if old.Spec.ControlPlaneEndpoint.IsZero() {
 			allErrs = append(allErrs, isControlPlaneEndpointValid(c.Spec.ControlPlaneEndpoint)...)
 		} else {
 			allErrs = append(allErrs,

@@ -1,22 +1,35 @@
+version: "2"
 linters:
-  # Enable specific linter
-  # https://golangci-lint.run/usage/linters/
+  enable:
+    - revive
+  settings:
+    revive:
+      rules:
+        - name: exported
+          severity: error
+        - name: package-comments
+          severity: error
+    staticcheck:
+      checks:
+        - all # Include all checks by default
+        - "-SA1019" # Exclude the SA1019 (deprecated) check until full migration to CAPI v1beta2
+        - "-QF1008" # Exclude the QF1008 (could remove embedded field) check until further refactoring
+  exclusions:
+    generated: lax
+    presets:
+      - common-false-positives
+      - legacy
+      - std-error-handling
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
+formatters:
   enable:
     - gofmt
-    - govet
-    - revive
-linters-settings:
-  revive:
-    rules:
-      # Consider missing comments as an error
-      - name: exported
-        severity: error
-      # Validate package comments
-      - name: package-comments
-        severity: error
-issues:
-  include:
-     - EXC0012 # exported (.+) should have comment or be unexported
-     - EXC0013 # package comment should be of the form "(.+)...
-     - EXC0014 # comment on exported (.+) should be of the form "(.+)..."
-     - EXC0015 # should have a package comment
+  exclusions:
+    generated: lax
+    paths:
+      - third_party$
+      - builtin$
+      - examples$

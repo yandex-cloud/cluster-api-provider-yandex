@@ -23,7 +23,7 @@ import (
 	infrav1 "github.com/yandex-cloud/cluster-api-provider-yandex/api/v1alpha1"
 	"github.com/yandex-cloud/cluster-api-provider-yandex/internal/pkg/cloud/scope"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"sigs.k8s.io/cluster-api/api/v1beta1"
+	clusterv1 "sigs.k8s.io/cluster-api/api/core/v1beta2"
 )
 
 func TestCLoudScope_GetLBName(t *testing.T) {
@@ -48,7 +48,7 @@ func TestCLoudScope_GetLBName(t *testing.T) {
 		{
 			testName: "Return generated name of the load balancer, if name is not defined",
 			scope: &scope.ClusterScope{
-				Cluster: &v1beta1.Cluster{ObjectMeta: v1.ObjectMeta{Name: "test-cluster"}},
+				Cluster: &clusterv1.Cluster{ObjectMeta: v1.ObjectMeta{Name: "test-cluster"}},
 				YandexCluster: &infrav1.YandexCluster{
 					Spec: infrav1.YandexClusterSpec{
 						LoadBalancer: infrav1.LoadBalancerSpec{},
@@ -59,7 +59,7 @@ func TestCLoudScope_GetLBName(t *testing.T) {
 		{
 			testName: "Return generated name of the load balancer only with alphnumeric characters",
 			scope: &scope.ClusterScope{
-				Cluster: &v1beta1.Cluster{ObjectMeta: v1.ObjectMeta{Name: "some_strange_name"}},
+				Cluster: &clusterv1.Cluster{ObjectMeta: v1.ObjectMeta{Name: "some_strange_name"}},
 				YandexCluster: &infrav1.YandexCluster{
 					Spec: infrav1.YandexClusterSpec{
 						LoadBalancer: infrav1.LoadBalancerSpec{},
@@ -70,7 +70,7 @@ func TestCLoudScope_GetLBName(t *testing.T) {
 		{
 			testName: "Return hashed name of the load balancer, if definded name too long",
 			scope: &scope.ClusterScope{
-				Cluster: &v1beta1.Cluster{
+				Cluster: &clusterv1.Cluster{
 					ObjectMeta: v1.ObjectMeta{
 						Name: "some-very-very-very-very-very-very-loooooooooooooooooooooooooong-name"}},
 				YandexCluster: &infrav1.YandexCluster{

@@ -35,7 +35,7 @@ import (
 	alb "github.com/yandex-cloud/go-genproto/yandex/cloud/apploadbalancer/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
+	clusterv1 "sigs.k8s.io/cluster-api/api/core/v1beta2"
 	ctrl "sigs.k8s.io/controller-runtime"
 )
 
@@ -124,11 +124,10 @@ func (c *ClusterTestEnv) getCAPIClusterWithInfrastructureReference(nsName string
 			Namespace: nsName,
 		},
 		Spec: clusterv1.ClusterSpec{
-			InfrastructureRef: &corev1.ObjectReference{
-				Namespace:  nsName,
-				Name:       c.clusterName,
-				APIVersion: infrav1.GroupVersion.String(),
-				Kind:       "YandexCluster",
+			InfrastructureRef: clusterv1.ContractVersionedObjectReference{
+				Name:     c.clusterName,
+				APIGroup: infrav1.GroupVersion.Group,
+				Kind:     "YandexCluster",
 			},
 		},
 	}
@@ -142,7 +141,7 @@ func (c *ClusterTestEnv) getYandexClusterWithOwnerReference(nsName string) *infr
 		Namespace: nsName,
 		OwnerReferences: []metav1.OwnerReference{
 			{
-				APIVersion: "cluster.x-k8s.io/v1beta1",
+				APIVersion: "cluster.x-k8s.io/v1beta2",
 				Kind:       "Cluster",
 				Name:       c.clusterName,
 				UID:        "some-uid",
@@ -826,7 +825,7 @@ func (c *ClusterTestEnv) getYandexMachine(nsName string) *infrav1.YandexMachine 
 func (c *ClusterTestEnv) getYandexMachineWithOwnerRef(nsName string) *infrav1.YandexMachine {
 	ym := c.getYandexMachine(nsName)
 	ym.ObjectMeta.OwnerReferences = []metav1.OwnerReference{{
-		APIVersion: "cluster.x-k8s.io/v1beta1",
+		APIVersion: "cluster.x-k8s.io/v1beta2",
 		Kind:       "Machine",
 		Name:       c.machineName,
 		UID:        types.UID("uid"),
@@ -857,11 +856,10 @@ func (c *ClusterTestEnv) getMachine(nsName string) *clusterv1.Machine {
 // getMachineWithInfrastructureRef returns CAPI Machine with infrastructure reference.
 func (c *ClusterTestEnv) getMachineWithInfrastructureRef(nsName string) *clusterv1.Machine {
 	cm := c.getMachine(nsName)
-	cm.Spec.InfrastructureRef = corev1.ObjectReference{
-		Kind:       "YandexMachine",
-		Namespace:  nsName,
-		Name:       c.machineName,
-		APIVersion: infrav1.GroupVersion.String(),
+	cm.Spec.InfrastructureRef = clusterv1.ContractVersionedObjectReference{
+		Kind:     "YandexMachine",
+		Name:     c.machineName,
+		APIGroup: infrav1.GroupVersion.Group,
 	}
 	cm.Spec.Bootstrap = clusterv1.Bootstrap{
 		DataSecretName: ptr.To(c.secretName),

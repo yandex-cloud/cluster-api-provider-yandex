@@ -20,6 +20,7 @@ import (
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"k8s.io/utils/ptr"
 
 	"github.com/yandex-cloud/cluster-api-provider-yandex/internal/pkg/client/mock_client"
 	"github.com/yandex-cloud/cluster-api-provider-yandex/internal/pkg/cloud/scope"
@@ -31,7 +32,7 @@ import (
 
 	infrav1 "github.com/yandex-cloud/cluster-api-provider-yandex/api/v1alpha1"
 	alb "github.com/yandex-cloud/go-genproto/yandex/cloud/apploadbalancer/v1"
-	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
+	clusterv1 "sigs.k8s.io/cluster-api/api/core/v1beta2"
 	ctrl "sigs.k8s.io/controller-runtime"
 )
 
@@ -151,7 +152,7 @@ var _ = Describe("YandexCluster reconciliation check", func() {
 
 		It("should not reconcile an YandexCluster with paused CAPI Cluster", func() {
 			cc := e.getCAPIClusterWithInfrastructureReference(testNamespace.Name)
-			cc.Spec.Paused = true
+			cc.Spec.Paused = ptr.To(true)
 			Expect(e.Create(ctx, cc)).To(Succeed())
 			yc := e.getYandexClusterWithOwnerReference(testNamespace.Name)
 			Expect(e.Create(ctx, yc)).To(Succeed())
@@ -227,6 +228,7 @@ var _ = Describe("YandexCluster reconciliation check", func() {
 				return (err == nil && yc.Status.Ready)
 			}, e.eventuallyTimeout).Should(BeTrue())
 
+			Expect(yc.Spec.ControlPlaneEndpoint.IsZero()).To(BeFalse())
 			Expect(yc.Spec.ControlPlaneEndpoint.Host).To(Equal(ip))
 			Expect(yc.Spec.ControlPlaneEndpoint.Port).To(Equal(int32(8443)))
 			Expect(yc.Status.LoadBalancer.ListenerAddress).To(Equal(ip))
@@ -268,6 +270,7 @@ var _ = Describe("YandexCluster reconciliation check", func() {
 				return (err == nil && yc.Status.Ready)
 			}, e.eventuallyTimeout).Should(BeTrue())
 
+			Expect(yc.Spec.ControlPlaneEndpoint).NotTo(BeNil())
 			Expect(yc.Spec.ControlPlaneEndpoint.Host).To(Equal(ip))
 			Expect(yc.Spec.ControlPlaneEndpoint.Port).To(Equal(int32(8443)))
 			Expect(yc.Status.LoadBalancer.ListenerAddress).To(Equal(ip))
@@ -307,6 +310,7 @@ var _ = Describe("YandexCluster reconciliation check", func() {
 				return (err == nil && yc.Status.Ready)
 			}, e.eventuallyTimeout).Should(BeTrue())
 
+			Expect(yc.Spec.ControlPlaneEndpoint).NotTo(BeNil())
 			Expect(yc.Spec.ControlPlaneEndpoint.Host).To(Equal(ip))
 			Expect(yc.Spec.ControlPlaneEndpoint.Port).To(Equal(int32(8443)))
 			Expect(yc.Status.LoadBalancer.ListenerAddress).To(Equal(ip))

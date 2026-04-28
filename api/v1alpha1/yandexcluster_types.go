@@ -19,7 +19,8 @@ package v1alpha1
 import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
-	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
+	clusterv1beta1 "sigs.k8s.io/cluster-api/api/core/v1beta1"
+	clusterv1 "sigs.k8s.io/cluster-api/api/core/v1beta2"
 )
 
 const (
@@ -58,7 +59,7 @@ type YandexClusterSpec struct {
 	// Do not set it manually when creating YandexCluster as CAPY will set this for you
 	// after creating load balancer based on LoadBalancer specification.
 	// +optional
-	ControlPlaneEndpoint clusterv1.APIEndpoint `json:"controlPlaneEndpoint"`
+	ControlPlaneEndpoint clusterv1.APIEndpoint `json:"controlPlaneEndpoint,omitempty,omitzero"`
 
 	// FolderID is the identifier of YandexCloud folder to deploy the cluster to.
 	// +required
@@ -194,9 +195,9 @@ func (ir *IdentityReference) NamespacedName() types.NamespacedName {
 type YandexClusterStatus struct {
 	// Ready is true when the provider resource is ready.
 	// +kubebuilder:default=false
-	Ready        bool                 `json:"ready"`
-	LoadBalancer LoadBalancerStatus   `json:"loadBalancerStatus,omitempty"`
-	Conditions   clusterv1.Conditions `json:"conditions,omitempty"`
+	Ready        bool                      `json:"ready"`
+	LoadBalancer LoadBalancerStatus        `json:"loadBalancerStatus,omitempty"`
+	Conditions   clusterv1beta1.Conditions `json:"conditions,omitempty"`
 }
 
 // LoadBalancerStatus encapsulates load balancer resources.
@@ -242,13 +243,13 @@ type YandexClusterList struct {
 }
 
 // GetConditions returns the list of conditions for an YandexCluster API object.
-func (yc *YandexCluster) GetConditions() clusterv1.Conditions {
-	return yc.Status.Conditions
+func (c *YandexCluster) GetConditions() clusterv1beta1.Conditions {
+	return c.Status.Conditions
 }
 
 // SetConditions will set the given conditions on an YandexCluster API object.
-func (yc *YandexCluster) SetConditions(conditions clusterv1.Conditions) {
-	yc.Status.Conditions = conditions
+func (c *YandexCluster) SetConditions(conditions clusterv1beta1.Conditions) {
+	c.Status.Conditions = conditions
 }
 
 func init() {

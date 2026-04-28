@@ -21,7 +21,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"k8s.io/apimachinery/pkg/api/resource"
-	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
+	clusterv1beta1 "sigs.k8s.io/cluster-api/api/core/v1beta1"
 	"sigs.k8s.io/cluster-api/errors"
 )
 
@@ -168,7 +168,7 @@ type YandexMachineStatus struct {
 
 	// Conditions defines current service state of the YandexMachine.
 	// +optional
-	Conditions clusterv1.Conditions `json:"conditions,omitempty"`
+	Conditions clusterv1beta1.Conditions `json:"conditions,omitempty"`
 }
 
 //+kubebuilder:object:root=true
@@ -193,12 +193,12 @@ type YandexMachineList struct {
 }
 
 // GetConditions returns the list of conditions for an Yandex Machine API object.
-func (ym *YandexMachine) GetConditions() clusterv1.Conditions {
+func (ym *YandexMachine) GetConditions() clusterv1beta1.Conditions {
 	return ym.Status.Conditions
 }
 
 // SetConditions will set the given conditions on an Yandex Machine API object.
-func (ym *YandexMachine) SetConditions(conditions clusterv1.Conditions) {
+func (ym *YandexMachine) SetConditions(conditions clusterv1beta1.Conditions) {
 	ym.Status.Conditions = conditions
 }
 

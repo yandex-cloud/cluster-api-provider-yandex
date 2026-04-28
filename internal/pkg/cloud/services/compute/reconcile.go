@@ -9,8 +9,8 @@ import (
 	"github.com/yandex-cloud/cluster-api-provider-yandex/internal/pkg/cloud/ycerrors"
 	yandex_compute "github.com/yandex-cloud/go-genproto/yandex/cloud/compute/v1"
 	corev1 "k8s.io/api/core/v1"
-	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
-	"sigs.k8s.io/cluster-api/util/conditions"
+	clusterv1beta1 "sigs.k8s.io/cluster-api/api/core/v1beta1"
+	v1beta1conditions "sigs.k8s.io/cluster-api/util/deprecated/v1beta1/conditions"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 )
 
@@ -31,8 +31,8 @@ func (s *Service) Reconcile(ctx context.Context) error {
 	if instanceID == "" {
 		newInstanceID, err := s.createComputeInstance(ctx, client)
 		if err != nil {
-			conditions.MarkFalse(s.scope.YandexMachine,
-				infrav1.ConditionStatusRunning, infrav1.ConditionStatusNotfound, clusterv1.ConditionSeverityError, "%s", err.Error())
+			v1beta1conditions.MarkFalse(s.scope.YandexMachine,
+				infrav1.ConditionStatusRunning, infrav1.ConditionStatusNotfound, clusterv1beta1.ConditionSeverityError, "%s", err.Error())
 			return err
 		}
 
@@ -46,24 +46,24 @@ func (s *Service) Reconcile(ctx context.Context) error {
 		if ycerrors.IsNotFound(err) {
 			logger.Info("unable to find compute instance in yandex cloud")
 			s.scope.SetInstanceStatus(infrav1.InstanceStatusDeleted)
-			conditions.MarkTrue(s.scope.YandexMachine, infrav1.ConditionStatusNotfound)
-			conditions.MarkFalse(s.scope.YandexMachine,
+			v1beta1conditions.MarkTrue(s.scope.YandexMachine, infrav1.ConditionStatusNotfound)
+			v1beta1conditions.MarkFalse(s.scope.YandexMachine,
 				infrav1.ConditionStatusProvisioning,
 				infrav1.ConditionStatusError,
-				clusterv1.ConditionSeverityError,
+				clusterv1beta1.ConditionSeverityError,
 				"%s", err.Error())
-			conditions.MarkFalse(s.scope.YandexMachine,
+			v1beta1conditions.MarkFalse(s.scope.YandexMachine,
 				infrav1.ConditionStatusRunning,
 				infrav1.ConditionStatusError,
-				clusterv1.ConditionSeverityError,
+				clusterv1beta1.ConditionSeverityError,
 				"%s", err.Error())
 			return nil
 		}
-		conditions.MarkUnknown(s.scope.YandexMachine,
+		v1beta1conditions.MarkUnknown(s.scope.YandexMachine,
 			infrav1.ConditionStatusProvisioning,
 			infrav1.ConditionStatusNotfound,
 			"%s", err.Error())
-		conditions.MarkUnknown(s.scope.YandexMachine,
+		v1beta1conditions.MarkUnknown(s.scope.YandexMachine,
 			infrav1.ConditionStatusRunning,
 			infrav1.ConditionStatusNotfound,
 			"%s", err.Error())
@@ -74,10 +74,10 @@ func (s *Service) Reconcile(ctx context.Context) error {
 	if instanceState == infrav1.InstanceStatusRunning {
 		instanceAddress, err := s.getInstanceAddress(vm)
 		if err != nil {
-			conditions.MarkFalse(s.scope.YandexMachine,
+			v1beta1conditions.MarkFalse(s.scope.YandexMachine,
 				infrav1.ConditionStatusRunning,
 				infrav1.ConditionStatusError,
-				clusterv1.ConditionSeverityError,
+				clusterv1beta1.ConditionSeverityError,
 				"%s", err.Error())
 			return err
 		}
@@ -90,7 +90,7 @@ func (s *Service) Reconcile(ctx context.Context) error {
 				return fmt.Errorf("failed to register controlplane compute instance in load balancer: %w", err)
 			}
 		}
-		conditions.MarkTrue(s.scope.YandexMachine, infrav1.ConditionStatusRunning)
+		v1beta1conditions.MarkTrue(s.scope.YandexMachine, infrav1.ConditionStatusRunning)
 	}
 
 	s.scope.SetInstanceStatus(infrav1.InstanceStatus(vm.GetStatus().String()))

@@ -14,11 +14,11 @@ import (
 //+kubebuilder:webhook:verbs=create;update,path=/mutate-infrastructure-cluster-x-k8s-io-v1alpha1-yandexcluster-identitylink,mutating=true,failurePolicy=fail,matchPolicy=Equivalent,groups=infrastructure.cluster.x-k8s.io,resources=yandexclusters,versions=v1alpha1,name=mutation.yandexclusters.infrastructure.cluster.x-k8s.io,sideEffects=None,admissionReviewVersions=v1beta1
 
 type yandexClusterAdmitter struct {
-	decoder *admission.Decoder
+	decoder admission.Decoder
 }
 
 // NewYandexClusterAdmitter returns a new admission.Handler that adds identityRef labels to YandexCluster objects.
-func NewYandexClusterAdmitter(decoder *admission.Decoder) admission.Handler {
+func NewYandexClusterAdmitter(decoder admission.Decoder) admission.Handler {
 	return &yandexClusterAdmitter{decoder: decoder}
 }
 

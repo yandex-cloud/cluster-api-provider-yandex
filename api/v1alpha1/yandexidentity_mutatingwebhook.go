@@ -15,12 +15,12 @@ import (
 
 type yandexIdentityAdmitter struct {
 	platformClient client.Client
-	decoder        *admission.Decoder
+	decoder        admission.Decoder
 }
 
 // NewYandexIdentityDeletionBlocker returns a new admission.Handler that prevents deletion of YandexIdentity objects
 // that are linked to YandexCluster objects.
-func NewYandexIdentityDeletionBlocker(platformClient client.Client, decoder *admission.Decoder) admission.Handler {
+func NewYandexIdentityDeletionBlocker(platformClient client.Client, decoder admission.Decoder) admission.Handler {
 	return &yandexIdentityAdmitter{
 		platformClient: platformClient,
 		decoder:        decoder,

@@ -24,17 +24,17 @@ import (
 	"github.com/pkg/errors"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
-	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
+	clusterv1 "sigs.k8s.io/cluster-api/api/core/v1beta2"
 	capierrors "sigs.k8s.io/cluster-api/errors"
 	"sigs.k8s.io/cluster-api/util"
 	"sigs.k8s.io/cluster-api/util/annotations"
 	"sigs.k8s.io/cluster-api/util/predicates"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/builder"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/log"
-	"sigs.k8s.io/controller-runtime/pkg/source"
 
 	infrav1 "github.com/yandex-cloud/cluster-api-provider-yandex/api/v1alpha1"
 	yandex "github.com/yandex-cloud/cluster-api-provider-yandex/internal/pkg/client"
@@ -201,9 +201,15 @@ func (r *YandexMachineReconciler) reconcileDelete(ctx context.Context, machineSc
 
 // SetupWithManager sets up the controller with the Manager.
 func (r *YandexMachineReconciler) SetupWithManager(ctx context.Context, mgr ctrl.Manager) error {
-	c, err := ctrl.NewControllerManagedBy(mgr).
+
+	clusterToObjectFunc, err := util.ClusterToTypedObjectsMapper(r.Client, &infrav1.YandexMachineList{}, mgr.GetScheme())
+	if err != nil {
+		return errors.Wrapf(err, "failed to create mapper for Cluster to YandexMachines")
+	}
+
+	return ctrl.NewControllerManagedBy(mgr).
 		For(&infrav1.YandexMachine{}).
-		WithEventFilter(predicates.ResourceNotPaused(ctrl.LoggerFrom(ctx))).
+		WithEventFilter(predicates.ResourceNotPaused(r.Scheme, ctrl.LoggerFrom(ctx))).
 		Watches(
 			&clusterv1.Machine{},
 			handler.EnqueueRequestsFromMapFunc(util.MachineToInfrastructureMapFunc(infrav1.GroupVersion.WithKind("YandexMachine"))),
@@ -212,26 +218,13 @@ func (r *YandexMachineReconciler) SetupWithManager(ctx context.Context, mgr ctrl
 			&infrav1.YandexCluster{},
 			handler.EnqueueRequestsFromMapFunc(r.YandexClusterToYandexMachines(ctx)),
 		).
-		Build(r)
-	if err != nil {
-		return errors.Wrapf(err, "error creating controller")
-	}
-
-	clusterToObjectFunc, err := util.ClusterToTypedObjectsMapper(r.Client, &infrav1.YandexMachineList{}, mgr.GetScheme())
-	if err != nil {
-		return errors.Wrapf(err, "failed to create mapper for Cluster to YandexMachines")
-	}
-
-	// add a watch on clusterv1.Cluster object for unpause & ready notifications.
-	if err := c.Watch(
-		source.Kind(mgr.GetCache(), &clusterv1.Cluster{}),
-		handler.EnqueueRequestsFromMapFunc(clusterToObjectFunc),
-		predicates.ClusterUnpausedAndInfrastructureReady(ctrl.LoggerFrom(ctx)),
-	); err != nil {
-		return errors.Wrapf(err, "failed adding a watch for ready clusters")
-	}
-
-	return nil
+		Watches(
+			&clusterv1.Cluster{},
+			handler.EnqueueRequestsFromMapFunc(clusterToObjectFunc),
+			builder.WithPredicates(
+				predicates.ClusterUnpausedAndInfrastructureProvisioned(r.Scheme, ctrl.LoggerFrom(ctx))),
+		).
+		Complete(r)
 }
 
 // YandexClusterToYandexMachines is a handler.ToRequestsFunc to be used to enqeue requests for reconciliation

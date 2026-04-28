@@ -21,7 +21,7 @@ import (
 
 	. "github.com/onsi/gomega"
 	infrav1 "github.com/yandex-cloud/cluster-api-provider-yandex/api/v1alpha1"
-	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
+	clusterv1 "sigs.k8s.io/cluster-api/api/core/v1beta2"
 )
 
 func TestYandexCluster_ValidateCreate(t *testing.T) {

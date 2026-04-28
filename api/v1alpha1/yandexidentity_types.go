@@ -18,7 +18,7 @@ package v1alpha1
 
 import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
+	clusterv1beta1 "sigs.k8s.io/cluster-api/api/core/v1beta1"
 )
 
 const (
@@ -53,7 +53,7 @@ type YandexIdentityStatus struct {
 
 	// Conditions is a list of conditions and their status.
 	// +optional
-	Conditions clusterv1.Conditions `json:"conditions,omitempty"`
+	Conditions clusterv1beta1.Conditions `json:"conditions,omitempty"`
 
 	// Linked clusters
 	// +optional
@@ -87,12 +87,12 @@ func (i *YandexIdentity) GenerateSecretFinalizer() string {
 }
 
 // GetConditions returns the list of conditions for an YandexIdentity API object.
-func (i *YandexIdentity) GetConditions() clusterv1.Conditions {
+func (i *YandexIdentity) GetConditions() clusterv1beta1.Conditions {
 	return i.Status.Conditions
 }
 
 // SetConditions will set the given conditions on an YandexIdentity API object.
-func (i *YandexIdentity) SetConditions(conditions clusterv1.Conditions) {
+func (i *YandexIdentity) SetConditions(conditions clusterv1beta1.Conditions) {
 	i.Status.Conditions = conditions
 }
 

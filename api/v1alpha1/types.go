@@ -1,7 +1,7 @@
 package v1alpha1
 
 import (
-	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
+	clusterv1beta1 "sigs.k8s.io/cluster-api/api/core/v1beta1"
 )
 
 // InstanceStatus describes the status of a Yandex Cloud Compute instance.
@@ -36,7 +36,7 @@ var (
 
 const (
 	// ConditionStatusProvisioning is the string representing an instance in a provisioning state.
-	ConditionStatusProvisioning clusterv1.ConditionType = "PROVISIONING"
+	ConditionStatusProvisioning clusterv1beta1.ConditionType = "PROVISIONING"
 	// ConditionStatusRunning is the string representing an instance in a running state.
 	ConditionStatusRunning = "RUNNING"
 	// ConditionStatusReady is the string representing an instance in a ready state.
@@ -49,18 +49,18 @@ const (
 
 const (
 	// LoadBalancerReadyCondition reports on whether a control plane load balancer was successfully reconciled.
-	LoadBalancerReadyCondition clusterv1.ConditionType = "LoadBalancerReady"
+	LoadBalancerReadyCondition clusterv1beta1.ConditionType = "LoadBalancerReady"
 	// LoadBalancerFailedReason used when an error occurs during load balancer reconciliation.
 	LoadBalancerFailedReason = "LoadBalancerFailed"
 )
 
 const (
 	// IdentityReadyCondition reports on whether a Yandex Identity was successfully reconciled.
-	IdentityReadyCondition clusterv1.ConditionType = "IdentityReady"
+	IdentityReadyCondition clusterv1beta1.ConditionType = "IdentityReady"
 	// IdentityValidCondition reports on whether a Yandex Identity is valid.
-	IdentityValidCondition clusterv1.ConditionType = "IdentityValid"
+	IdentityValidCondition clusterv1beta1.ConditionType = "IdentityValid"
 	// IdentitySecretUpdatedCondition reports on whether a Yandex Identity secret was updated.
-	IdentitySecretUpdatedCondition clusterv1.ConditionType = "IdentitySecretUpdated"
+	IdentitySecretUpdatedCondition clusterv1beta1.ConditionType = "IdentitySecretUpdated"
 	// IdentityLinkedClustersUpdatedCondition reports on whether a Yandex Identity linked clusters were updated.
-	IdentityLinkedClustersUpdatedCondition clusterv1.ConditionType = "IdentityLinkedClustersUpdated"
+	IdentityLinkedClustersUpdatedCondition clusterv1beta1.ConditionType = "IdentityLinkedClustersUpdated"
 )

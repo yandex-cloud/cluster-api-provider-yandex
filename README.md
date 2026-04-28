@@ -84,7 +84,7 @@
     * [Go](https://go.dev/doc/install) версии 1.22.0 и выше;
     * [docker](https://www.docker.com/) версии 17.03 и выше;
     * [kubectl](https://kubernetes.io/docs/tasks/tools/#kubectl) версии 1.11.3 и выше;
-    * [clusterctl](https://cluster-api.sigs.k8s.io/user/quick-start#install-clusterctl) версии 1.5.0 и выше.
+    * [clusterctl](https://cluster-api.sigs.k8s.io/user/quick-start#install-clusterctl) версии 1.11.0 и выше.
 
 1. Настройте для `kubectl` доступ к управляющему кластеру Kubernetes:
     * [Managed Service for Kubernetes](https://yandex.cloud/ru/docs/managed-kubernetes/operations/connect/#kubectl-connect);

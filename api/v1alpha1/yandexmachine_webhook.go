@@ -25,7 +25,6 @@ import (
 	"k8s.io/apimachinery/pkg/util/validation/field"
 	ctrl "sigs.k8s.io/controller-runtime"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
-	"sigs.k8s.io/controller-runtime/pkg/webhook"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 )
 
@@ -42,10 +41,10 @@ func (ym *YandexMachine) SetupWebhookWithManager(mgr ctrl.Manager) error {
 //nolint:lll // controller-gen marker
 //+kubebuilder:webhook:path=/validate-infrastructure-cluster-x-k8s-io-v1alpha1-yandexmachine,mutating=false,failurePolicy=fail,sideEffects=None,groups=infrastructure.cluster.x-k8s.io,resources=yandexmachines,verbs=create;update,versions=v1alpha1,name=validation.yandexmachines.infrastructure.cluster.x-k8s.io,admissionReviewVersions=v1beta1
 
-var (
-	_ webhook.Defaulter = &YandexMachine{}
-	_ webhook.Validator = &YandexMachine{}
-)
+// var (
+// 	_ webhook.Defaulter = &YandexMachine{}
+// 	_ webhook.Validator = &YandexMachine{}
+// )
 
 // Default implements webhook.Defaulter so a webhook will be registered for the type.
 func (ym *YandexMachine) Default() {

@@ -24,11 +24,11 @@ import (
 
 	infrav1 "github.com/yandex-cloud/cluster-api-provider-yandex/api/v1alpha1"
 	"github.com/yandex-cloud/cluster-api-provider-yandex/internal/pkg/cloud/scope"
-	"github.com/yandex-cloud/cluster-api-provider-yandex/internal/pkg/cloud/services/loadbalancers"
+	loadbalancer "github.com/yandex-cloud/cluster-api-provider-yandex/internal/pkg/cloud/services/loadbalancers"
 	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	"sigs.k8s.io/cluster-api/api/v1beta1"
+	clusterv1 "sigs.k8s.io/cluster-api/api/core/v1beta2"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 )
 
@@ -103,9 +103,9 @@ func fakeScopeWithSecret(secret *corev1.Secret) (*scope.MachineScope, error) {
 		return nil, err
 	}
 
-	cm := &v1beta1.Machine{
-		Spec: v1beta1.MachineSpec{
-			Bootstrap: v1beta1.Bootstrap{
+	cm := &clusterv1.Machine{
+		Spec: clusterv1.MachineSpec{
+			Bootstrap: clusterv1.Bootstrap{
 				DataSecretName: &secret.Name,
 			},
 		},

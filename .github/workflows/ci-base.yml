@@ -26,11 +26,11 @@ jobs:
           go-version-file: go.mod
           cache: false
       - name: golangci-lint
-        uses: golangci/golangci-lint-action@v4
+        uses: golangci/golangci-lint-action@v8
         with:
           args: --timeout=5m
           # Require: The version of golangci-lint to use.
-          version: v1.63.4
+          version: v2.6.2
 
   test:
     needs: golangci

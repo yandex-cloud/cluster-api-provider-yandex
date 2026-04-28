@@ -32,6 +32,7 @@ import (
 
 	infrav1 "github.com/yandex-cloud/cluster-api-provider-yandex/api/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/utils/ptr"
 )
 
 var _ = Describe("YandexMachine reconciliation check", func() {
@@ -103,7 +104,7 @@ var _ = Describe("YandexMachine reconciliation check", func() {
 
 		It("should not reconcile YandexMachine with paused CAPI Cluster", func() {
 			cc := e.getCAPIClusterWithInfrastructureReference(testNamespace.Name)
-			cc.Spec.Paused = true
+			cc.Spec.Paused = ptr.To(true)
 			Expect(e.Create(ctx, cc)).To(Succeed())
 			Expect(e.Create(ctx, e.getYandexClusterWithOwnerReference(testNamespace.Name))).To(Succeed())
 			Expect(e.Create(ctx, e.getMachineWithInfrastructureRef(testNamespace.Name))).To(Succeed())

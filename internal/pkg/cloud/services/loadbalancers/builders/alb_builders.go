@@ -39,6 +39,7 @@ type ALBBuilder struct {
 	lbs              infrav1.LoadBalancerSpec
 	folderID         string
 	networkID        string
+	securityGroupIDs []string
 	clusterName      string
 	name             string
 	backendGroupID   string
@@ -270,6 +271,11 @@ func (a *ALBBuilder) WithNetworkID(id string) *ALBBuilder {
 	return a
 }
 
+func (a *ALBBuilder) WithSecurityGroups(SGIDs []string) *ALBBuilder {
+	a.securityGroupIDs = SGIDs
+	return a
+}
+
 // WithLabels sets an additional set of tags on ALB.
 func (a *ALBBuilder) WithLabels(labels infrav1.Labels) *ALBBuilder {
 	a.additionalLabels = labels
@@ -295,6 +301,9 @@ func (a *ALBBuilder) Build() (*alb.CreateLoadBalancerRequest, error) {
 
 	if a.additionalLabels != nil {
 		request.SetLabels(a.additionalLabels)
+	}
+	if a.securityGroupIDs != nil {
+		request.SetSecurityGroupIds(a.securityGroupIDs)
 	}
 
 	request.SetListenerSpecs(a.createListenerSpec(

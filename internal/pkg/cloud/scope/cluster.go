@@ -126,6 +126,10 @@ func (c *ClusterScope) GetLabels() infrav1.Labels {
 	return c.YandexCluster.Spec.Labels
 }
 
+func (c *ClusterScope) GetLoadBalancerSecurityGroupsIds() []string {
+	return c.YandexCluster.Spec.LoadBalancer.SecurityGroups
+}
+
 // ControlPlaneEndpoint gets the cluster API endpoit.
 func (c *ClusterScope) ControlPlaneEndpoint() clusterv1.APIEndpoint {
 	return c.YandexCluster.Spec.ControlPlaneEndpoint

@@ -217,6 +217,7 @@ func (s *Service) reconcileALB(ctx context.Context, backendGroupID string) error
 		WithFolder(s.scope.GetFolderID()).
 		WithBackendGroupID(backendGroupID).
 		WithNetworkID(s.scope.GetNetworkID()).
+		WithSecurityGroups(s.scope.GetLoadBalancerSecurityGroupsIds()).
 		WithLabels(s.scope.GetLabels())
 
 	lb, err := client.ALBGetByName(ctx, s.scope.GetFolderID(), builder.GetName())

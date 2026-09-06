@@ -518,6 +518,11 @@ func (in *YandexMachineSpec) DeepCopyInto(out *YandexMachineSpec) {
 		*out = new(string)
 		**out = **in
 	}
+	if in.Preemptible != nil {
+		in, out := &in.Preemptible, &out.Preemptible
+		*out = new(bool)
+		**out = **in
+	}
 	if in.BootDisk != nil {
 		in, out := &in.BootDisk, &out.BootDisk
 		*out = new(Disk)

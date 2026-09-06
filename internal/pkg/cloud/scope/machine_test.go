@@ -25,9 +25,12 @@ import (
 	infrav1 "github.com/yandex-cloud/cluster-api-provider-yandex/api/v1alpha1"
 	"github.com/yandex-cloud/cluster-api-provider-yandex/internal/pkg/cloud/scope"
 	"github.com/yandex-cloud/cluster-api-provider-yandex/internal/pkg/cloud/services/loadbalancers"
+	"github.com/yandex-cloud/go-genproto/yandex/cloud/compute/v1"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/utils/ptr"
 	"sigs.k8s.io/cluster-api/api/v1beta1"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 )
@@ -88,6 +91,50 @@ func TestMachineScope_GetBootstrapData(t *testing.T) {
 	g.Expect(get).To(BeZero())
 }
 
+func TestMachineScope_GetInstanceReq_SchedulingPolicy(t *testing.T) {
+	g := NewWithT(t)
+
+	tests := []struct {
+		name        string
+		preemptible *bool
+		want        bool
+	}{
+		{
+			name:        "preemptible is not set, VM should not be preemptible",
+			preemptible: nil,
+			want:        false,
+		},
+		{
+			name:        "preemptible is false, VM should not be preemptible",
+			preemptible: ptr.To(false),
+			want:        false,
+		},
+		{
+			name:        "preemptible is true, VM should be preemptible",
+			preemptible: ptr.To(true),
+			want:        true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(_ *testing.T) {
+			secret := corev1.Secret{
+				ObjectMeta: v1.ObjectMeta{Namespace: "test", Name: "test-secret"},
+				Data:       map[string][]byte{"value": []byte("bootstrap-data")},
+			}
+			scp, err := fakeScopeWithSecret(&secret)
+			g.Expect(err).ToNot(HaveOccurred())
+			g.Expect(scp).ToNot(BeNil())
+
+			scp.YandexMachine.Spec.Preemptible = tt.preemptible
+
+			req, err := scp.GetInstanceReq()
+			g.Expect(err).ToNot(HaveOccurred())
+			g.Expect(req.GetSchedulingPolicy()).To(Equal(&compute.SchedulingPolicy{Preemptible: tt.want}))
+		})
+	}
+}
+
 // fakeScopeWithSecret creates machine scope with fakeclient.
 func fakeScopeWithSecret(secret *corev1.Secret) (*scope.MachineScope, error) {
 	scheme := runtime.NewScheme()
@@ -115,13 +162,32 @@ func fakeScopeWithSecret(secret *corev1.Secret) (*scope.MachineScope, error) {
 			Namespace: "test",
 			Name:      "ym-test",
 		},
+		Spec: infrav1.YandexMachineSpec{
+			ZoneID:     ptr.To("ru-central1-d"),
+			PlatformID: ptr.To("standard-v3"),
+			BootDisk: &infrav1.Disk{
+				TypeID:  ptr.To("network-ssd"),
+				Size:    resource.MustParse("10Gi"),
+				ImageID: "test-image",
+			},
+			Resources: infrav1.Resources{
+				Memory: resource.MustParse("2Gi"),
+				Cores:  2,
+			},
+			NetworkInterfaces: []infrav1.NetworkInterface{{SubnetID: "test-subnet"}},
+		},
+	}
+	clusterScope := &scope.ClusterScope{
+		YandexCluster: &infrav1.YandexCluster{
+			Spec: infrav1.YandexClusterSpec{FolderID: "test-folder"},
+		},
 	}
 
 	scp, err := scope.NewMachineScope(scope.MachineScopeParams{
 		Client:        k8sClient,
 		Machine:       cm,
-		LoadBalancer:  loadbalancer.New(&scope.ClusterScope{}),
-		ClusterGetter: &scope.ClusterScope{},
+		LoadBalancer:  loadbalancer.New(clusterScope),
+		ClusterGetter: clusterScope,
 		YandexMachine: ym,
 	})
 	if err != nil {

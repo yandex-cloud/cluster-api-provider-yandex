@@ -223,6 +223,11 @@ func (m *MachineScope) GetInstanceReq() (*compute.CreateInstanceRequest, error) 
 		return nil, errors.New("failed to parse instance's boot disk size from yandex machine specification")
 	}
 
+	schedulingPolicy := &compute.SchedulingPolicy{}
+	if m.YandexMachine.Spec.Preemptible != nil {
+		schedulingPolicy.Preemptible = *m.YandexMachine.Spec.Preemptible
+	}
+
 	return &compute.CreateInstanceRequest{
 		FolderId:   m.ClusterGetter.GetFolderID(),
 		Name:       m.YandexMachine.GetName(),
@@ -247,5 +252,6 @@ func (m *MachineScope) GetInstanceReq() (*compute.CreateInstanceRequest, error) 
 			},
 		},
 		NetworkInterfaceSpecs: networkInterfacesSpecs,
+		SchedulingPolicy:      schedulingPolicy,
 	}, nil
 }

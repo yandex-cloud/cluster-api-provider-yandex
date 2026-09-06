@@ -140,6 +140,7 @@ spec:
     spec:
       zoneID: ${YANDEX_ZONE_ID:=ru-central1-a}
       platformID: "${YANDEX_NODE_MACHINE_PLATFORM_ID:=standard-v3}"
+      preemptible: ${YANDEX_NODE_MACHINE_PREEMPTIBLE:=false}
       resources:
         cores: ${YANDEX_NODE_MACHINE_CORES:=2}
         memory: "${YANDEX_NODE_MACHINE_MEMORY_SIZE:=4Gi}"

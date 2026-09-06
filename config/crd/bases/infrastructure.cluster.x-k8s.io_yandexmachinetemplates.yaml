@@ -127,6 +127,13 @@ spec:
                           With GPU: gpu-standard-v1, gpu-standard-v2, gpu-standard-v3, standard-v3-t4
                           More information https://cloud.yandex.ru/ru/docs/compute/concepts/vm-platforms .
                         type: string
+                      preemptible:
+                        default: false
+                        description: |-
+                          Preemptible is set to true if YandexCloud VM should be created as preemptible.
+                          Preemptible VMs are cheaper, but can be stopped by YandexCloud at any time and always after 24 hours.
+                          More information https://yandex.cloud/en/docs/compute/concepts/preemptible-vm .
+                        type: boolean
                       providerID:
                         description: ProviderID is the unique identifier as specified
                           by the cloud provider.

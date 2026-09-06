@@ -51,6 +51,13 @@ type YandexMachineSpec struct {
 	// +kubebuilder:default=standard-v3
 	PlatformID *string `json:"platformID,omitempty"`
 
+	// Preemptible is set to true if YandexCloud VM should be created as preemptible.
+	// Preemptible VMs are cheaper, but can be stopped by YandexCloud at any time and always after 24 hours.
+	// More information https://yandex.cloud/en/docs/compute/concepts/preemptible-vm .
+	// +optional
+	// +kubebuilder:default=false
+	Preemptible *bool `json:"preemptible,omitempty"`
+
 	// Disk is boot storage configuration for YandexCloud VM.
 	BootDisk *Disk `json:"bootDisk"`
 
